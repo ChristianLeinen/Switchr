@@ -1,8 +1,8 @@
-# switchr Orchestrator Configuration
+# Switchr Orchestrator Configuration
 # Declarative inventory of target hosts, managed services, and configuration profiles.
 
 app:
-  name: "switchr"
+  name: "Switchr"
   version: "1.0.0"
   dry_run: true # Set to false in production to execute on real hosts
   default_job_timeout: 300 # seconds
