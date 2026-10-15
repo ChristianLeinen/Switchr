@@ -1,0 +1,159 @@
+# switchr Orchestrator Configuration
+# Declarative inventory of target hosts, managed services, and configuration profiles.
+
+app:
+  name: "switchr"
+  version: "1.0.0"
+  dry_run: true # Set to false in production to execute on real hosts
+  default_job_timeout: 300 # seconds
+  log_dir: "./logs"
+
+hosts:
+  - id: "win-prod-01"
+    name: "Windows Core Gateway"
+    os_type: "windows"
+    hostname: "192.168.10.45"
+    port: 5985
+    use_ssl: false
+    auth:
+      type: "password"
+      username: "orchestrator_svc"
+      password_env: "WIN_CORE_PASSWORD" # Evaluated from env or fallback config
+    description: "Primary Windows Server 2022 hosting Core Financial Routing daemon"
+
+  - id: "win-stage-02"
+    name: "Windows Staging Worker"
+    os_type: "windows"
+    hostname: "192.168.10.46"
+    port: 5986
+    use_ssl: true
+    auth:
+      type: "password"
+      username: "admin_deploy"
+      password_env: "WIN_STAGE_PASSWORD"
+    description: "Windows Staging Node for batch settlement jobs"
+
+  - id: "unix-prod-01"
+    name: "Linux Edge Proxy & Ingestion"
+    os_type: "unix"
+    hostname: "10.200.4.12"
+    port: 22
+    auth:
+      type: "key"
+      username: "deploy_agent"
+      key_path: "~/.ssh/switchr_rsa"
+    description: "Ubuntu 24.04 LTS running event ingestion and rate-limiting proxy"
+
+  - id: "unix-db-cache-01"
+    name: "Linux Redis & Session Daemon"
+    os_type: "unix"
+    hostname: "10.200.4.18"
+    port: 22
+    auth:
+      type: "key"
+      username: "sysops"
+      key_path: "~/.ssh/id_ed25519"
+    description: "Debian 12 cluster node for cache partitioning and session store"
+
+services:
+  - id: "svc-fin-router"
+    host_id: "win-prod-01"
+    name: "Financial Transaction Router"
+    service_type: "windows_service"
+    verification_service_name: "FinRouterSvc"
+    current_profile: "production-high-throughput"
+    description: "PCI-DSS compliant transaction gateway service"
+    profiles:
+      - name: "production-high-throughput"
+        description: "Direct clearinghouse connections with 128 concurrent threads"
+        script_path: "C:\\Services\\FinRouter\\scripts\\switch_profile.bat"
+        parameters:
+          - "--profile"
+          - "prod-high"
+          - "--pool-size"
+          - "128"
+        timeout_seconds: 180
+
+      - name: "production-balanced"
+        description: "Standard daytime traffic profile with 64 thread pool"
+        script_path: "C:\\Services\\FinRouter\\scripts\\switch_profile.bat"
+        parameters:
+          - "--profile"
+          - "prod-balanced"
+          - "--pool-size"
+          - "64"
+        timeout_seconds: 180
+
+      - name: "maintenance-drain"
+        description: "Gracefully drain in-flight transactions and reject new requests"
+        script_path: "C:\\Services\\FinRouter\\scripts\\switch_profile.bat"
+        parameters:
+          - "--profile"
+          - "drain"
+        timeout_seconds: 240
+
+  - id: "svc-win-batch"
+    host_id: "win-stage-02"
+    name: "Nightly Settlement Worker"
+    service_type: "windows_service"
+    verification_service_name: "BatchSettlement"
+    current_profile: "batch-standard"
+    description: "Reconciliation engine processing end-of-day batches"
+    profiles:
+      - name: "batch-standard"
+        description: "Single-thread sequential ledger validation"
+        script_path: "D:\\BatchApps\\Settlement\\bin\\apply_config.bat"
+        parameters: ["--mode", "standard"]
+        timeout_seconds: 120
+
+      - name: "batch-stress-test"
+        description: "Synthetic load generation profile with mock transaction inputs"
+        script_path: "D:\\BatchApps\\Settlement\\bin\\apply_config.bat"
+        parameters: ["--mode", "stress-test", "--concurrency", "16"]
+        timeout_seconds: 300
+
+  - id: "svc-edge-proxy"
+    host_id: "unix-prod-01"
+    name: "Edge Ingress Gateway"
+    service_type: "systemd"
+    verification_service_name: "switchr-ingress"
+    current_profile: "active-primary-datacenter"
+    description: "Reverse proxy managing traffic balancing and TLS termination"
+    profiles:
+      - name: "active-primary-datacenter"
+        description: "Routes 100% of ingress traffic to Primary DC (Frankfurt)"
+        script_path: "/opt/switchr/scripts/switch_traffic.sh"
+        parameters: ["--region", "eu-central-1", "--weight", "100"]
+        timeout_seconds: 90
+
+      - name: "failover-secondary-datacenter"
+        description: "Emergency failover routing to Secondary DC (Dublin)"
+        script_path: "/opt/switchr/scripts/switch_traffic.sh"
+        parameters: ["--region", "eu-west-1", "--weight", "100"]
+        timeout_seconds: 90
+
+      - name: "split-50-50-canary"
+        description: "50/50 dual-region traffic distribution for canary testing"
+        script_path: "/opt/switchr/scripts/switch_traffic.sh"
+        parameters: ["--canary", "true", "--split", "50:50"]
+        timeout_seconds: 120
+
+  - id: "svc-cache-daemon"
+    host_id: "unix-db-cache-01"
+    name: "Redis Cache Partition"
+    service_type: "systemd"
+    verification_service_name: "redis-server"
+    current_profile: "write-through-persistent"
+    description: "High-availability in-memory cache and session synchronization"
+    profiles:
+      - name: "write-through-persistent"
+        description: "AOF enabled every second with strict RDB snapshots"
+        script_path: "/usr/local/bin/redis-config-switch.sh"
+        parameters: ["--durability", "strict"]
+        timeout_seconds: 60
+
+      - name: "in-memory-volatile"
+        description: "Persistence disabled for maximum throughput during migration"
+        script_path: "/usr/local/bin/redis-config-switch.sh"
+        parameters: ["--durability", "volatile-lru"]
+        timeout_seconds: 60
