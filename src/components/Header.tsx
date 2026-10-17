@@ -2,8 +2,8 @@ import React from 'react';
 import { Layers, Terminal, ShieldAlert, Cpu } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'fleet' | 'audit' | 'config' | 'deploy';
-  onTabChange: (tab: 'fleet' | 'audit' | 'config' | 'deploy') => void;
+  activeTab: 'fleet' | 'audit' | 'config';
+  onTabChange: (tab: 'fleet' | 'audit' | 'config') => void;
   activeLocksCount: number;
   onSimulateConflict: () => void;
 }
@@ -23,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Layers className="w-5 h-5" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-display text-lg font-bold tracking-tight text-white">switchr</span>
+            <span className="font-display text-lg font-bold tracking-tight text-white">Switchr</span>
             <span className="text-[11px] font-mono text-slate-500">v1.0.0</span>
           </div>
         </div>
@@ -59,16 +59,6 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Configuration YAML
-          </button>
-          <button
-            onClick={() => onTabChange('deploy')}
-            className={`whitespace-nowrap pb-0.5 border-b-2 transition-colors ${
-              activeTab === 'deploy'
-                ? 'border-sky-500 text-white font-semibold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Python & Apache Export
           </button>
         </nav>
 

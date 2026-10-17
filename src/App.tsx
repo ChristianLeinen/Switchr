@@ -7,13 +7,12 @@ import { ConfirmModal } from './components/ConfirmModal';
 import { TerminalDrawer } from './components/TerminalDrawer';
 import { AuditHistoryView } from './components/AuditHistoryView';
 import { ConfigViewer } from './components/ConfigViewer';
-import { DeploymentExportView } from './components/DeploymentExportView';
 import { orchestratorService } from './services/mockOrchestrator';
 import { JobRecord, ManagedService, TargetHost } from './types';
 import { ShieldAlert, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'fleet' | 'audit' | 'config' | 'deploy'>('fleet');
+  const [activeTab, setActiveTab] = useState<'fleet' | 'audit' | 'config'>('fleet');
   const [hosts, setHosts] = useState<TargetHost[]>([]);
   const [services, setServices] = useState<ManagedService[]>([]);
   const [auditHistory, setAuditHistory] = useState<JobRecord[]>([]);
@@ -37,8 +36,32 @@ export default function App() {
     description: string;
   } | null>(null);
 
-  // Sync state from orchestrator
-  const refreshState = () => {
+  // Sync state from API with fallback to orchestratorService
+  const refreshState = async () => {
+    try {
+      const res = await fetch('/api/inventory');
+      if (res.ok) {
+        const data = await res.json();
+        const allServices: ManagedService[] = [];
+        data.hosts.forEach((h: any) => {
+          if (h.services) allServices.push(...h.services);
+        });
+        setHosts(data.hosts);
+        setServices(allServices);
+        setActiveLocksCount(data.active_locks_count ?? 0);
+
+        // Fetch audit history
+        const hRes = await fetch('/api/jobs/history');
+        if (hRes.ok) {
+          const hData = await hRes.json();
+          if (hData.history) setAuditHistory(hData.history);
+        }
+        return;
+      }
+    } catch {
+      // Fallback to local orchestratorService
+    }
+
     setHosts([...orchestratorService.getHosts()]);
     setServices([...orchestratorService.getServices()]);
     setAuditHistory([...orchestratorService.getAuditHistory()]);
@@ -76,6 +99,55 @@ export default function App() {
     setIsModalOpen(false);
 
     try {
+      // Attempt backend API call
+      const res = await fetch('/api/jobs/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host_id: modalHost.id,
+          service_id: modalService.id,
+          profile_name: modalTargetProfile,
+          simulate_failure: modalSimulateFailure,
+        }),
+      });
+
+      if (res.status === 409) {
+        const err = await res.json();
+        showToast(
+          'warning',
+          'Concurrency Lock Conflict (HTTP 409)',
+          err.detail || 'Service is already locked by an active job.'
+        );
+        refreshState();
+        return;
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+        const newJob: JobRecord = {
+          job_id: data.job_id,
+          host_id: modalHost.id,
+          host_name: modalHost.name,
+          os_type: modalHost.os_type,
+          service_id: modalService.id,
+          service_name: modalService.name,
+          target_profile: modalTargetProfile,
+          previous_profile: modalService.current_profile,
+          status: 'RUNNING',
+          started_at: new Date().toISOString(),
+          verification_passed: false,
+          is_simulation: true,
+          logs: [],
+        };
+        refreshState();
+        openSseTerminal(newJob);
+        return;
+      }
+    } catch {
+      // Fallback to local orchestratorService
+    }
+
+    try {
       const job = await orchestratorService.startSwitchJob({
         host_id: modalHost.id,
         service_id: modalService.id,
@@ -98,11 +170,57 @@ export default function App() {
     }
   };
 
+  const openSseTerminal = (job: JobRecord) => {
+    setActiveJob(job);
+    setIsDrawerOpen(true);
+
+    const eventSource = new EventSource(`/api/jobs/${job.job_id}/stream`);
+
+    eventSource.onmessage = (event) => {
+      const text = event.data;
+      if (!text) return;
+      const now = new Date();
+      const timeStr = `${now.toTimeString().split(' ')[0]}.${String(now.getMilliseconds()).padStart(3, '0')}`;
+      
+      let type: any = 'stdout';
+      if (text.includes('[stderr]') || text.includes('[FATAL]') || text.includes('[error]')) type = 'error';
+      else if (text.includes('[✓]')) type = 'success';
+      else if (text.includes('[!]')) type = 'warn';
+      else if (text.includes('[$]') || text.includes('[*]')) type = 'info';
+
+      setActiveJob((prev) => {
+        if (!prev || prev.job_id !== job.job_id) return prev;
+        return {
+          ...prev,
+          logs: [
+            ...prev.logs,
+            { id: Math.random().toString(36).substring(2, 9), timestamp: timeStr, text, type },
+          ],
+        };
+      });
+    };
+
+    eventSource.addEventListener('done', (event: any) => {
+      const finalStatus = event.data || 'SUCCESS';
+      setActiveJob((prev) => (prev ? { ...prev, status: finalStatus as any } : null));
+      eventSource.close();
+      refreshState();
+      if (finalStatus === 'SUCCESS') {
+        showToast('success', 'Configuration Switch Succeeded', `${job.service_name} verified RUNNING.`);
+      } else {
+        showToast('error', 'Job Failed (Fail-Fast)', 'Service probe or transition failed.');
+      }
+    });
+
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
+  };
+
   const openTerminalForJob = (job: JobRecord) => {
     setActiveJob({ ...job, logs: [...job.logs] });
     setIsDrawerOpen(true);
 
-    // Subscribe to live log emissions
     const unsubscribe = orchestratorService.subscribeJobLogs(
       job.job_id,
       (line) => {
@@ -140,10 +258,31 @@ export default function App() {
     const job = orchestratorService.getJob(jobId);
     if (job) {
       openTerminalForJob(job);
+    } else {
+      openSseTerminal({
+        job_id: jobId,
+        host_id: '',
+        host_name: '',
+        os_type: 'windows',
+        service_id: '',
+        service_name: label,
+        target_profile: '',
+        previous_profile: '',
+        status: 'RUNNING',
+        started_at: new Date().toISOString(),
+        verification_passed: false,
+        is_simulation: true,
+        logs: [],
+      });
     }
   };
 
-  const handleAbortJob = (jobId: string) => {
+  const handleAbortJob = async (jobId: string) => {
+    try {
+      await fetch(`/api/jobs/${jobId}/abort`, { method: 'POST' });
+    } catch {
+      // Fallback
+    }
     orchestratorService.abortJob(jobId);
     refreshState();
     showToast('warning', 'Abort Dispatched', `Job ${jobId} cancellation signal sent.`);
@@ -157,6 +296,49 @@ export default function App() {
 
     try {
       // 1. Start first job if not running
+      const res1 = await fetch('/api/jobs/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host_id: finHost.id,
+          service_id: finService.id,
+          profile_name: 'production-balanced',
+        }),
+      });
+
+      if (res1.ok) {
+        const d1 = await res1.json();
+        showToast('warning', 'Job 1 Dispatched', `Acquired lock for (${finHost.id}, ${finService.id})`);
+        refreshState();
+
+        // 2. Immediately attempt concurrent switch on same service to trigger 409 Conflict
+        setTimeout(async () => {
+          const res2 = await fetch('/api/jobs/switch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              host_id: finHost.id,
+              service_id: finService.id,
+              profile_name: 'maintenance-drain',
+            }),
+          });
+
+          if (res2.status === 409) {
+            const err = await res2.json();
+            showToast(
+              'warning',
+              'HTTP 409 Conflict Invariant Verified!',
+              err.detail || `Rejected concurrent switch on (${finHost.id}, ${finService.id}).`
+            );
+          }
+        }, 300);
+        return;
+      }
+    } catch {
+      // Fallback to local
+    }
+
+    try {
       const job1 = await orchestratorService.startSwitchJob({
         host_id: finHost.id,
         service_id: finService.id,
@@ -165,7 +347,6 @@ export default function App() {
       openTerminalForJob(job1);
       refreshState();
 
-      // 2. Immediately attempt concurrent switch on same service to trigger 409 Conflict
       setTimeout(async () => {
         try {
           await orchestratorService.startSwitchJob({
@@ -258,10 +439,6 @@ export default function App() {
 
         {activeTab === 'config' && (
           <ConfigViewer hosts={hosts} services={services} />
-        )}
-
-        {activeTab === 'deploy' && (
-          <DeploymentExportView />
         )}
       </main>
 
