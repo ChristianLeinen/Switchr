@@ -1,349 +1,366 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>switchr — Remote Service Configuration Orchestrator</title>
+  <title>Switchr — Remote Service Configuration Orchestrator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"DM Sans"', 'sans-serif'],
-            display: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            canvas: '#090d16',
-            surface: '#0f172a',
-            surfaceLight: '#1e293b',
-            brand: '#0284c7',
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    body { background-color: #090d16; color: #e2e8f0; }
-    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .terminal-scroll::-webkit-scrollbar { width: 8px; }
+    .terminal-scroll::-webkit-scrollbar-track { background: #111827; }
+    .terminal-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased text-slate-200 bg-[#090d16]">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- Top Bar Contract: 3 zones separated by gap-8 -->
-  <header class="border-b border-slate-800 bg-[#0c1220]/80 backdrop-blur sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
-      <!-- Zone 1: Single brand mark -->
-      <div class="flex items-center gap-3">
-        <a href="#" class="font-display text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          <svg class="w-6 h-6 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-          </svg>
-          switchr
-        </a>
-        <span class="text-xs text-slate-400 font-mono">v1.0.0</span>
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+        ⚡
       </div>
-
-      <!-- Zone 2: Concise Nav Links -->
-      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
-        <button onclick="switchTab('inventory')" id="nav-inventory" class="text-white hover:text-white transition-colors">Managed Services</button>
-        <button onclick="switchTab('audit')" id="nav-audit" class="hover:text-white transition-colors">Audit History</button>
-        <button onclick="switchTab('docs')" id="nav-docs" class="hover:text-white transition-colors">API Docs</button>
-      </nav>
-
-      <!-- Zone 3: Single Primary Action -->
-      <div class="flex items-center gap-4">
-        <span id="dryrun-indicator" class="text-xs font-mono text-amber-400/90 bg-amber-950/40 border border-amber-800/60 px-2 py-0.5 rounded">
-          DRY_RUN=True
-        </span>
-        <button onclick="fetchInventory()" class="text-xs font-medium px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded transition-colors flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          Refresh
-        </button>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-xl font-bold tracking-tight">Switchr</h1>
+          <span class="text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono" id="appVersion">v1.0.0</span>
+        </div>
+        <p class="text-xs text-slate-400">Remote Service Configuration Orchestrator</p>
       </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <span id="locksBadge" class="hidden px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        <span id="locksCount">0</span> ACTIVE LOCKS
+      </span>
+      <span id="dryRunBadge" class="hidden px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        DRY RUN SIMULATION
+      </span>
+      <button onclick="loadInventory()" class="px-3 py-1.5 text-xs font-medium rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+        ↻ Refresh Fleet
+      </button>
     </div>
   </header>
 
-  <!-- Main Viewport -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
-    <!-- Tab 1: Inventory Grid -->
-    <section id="tab-inventory" class="space-y-6">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+    <!-- Active Execution Banner (shown when a job is running) -->
+    <div id="activeJobBanner" class="hidden bg-indigo-950/70 border border-indigo-500/40 rounded-xl p-4 flex items-center justify-between shadow-xl">
+      <div class="flex items-center space-x-4">
+        <span class="relative flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+        </span>
         <div>
-          <h1 class="text-xl font-display font-bold text-white">Target Host Fleet</h1>
-          <p class="text-sm text-slate-400 mt-0.5">Real-time service profiles across agentless Windows and Unix targets</p>
-        </div>
-        <div class="flex items-center gap-3 text-xs text-slate-400">
-          <span id="active-locks-badge" class="font-mono">0 active locks</span>
-          <span aria-hidden="true">·</span>
-          <span id="total-hosts-badge" class="font-mono">0 hosts</span>
+          <div class="text-sm font-semibold text-indigo-200" id="activeJobText">Switching Configuration...</div>
+          <div class="text-xs text-indigo-400" id="activeJobSub">Job ID: <span id="activeJobId" class="font-mono"></span></div>
         </div>
       </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="openTerminalModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-medium transition shadow-md shadow-indigo-600/30">
+          View Live Console
+        </button>
+        <button onclick="abortCurrentJob()" class="px-3 py-1.5 bg-red-600/80 hover:bg-red-500 text-white rounded text-xs font-medium transition">
+          Abort
+        </button>
+      </div>
+    </div>
 
-      <div id="hosts-container" class="space-y-6">
+    <!-- Fleet Grid -->
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-200">Target Fleet & Managed Services</h2>
+          <p class="text-xs text-slate-400">Agentless remote configuration execution across Windows and Linux nodes</p>
+        </div>
+        <span class="text-xs text-slate-400" id="lastUpdated">Updated just now</span>
+      </div>
+
+      <div id="hostsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Rendered dynamically -->
-        <div class="text-slate-500 font-mono text-sm py-8 text-center">Loading orchestrator inventory...</div>
+        <div class="text-slate-500 text-sm italic col-span-full py-8 text-center">Loading target fleet...</div>
       </div>
-    </section>
+    </div>
 
-    <!-- Tab 2: Audit History -->
-    <section id="tab-audit" class="hidden space-y-6">
-      <div class="border-b border-slate-800 pb-4">
-        <h1 class="text-xl font-display font-bold text-white">Audit Execution Logs</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Timestamped records of profile switches, probe results, and exit codes</p>
-      </div>
-
-      <div class="bg-[#0f172a] border border-slate-800 rounded-lg overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-300">
-            <thead class="bg-slate-900/80 text-xs font-mono uppercase tracking-wider text-slate-400 border-b border-slate-800">
-              <tr>
-                <th class="px-4 py-3">Time</th>
-                <th class="px-4 py-3">Job ID</th>
-                <th class="px-4 py-3">Host / Service</th>
-                <th class="px-4 py-3">Target Profile</th>
-                <th class="px-4 py-3">Status</th>
-                <th class="px-4 py-3">Duration</th>
-                <th class="px-4 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody id="audit-table-body" class="divide-y divide-slate-800 font-mono text-xs">
-              <tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">No audit records loaded.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tab 3: API Docs -->
-    <section id="tab-docs" class="hidden space-y-4">
-      <div class="border-b border-slate-800 pb-4">
-        <h1 class="text-xl font-display font-bold text-white">Orchestrator API Reference</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Integrate switchr endpoints into deployment pipelines or webhooks</p>
-      </div>
-      <div class="bg-[#0f172a] border border-slate-800 rounded-lg p-6 font-mono text-xs space-y-4 text-slate-300">
+    <!-- Audit History Section -->
+    <div class="mt-12 pt-8 border-t border-slate-800">
+      <div class="flex items-center justify-between mb-4">
         <div>
-          <span class="text-emerald-400 font-bold">GET</span> /api/inventory
-          <p class="text-slate-400 mt-1">Returns target hosts, services, active/last-known profiles, and lock states.</p>
+          <h3 class="text-base font-semibold text-slate-300">Execution Audit Trail</h3>
+          <p class="text-xs text-slate-500">Immutable operational history and verification logs</p>
         </div>
-        <div class="border-t border-slate-800 pt-3">
-          <span class="text-sky-400 font-bold">POST</span> /api/jobs/switch
-          <p class="text-slate-400 mt-1">Payload: {"host_id": "...", "service_id": "...", "profile_name": "..."}</p>
-          <p class="text-slate-400">Returns 202 Accepted with job_id, or 409 Conflict if service lock is held.</p>
-        </div>
-        <div class="border-t border-slate-800 pt-3">
-          <span class="text-amber-400 font-bold">GET</span> /api/jobs/{id}/stream
-          <p class="text-slate-400 mt-1">Server-Sent Events (SSE) text/event-stream with live stdout/stderr lines.</p>
-        </div>
-        <div class="border-t border-slate-800 pt-3">
-          <span class="text-rose-400 font-bold">POST</span> /api/jobs/{id}/abort
-          <p class="text-slate-400 mt-1">Aborts running job and terminates remote process.</p>
-        </div>
+        <button onclick="loadHistory()" class="text-xs text-indigo-400 hover:underline">Refresh History</button>
       </div>
-    </section>
+      <div class="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/40">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-3">Timestamp</th>
+              <th class="px-4 py-3">Host ID</th>
+              <th class="px-4 py-3">Service ID</th>
+              <th class="px-4 py-3">Target Profile</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Exit Code</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody" class="divide-y divide-slate-800/60">
+            <tr><td colspan="6" class="px-4 py-4 text-center text-slate-500">No past execution logs found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
   </main>
 
-  <!-- Confirmation Switch Modal -->
-  <div id="confirm-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-    <div class="bg-[#0f172a] border border-slate-700 rounded-lg max-w-md w-full p-6 shadow-2xl space-y-5">
-      <div>
-        <h3 class="text-lg font-display font-bold text-white">Confirm Configuration Switch</h3>
-        <p class="text-xs text-slate-400 mt-1">An exclusive lock will be held for this service until execution completes.</p>
-      </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded p-4 text-xs font-mono space-y-2">
-        <div class="flex justify-between">
-          <span class="text-slate-500">Host:</span>
-          <span id="modal-host-name" class="text-slate-200"></span>
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-bold">
+          ⚠️
         </div>
-        <div class="flex justify-between">
-          <span class="text-slate-500">Service:</span>
-          <span id="modal-service-name" class="text-slate-200"></span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-slate-500">Current Profile:</span>
-          <span id="modal-current-profile" class="text-slate-400"></span>
-        </div>
-        <div class="flex justify-between border-t border-slate-800 pt-2">
-          <span class="text-sky-400 font-bold">Target Profile:</span>
-          <span id="modal-target-profile" class="text-white font-bold"></span>
-        </div>
-        <div class="flex justify-between text-slate-500 text-[11px] pt-1">
-          <span>Verification Probe:</span>
-          <span id="modal-verification-name"></span>
+        <div>
+          <h3 class="text-lg font-bold text-slate-100">Confirm Configuration Switch</h3>
+          <p class="text-xs text-slate-400">Review target host and profile specifications</p>
         </div>
       </div>
 
-      <div class="flex justify-end gap-3 pt-2">
-        <button onclick="closeConfirmModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors">
+      <div class="space-y-2 bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs">
+        <div class="flex justify-between py-1 border-b border-slate-900">
+          <span class="text-slate-400">Target Host:</span>
+          <span id="modalHost" class="font-semibold text-slate-200"></span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-900">
+          <span class="text-slate-400">Managed Service:</span>
+          <span id="modalService" class="font-semibold text-slate-200"></span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-900">
+          <span class="text-slate-400">Current Profile:</span>
+          <span id="modalCurrentProfile" class="font-mono text-slate-400"></span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-900">
+          <span class="text-slate-400">Target Profile:</span>
+          <span id="modalTargetProfile" class="font-mono font-bold text-indigo-400"></span>
+        </div>
+        <div class="py-1">
+          <span class="text-slate-400 block mb-1">Target Script:</span>
+          <div id="modalScriptPath" class="font-mono text-[11px] text-slate-300 bg-slate-900 px-2 py-1 rounded break-all"></div>
+        </div>
+      </div>
+
+      <div class="text-xs text-amber-300/90 bg-amber-950/40 border border-amber-500/30 p-3 rounded-lg leading-relaxed">
+        <strong>Execution Warning:</strong> Applying this profile will issue a shutdown signal, execute the transition script, and perform an automatic verification probe to confirm health.
+      </div>
+
+      <div class="flex items-center space-x-2 pt-1">
+        <input type="checkbox" id="modalSimulateFailure" class="rounded bg-slate-950 border-slate-800 text-indigo-600 focus:ring-0">
+        <label for="modalSimulateFailure" class="text-xs text-slate-400 cursor-pointer">Simulate execution failure (dry-run testing)</label>
+      </div>
+
+      <div class="flex justify-end space-x-3 pt-2">
+        <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition">
           Cancel
         </button>
-        <button id="modal-confirm-btn" onclick="executeSwitch()" class="px-4 py-2 text-xs font-medium bg-sky-600 hover:bg-sky-500 text-white rounded transition-colors shadow">
-          Confirm & Execute
+        <button onclick="executeSwitch()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition">
+          Proceed & Execute Switch
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Live Terminal Slide-out Console -->
-  <aside id="terminal-drawer" class="fixed inset-y-0 right-0 w-full md:w-[680px] bg-[#070b14] border-l border-slate-800 z-50 transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
-    <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
-      <div class="flex items-center gap-3">
-        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" id="terminal-indicator"></div>
-        <div>
-          <h2 class="text-sm font-display font-bold text-white flex items-center gap-2">
-            Remote Execution Console
-            <span id="terminal-job-id" class="text-xs font-mono text-slate-400 font-normal"></span>
-          </h2>
-          <div class="text-xs text-slate-500 font-mono mt-0.5" id="terminal-meta">Connecting SSE stream...</div>
+  <!-- Live Terminal Console Modal -->
+  <div id="terminalModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-gray-950 border border-gray-800 rounded-xl max-w-4xl w-full h-[600px] flex flex-col shadow-2xl">
+      <!-- Terminal Header -->
+      <div class="px-4 py-3 bg-gray-900 border-b border-gray-800 flex items-center justify-between rounded-t-xl">
+        <div class="flex items-center space-x-2">
+          <span class="w-3 h-3 rounded-full bg-red-500"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500"></span>
+          <span class="ml-2 font-mono text-xs text-gray-300 font-semibold" id="terminalTitle">Switch Job Console</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="terminalAbortBtn" onclick="abortCurrentJob()" class="px-2.5 py-1 bg-red-600/80 hover:bg-red-500 text-white rounded text-xs transition">
+            Abort
+          </button>
+          <button onclick="closeTerminalModal()" class="px-2.5 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-xs transition">
+            Close
+          </button>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <button id="abort-btn" onclick="abortActiveJob()" class="text-xs font-mono px-3 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 rounded transition-colors flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          Abort Job
-        </button>
-        <button onclick="closeTerminalDrawer()" class="text-slate-400 hover:text-white p-1">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
+      <!-- Terminal Output Area -->
+      <div id="terminalLogs" class="terminal-scroll flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1 bg-black text-gray-200">
+        <!-- Log lines streamed here -->
+      </div>
+      <!-- Terminal Footer Status -->
+      <div class="px-4 py-2.5 bg-gray-900/90 border-t border-gray-800 text-xs flex justify-between items-center text-gray-400">
+        <div id="terminalStatusText">Streaming from server...</div>
+        <button onclick="clearTerminalLogs()" class="hover:text-gray-200 text-[11px]">Clear Console</button>
       </div>
     </div>
-
-    <!-- Monospace Terminal Stream Window -->
-    <div id="terminal-logs" class="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1 select-text bg-[#070b14] text-slate-300">
-      <div class="text-slate-600">// Waiting for stream payload from /api/jobs/{id}/stream ...</div>
-    </div>
-
-    <!-- Terminal Footer Status Bar -->
-    <div class="p-3 border-t border-slate-800 bg-slate-900/40 flex items-center justify-between text-xs font-mono text-slate-400">
-      <span id="terminal-status-text">Status: RUNNING</span>
-      <span id="terminal-line-count">0 lines</span>
-    </div>
-  </aside>
+  </div>
 
   <script>
-    let inventoryData = null;
+    let fleetInventory = null;
     let pendingSwitch = null;
-    let activeJobId = null;
-    let activeEventSource = null;
+    let currentJobId = null;
+    let currentEventSource = null;
 
-    async function fetchInventory() {
+    async function loadInventory() {
       try {
         const res = await fetch('/api/inventory');
-        if (!res.ok) throw new Error('API request failed');
-        inventoryData = await res.json();
-        renderInventory();
-        document.getElementById('dryrun-indicator').innerText = `DRY_RUN=${inventoryData.dry_run ? 'True' : 'False'}`;
+        fleetInventory = await res.json();
+
+        if (fleetInventory.app_version) {
+          document.getElementById('appVersion').innerText = `v${fleetInventory.app_version}`;
+        }
+
+        if (fleetInventory.dry_run) {
+          document.getElementById('dryRunBadge').classList.remove('hidden');
+        } else {
+          document.getElementById('dryRunBadge').classList.add('hidden');
+        }
+
+        const locksBadge = document.getElementById('locksBadge');
+        if (fleetInventory.active_locks_count > 0) {
+          document.getElementById('locksCount').innerText = fleetInventory.active_locks_count;
+          locksBadge.classList.remove('hidden');
+        } else {
+          locksBadge.classList.add('hidden');
+        }
+
+        renderGrid(fleetInventory.hosts || []);
+        document.getElementById('lastUpdated').innerText = `Updated at ${new Date().toLocaleTimeString()}`;
       } catch (err) {
         console.error("Failed to load inventory:", err);
       }
     }
 
-    function renderInventory() {
-      const container = document.getElementById('hosts-container');
-      if (!inventoryData || !inventoryData.hosts) return;
+    function renderGrid(hosts) {
+      const container = document.getElementById('hostsGrid');
+      container.innerHTML = '';
 
-      document.getElementById('total-hosts-badge').innerText = `${inventoryData.hosts.length} hosts`;
-      document.getElementById('active-locks-badge').innerText = `${inventoryData.active_locks_count} active locks`;
+      if (!hosts || hosts.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-12">No target hosts configured in inventory.</div>`;
+        return;
+      }
 
-      container.innerHTML = inventoryData.hosts.map(host => {
-        const isWin = host.os_type === 'windows';
-        return `
-          <div class="bg-[#0f172a] border border-slate-800 rounded-lg p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div class="flex items-center gap-3">
-                <span class="text-xs font-mono px-2 py-0.5 rounded ${isWin ? 'bg-blue-950 text-blue-300 border border-blue-800' : 'bg-orange-950 text-orange-300 border border-orange-800'}">
-                  ${isWin ? 'WINDOWS (WinRM)' : 'UNIX (SSH)'}
-                </span>
-                <h2 class="text-base font-display font-bold text-white">${host.name}</h2>
-                <span class="text-xs font-mono text-slate-400">${host.hostname}:${host.port}</span>
+      hosts.forEach(host => {
+        const isWin = (host.os_type || host.os || '').toLowerCase() === 'windows';
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between shadow-lg hover:border-slate-700 transition";
+
+        let servicesHtml = '';
+        const servicesList = Array.isArray(host.services) 
+          ? host.services 
+          : Object.entries(host.services || {}).map(([k, v]) => ({ id: k, ...v }));
+
+        servicesList.forEach(svc => {
+          const isLocked = svc.is_locked || svc.status === 'TRANSITIONING' || svc.status === 'Locked';
+          const profiles = svc.profiles || [];
+          
+          let optionsHtml = '';
+          profiles.forEach(p => {
+            const isSelected = p.name === svc.current_profile ? 'selected' : '';
+            optionsHtml += `<option value="${p.name}" ${isSelected}>${p.name}</option>`;
+          });
+
+          const statusBadge = isLocked
+            ? '<span class="text-[10px] px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30">🔒 LOCKED</span>'
+            : '<span class="text-[10px] px-2 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">● RUNNING</span>';
+
+          const serviceTypeBadge = svc.service_type === 'windows_service' 
+            ? 'Windows Service' 
+            : svc.service_type === 'systemd' ? 'Systemd Daemon' : 'Process';
+
+          servicesHtml += `
+            <div class="mt-4 pt-4 border-t border-slate-800/80">
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-sm font-semibold text-slate-100">${svc.name}</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded font-mono bg-slate-800 text-slate-400">${svc.id}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">${svc.description || ''}</div>
+                </div>
+                ${statusBadge}
               </div>
-              <span class="text-xs text-slate-500">${host.services.length} services managed</span>
-            </div>
 
-            <div class="grid grid-cols-1 gap-3">
-              ${host.services.map(svc => renderServiceCard(host, svc)).join('')}
+              <div class="flex items-center space-x-2 mt-2">
+                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-700/50">${serviceTypeBadge}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono">
+                  Active: <strong>${svc.current_profile || 'N/A'}</strong>
+                </span>
+              </div>
+
+              <div class="flex items-center space-x-2 mt-3">
+                <select id="sel_${host.id}_${svc.id}" class="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono" ${isLocked ? 'disabled' : ''}>
+                  ${optionsHtml}
+                </select>
+                <button onclick="promptSwitch('${host.id}', '${svc.id}')" class="px-3.5 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-semibold shadow transition" ${isLocked ? 'disabled' : ''}>
+                  Switch
+                </button>
+              </div>
             </div>
+          `;
+        });
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-bold text-base text-slate-100">${host.name}</span>
+                <span class="ml-2 font-mono text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">${host.id}</span>
+              </div>
+              <span class="text-xs px-2.5 py-0.5 rounded font-medium ${isWin ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'}">
+                ${isWin ? 'Windows' : 'Unix'}
+              </span>
+            </div>
+            <div class="text-xs text-slate-400 mt-1 font-mono">${host.hostname}:${host.port}</div>
+            <div class="text-xs text-slate-500 mt-1">${host.description || ''}</div>
+            ${servicesHtml}
           </div>
         `;
-      }).join('');
+
+        container.appendChild(card);
+      });
     }
 
-    function renderServiceCard(host, svc) {
-      const isLocked = svc.is_locked;
-      const statusColor = isLocked ? 'text-amber-400' : 'text-emerald-400';
-      const statusText = isLocked ? 'TRANSITIONING (LOCKED)' : 'RUNNING';
+    function promptSwitch(hostId, serviceId) {
+      const host = fleetInventory.hosts.find(h => h.id === hostId);
+      if (!host) return;
+      const svc = host.services.find(s => s.id === serviceId);
+      if (!svc) return;
 
-      const options = svc.profiles.map(p => `
-        <option value="${p.name}" ${p.name === svc.current_profile ? 'selected' : ''}>
-          ${p.name} (${p.timeout_seconds}s)
-        </option>
-      `).join('');
+      const select = document.getElementById(`sel_${hostId}_${serviceId}`);
+      const targetProfileName = select.value;
+      const targetProfile = svc.profiles.find(p => p.name === targetProfileName);
 
-      return `
-        <div class="bg-slate-900/80 border border-slate-800/80 rounded p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-sm font-semibold text-slate-100">${svc.name}</span>
-              <span class="text-xs font-mono ${statusColor}">${statusText}</span>
-            </div>
-            <div class="text-xs text-slate-400 font-mono">
-              Active Profile: <span class="text-sky-300">${svc.current_profile}</span>
-              <span class="text-slate-600"> · </span>
-              Probe: <span class="text-slate-400">${svc.verification_service_name}</span>
-            </div>
-            <p class="text-xs text-slate-500">${svc.description}</p>
-          </div>
+      pendingSwitch = {
+        hostId,
+        serviceId,
+        targetProfileName,
+        scriptPath: targetProfile ? targetProfile.script_path : ''
+      };
 
-          <div class="flex items-center gap-3 shrink-0">
-            <select id="select-${svc.id}" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 font-mono focus:outline-none focus:border-sky-500">
-              ${options}
-            </select>
-            <button 
-              onclick="promptSwitch('${host.id}', '${svc.id}', '${host.name}', '${svc.name}', '${svc.current_profile}', '${svc.verification_service_name}')"
-              ${isLocked ? 'disabled' : ''}
-              class="px-3 py-1.5 text-xs font-medium ${isLocked ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-500 text-white'} rounded transition-colors whitespace-nowrap">
-              ${isLocked ? 'Locked' : 'Switch Configuration'}
-            </button>
-            ${isLocked && svc.active_job_id ? `
-              <button onclick="openLiveStream('${svc.active_job_id}', '${svc.name}')" class="px-2 py-1.5 text-xs font-mono text-sky-400 hover:text-sky-300">
-                View Log
-              </button>
-            ` : ''}
-          </div>
-        </div>
-      `;
-    }
+      document.getElementById('modalHost').innerText = `${host.name} (${host.id})`;
+      document.getElementById('modalService').innerText = `${svc.name} (${svc.id})`;
+      document.getElementById('modalCurrentProfile').innerText = svc.current_profile || 'None';
+      document.getElementById('modalTargetProfile').innerText = targetProfileName;
+      document.getElementById('modalScriptPath').innerText = targetProfile ? targetProfile.script_path : 'N/A';
+      document.getElementById('modalSimulateFailure').checked = false;
 
-    function promptSwitch(hostId, serviceId, hostName, serviceName, currentProfile, probeName) {
-      const selectEl = document.getElementById(`select-${serviceId}`);
-      const targetProfile = selectEl.value;
-
-      pendingSwitch = { hostId, serviceId, targetProfile };
-      document.getElementById('modal-host-name').innerText = hostName;
-      document.getElementById('modal-service-name').innerText = serviceName;
-      document.getElementById('modal-current-profile').innerText = currentProfile;
-      document.getElementById('modal-target-profile').innerText = targetProfile;
-      document.getElementById('modal-verification-name').innerText = probeName;
-
-      document.getElementById('confirm-modal').classList.remove('hidden');
+      document.getElementById('confirmModal').classList.remove('hidden');
     }
 
     function closeConfirmModal() {
-      document.getElementById('confirm-modal').classList.add('hidden');
+      document.getElementById('confirmModal').classList.add('hidden');
       pendingSwitch = null;
     }
 
     async function executeSwitch() {
       if (!pendingSwitch) return;
-      const { hostId, serviceId, targetProfile } = pendingSwitch;
+      const { hostId, serviceId, targetProfileName } = pendingSwitch;
+      const simulateFailure = document.getElementById('modalSimulateFailure').checked;
       closeConfirmModal();
 
       try {
@@ -353,154 +370,173 @@
           body: JSON.stringify({
             host_id: hostId,
             service_id: serviceId,
-            profile_name: targetProfile
+            profile_name: targetProfileName,
+            simulate_failure: simulateFailure
           })
         });
 
         if (res.status === 409) {
           const err = await res.json();
-          alert(`Lock Conflict (409): ${err.detail}`);
-          fetchInventory();
+          alert(`Concurrency Conflict (HTTP 409): ${err.error}`);
           return;
         }
 
         if (!res.ok) {
           const err = await res.json();
-          alert(`Error: ${err.detail || 'Failed to dispatch switch job'}`);
+          alert(`Failed to start job: ${err.error || res.statusText}`);
           return;
         }
 
         const data = await res.json();
-        activeJobId = data.job_id;
-        openLiveStream(data.job_id, `${serviceId} -> ${targetProfile}`);
-        fetchInventory();
-      } catch (e) {
-        alert(`Request failed: ${e.message}`);
+        currentJobId = data.job_id || data.jobId;
+
+        // Show banner and open terminal
+        showActiveBanner(currentJobId, `${hostId} / ${serviceId} -> ${targetProfileName}`);
+        openTerminalModal();
+        startStreaming(currentJobId);
+        loadInventory();
+      } catch (err) {
+        console.error("Execution trigger failed:", err);
+        alert(`Error triggering switch: ${err.message}`);
       }
     }
 
-    function openLiveStream(jobId, label) {
-      activeJobId = jobId;
-      const drawer = document.getElementById('terminal-drawer');
-      const logsContainer = document.getElementById('terminal-logs');
-      drawer.classList.remove('translate-x-full');
-
-      document.getElementById('terminal-job-id').innerText = `[${jobId}]`;
-      document.getElementById('terminal-meta').innerText = label;
-      document.getElementById('terminal-status-text').innerText = 'Status: CONNECTING';
-      logsContainer.innerHTML = '';
-
-      if (activeEventSource) {
-        activeEventSource.close();
+    function startStreaming(jobId) {
+      if (currentEventSource) {
+        currentEventSource.close();
       }
 
-      let lineCount = 0;
-      activeEventSource = new EventSource(`/api/jobs/${jobId}/stream`);
+      const logsContainer = document.getElementById('terminalLogs');
+      logsContainer.innerHTML = '';
+      document.getElementById('terminalTitle').innerText = `Job ${jobId} — Real-Time Log Stream`;
+      document.getElementById('terminalStatusText').innerText = "Connecting to SSE stream...";
 
-      activeEventSource.onmessage = (event) => {
-        lineCount++;
-        document.getElementById('terminal-line-count').innerText = `${lineCount} lines`;
+      currentEventSource = new EventSource(`/api/jobs/${jobId}/stream`);
 
-        const div = document.createElement('div');
-        div.className = 'py-0.5 leading-relaxed';
-
-        const text = event.data;
-        if (text.includes('[stdout]')) {
-          div.className += ' text-slate-300';
-        } else if (text.includes('[stderr]') || text.includes('[error]') || text.includes('[FATAL]')) {
-          div.className += ' text-rose-400 font-bold';
-        } else if (text.includes('[✓]')) {
-          div.className += ' text-emerald-400';
-        } else if (text.includes('[!]')) {
-          div.className += ' text-amber-400';
-        } else {
-          div.className += ' text-sky-400';
-        }
-
-        div.textContent = text;
-        logsContainer.appendChild(div);
-        logsContainer.scrollTop = logsContainer.scrollHeight;
-        document.getElementById('terminal-status-text').innerText = 'Status: RUNNING';
+      currentEventSource.onmessage = (event) => {
+        appendLog(event.data);
       };
 
-      activeEventSource.addEventListener('done', (event) => {
-        const finalStatus = event.data;
-        document.getElementById('terminal-status-text').innerText = `Status: ${finalStatus}`;
-        document.getElementById('terminal-indicator').className = 
-          finalStatus === 'SUCCESS' ? 'w-2.5 h-2.5 rounded-full bg-emerald-500' : 'w-2.5 h-2.5 rounded-full bg-rose-500';
-        activeEventSource.close();
-        fetchInventory();
+      currentEventSource.addEventListener('done', () => {
+        appendLog("[SYSTEM] Stream completed.");
+        document.getElementById('terminalStatusText').innerText = "Execution completed.";
+        currentEventSource.close();
+        currentEventSource = null;
+        hideActiveBanner();
+        loadInventory();
+        loadHistory();
       });
 
-      activeEventSource.onerror = () => {
-        document.getElementById('terminal-status-text').innerText = 'Status: STREAM CLOSED';
+      currentEventSource.onerror = (err) => {
+        document.getElementById('terminalStatusText').innerText = "Stream closed or finished.";
+        if (currentEventSource) {
+          currentEventSource.close();
+          currentEventSource = null;
+        }
+        hideActiveBanner();
+        loadInventory();
+        loadHistory();
       };
     }
 
-    async function abortActiveJob() {
-      if (!activeJobId) return;
-      if (!confirm(`Are you sure you want to abort job ${activeJobId}?`)) return;
+    function appendLog(line) {
+      const container = document.getElementById('terminalLogs');
+      const div = document.createElement('div');
+
+      if (line.includes('[ERROR]') || line.includes('[STDERR]')) {
+        div.className = "text-red-400";
+      } else if (line.includes('[SUCCESS]')) {
+        div.className = "text-emerald-400 font-semibold";
+      } else if (line.includes('[EXEC]') || line.includes('[PROBE]')) {
+        div.className = "text-sky-300";
+      } else if (line.includes('[INFO]')) {
+        div.className = "text-gray-400";
+      } else {
+        div.className = "text-gray-200";
+      }
+
+      div.innerText = line;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showActiveBanner(jobId, desc) {
+      document.getElementById('activeJobId').innerText = jobId;
+      document.getElementById('activeJobText').innerText = desc;
+      document.getElementById('activeJobBanner').classList.remove('hidden');
+    }
+
+    function hideActiveBanner() {
+      document.getElementById('activeJobBanner').classList.add('hidden');
+    }
+
+    async function abortCurrentJob() {
+      if (!currentJobId) return;
+      if (!confirm("Are you sure you want to abort this running job?")) return;
 
       try {
-        await fetch(`/api/jobs/${activeJobId}/abort`, { method: 'POST' });
+        await fetch(`/api/jobs/${currentJobId}/abort`, { method: 'POST' });
+        appendLog("[SYSTEM] Abort signal sent to server.");
       } catch (err) {
-        console.error("Failed to abort:", err);
+        console.error("Abort error:", err);
       }
     }
 
-    function closeTerminalDrawer() {
-      document.getElementById('terminal-drawer').classList.add('translate-x-full');
-      if (activeEventSource) {
-        activeEventSource.close();
-        activeEventSource = null;
-      }
+    function openTerminalModal() {
+      document.getElementById('terminalModal').classList.remove('hidden');
     }
 
-    async function fetchAuditHistory() {
+    function closeTerminalModal() {
+      document.getElementById('terminalModal').classList.add('hidden');
+    }
+
+    function clearTerminalLogs() {
+      document.getElementById('terminalLogs').innerHTML = '';
+    }
+
+    async function loadHistory() {
       try {
         const res = await fetch('/api/jobs/history');
-        if (!res.ok) return;
-        const data = await res.json();
-        const tbody = document.getElementById('audit-table-body');
-        if (!data.history || data.history.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">No past execution logs found.</td></tr>';
+        const history = await res.json();
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '';
+
+        if (!history || history.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center text-slate-500">No past execution logs found.</td></tr>`;
           return;
         }
 
-        tbody.innerHTML = data.history.map(item => `
-          <tr class="hover:bg-slate-800/50">
-            <td class="px-4 py-3 text-slate-400">${item.started_at.slice(11, 19)}</td>
-            <td class="px-4 py-3 text-sky-400">${item.job_id}</td>
-            <td class="px-4 py-3 text-slate-200">${item.host_name} / ${item.service_name}</td>
-            <td class="px-4 py-3 text-slate-300">${item.target_profile}</td>
-            <td class="px-4 py-3 ${item.status === 'SUCCESS' ? 'text-emerald-400' : 'text-rose-400'}">${item.status}</td>
-            <td class="px-4 py-3 text-slate-400">${item.duration_seconds ? item.duration_seconds.toFixed(1) + 's' : '-'}</td>
-            <td class="px-4 py-3 text-right">
-              <button onclick="openLiveStream('${item.job_id}', '${item.service_name}')" class="text-sky-400 hover:underline">View Log</button>
-            </td>
-          </tr>
-        `).join('');
-      } catch (e) {
-        console.error(e);
+        history.forEach(item => {
+          const row = document.createElement('tr');
+          const isSuccess = item.status === 'Succeeded' || item.status === 'SUCCESS';
+          const isRunning = item.status === 'Running' || item.status === 'RUNNING';
+          const badgeClass = isSuccess ? 'text-emerald-400' : isRunning ? 'text-indigo-400' : 'text-red-400';
+
+          const startTime = item.start_time || item.startTime;
+          const hostId = item.host_id || item.hostId;
+          const serviceId = item.service_id || item.serviceId;
+          const profileName = item.profile_name || item.profileName;
+          const exitCode = item.exit_code !== undefined ? item.exit_code : (item.exitCode !== undefined ? item.exitCode : '-');
+
+          row.innerHTML = `
+            <td class="px-4 py-3 font-mono text-slate-400">${startTime ? new Date(startTime).toLocaleString() : '-'}</td>
+            <td class="px-4 py-3 font-semibold text-slate-200">${hostId}</td>
+            <td class="px-4 py-3">${serviceId}</td>
+            <td class="px-4 py-3 font-mono text-indigo-300 font-bold">${profileName}</td>
+            <td class="px-4 py-3 font-bold ${badgeClass}">● ${item.status}</td>
+            <td class="px-4 py-3 font-mono">${exitCode !== null ? exitCode : '-'}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Failed to load history:", err);
       }
     }
 
-    function switchTab(tab) {
-      ['inventory', 'audit', 'docs'].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.add('hidden');
-        document.getElementById(`nav-${t}`).classList.remove('text-white');
-        document.getElementById(`nav-${t}`).classList.add('text-slate-400');
-      });
-      document.getElementById(`tab-${tab}`).classList.remove('hidden');
-      document.getElementById(`nav-${tab}`).classList.add('text-white');
-      document.getElementById(`nav-${tab}`).classList.remove('text-slate-400');
-
-      if (tab === 'audit') fetchAuditHistory();
-    }
-
-    // Auto-refresh inventory every 5 seconds
-    fetchInventory();
-    setInterval(fetchInventory, 5000);
+    // Initialize
+    loadInventory();
+    loadHistory();
+    setInterval(loadInventory, 10000); // 10s fleet poll
   </script>
 </body>
 </html>
