@@ -11,8 +11,9 @@ import {
   RotateCw,
   Sliders,
   Flame,
+  FileText,
 } from 'lucide-react';
-import { ManagedService, OSType, TargetHost } from '../types';
+import { getEffectiveScripts, ManagedService, OSType, TargetHost } from '../types';
 
 interface FleetViewProps {
   hosts: TargetHost[];
@@ -67,7 +68,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
         <div>
           <h1 className="text-xl font-display font-bold text-white tracking-tight">Managed Target Fleet</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Agentless profile orchestrator dispatching *.bat via WinRM and *.sh via SSH with strict concurrency locks.
+            Serial multi-script execution pipelines with dynamic active profile resolution and strict concurrency locks.
           </p>
         </div>
 
@@ -198,9 +199,10 @@ export const FleetView: React.FC<FleetViewProps> = ({
                 <div className="divide-y divide-slate-800/60">
                   {hostServices.map((service) => {
                     const isLocked = service.is_locked;
-                    const selectedProfile = selectedProfiles[service.id] || service.current_profile;
+                    // If current_profile is null and user hasn't selected anything, leave selectedProfile as empty
+                    const selectedProfile = selectedProfiles[service.id] ?? (service.current_profile || '');
                     const isFailureSimulated = Boolean(simulateFailures[service.id]);
-                    const isDifferentProfile = selectedProfile !== service.current_profile;
+                    const isDifferentProfile = selectedProfile !== '' && selectedProfile !== service.current_profile;
 
                     return (
                       <div
@@ -236,9 +238,26 @@ export const FleetView: React.FC<FleetViewProps> = ({
 
                             {/* Service Metadata (Zero-Pill) */}
                             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 font-mono">
-                              <span>Active: <strong className="text-sky-300 font-normal">{service.current_profile}</strong></span>
+                              <span>
+                                Active:{' '}
+                                {service.current_profile ? (
+                                  <strong className="text-sky-300 font-normal">{service.current_profile}</strong>
+                                ) : (
+                                  <strong className="text-slate-500 font-normal">None</strong>
+                                )}
+                              </span>
                               <span aria-hidden="true">·</span>
-                              <span>Verification Probe: <span className="text-slate-300">{service.verification_service_name}</span></span>
+                              <span>
+                                Probe: <span className="text-slate-300">{service.verification_service_name}</span>
+                              </span>
+                              {service.active_profile_path && (
+                                <>
+                                  <span aria-hidden="true">·</span>
+                                  <span className="text-slate-500" title={service.active_profile_path}>
+                                    Profile File: {service.active_profile_path.split('\\').pop()?.split('/').pop()}
+                                  </span>
+                                </>
+                              )}
                               <span aria-hidden="true">·</span>
                               <span className="text-slate-500">{service.service_type}</span>
                             </div>
@@ -257,16 +276,30 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                 className={`text-xs font-mono px-3 py-2 bg-slate-900 border rounded-md text-slate-200 focus:outline-none focus:border-sky-500 transition-colors ${
                                   isLocked
                                     ? 'border-slate-800 text-slate-600 cursor-not-allowed'
+                                    : !selectedProfile
+                                    ? 'border-amber-600/70 text-amber-300'
                                     : isDifferentProfile
                                     ? 'border-sky-500/80 text-sky-200'
                                     : 'border-slate-700 text-slate-300'
                                 }`}
                               >
-                                {service.profiles.map((p) => (
-                                  <option key={p.name} value={p.name}>
-                                    {p.name} ({p.timeout_seconds}s)
+                                {!service.current_profile && (
+                                  <option value="" disabled>
+                                    -- Select profile to apply --
                                   </option>
-                                ))}
+                                )}
+                                {service.profiles.map((p) => {
+                                  const steps = getEffectiveScripts(p);
+                                  const totalTimeout = steps.reduce(
+                                    (sum, s) => sum + (s.timeout_seconds || 60),
+                                    0
+                                  );
+                                  return (
+                                    <option key={p.name} value={p.name}>
+                                      {p.name} ({steps.length} {steps.length === 1 ? 'step' : 'steps'}, {totalTimeout}s)
+                                    </option>
+                                  );
+                                })}
                               </select>
                             </div>
 
@@ -287,10 +320,13 @@ export const FleetView: React.FC<FleetViewProps> = ({
 
                             {/* Switch Action Button */}
                             <button
-                              onClick={() => onInitiateSwitch(host, service, selectedProfile, isFailureSimulated)}
-                              disabled={isLocked}
+                              onClick={() => {
+                                if (!selectedProfile) return;
+                                onInitiateSwitch(host, service, selectedProfile, isFailureSimulated);
+                              }}
+                              disabled={isLocked || !selectedProfile}
                               className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap ${
-                                isLocked
+                                isLocked || !selectedProfile
                                   ? 'bg-slate-800 text-slate-600 border border-slate-800 cursor-not-allowed'
                                   : isDifferentProfile
                                   ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-sm'

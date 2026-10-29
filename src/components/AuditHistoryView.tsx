@@ -159,7 +159,7 @@ export const AuditHistoryView: React.FC<AuditHistoryViewProps> = ({
                         {rec.service_name}
                       </td>
                       <td className="px-4 py-3 text-slate-300">
-                        <span className="text-slate-500">{rec.previous_profile} &rarr; </span>
+                        <span className="text-slate-500">{rec.previous_profile || 'None'} &rarr; </span>
                         <span className="text-sky-300 font-bold">{rec.target_profile}</span>
                       </td>
                       <td className="px-4 py-3">

@@ -22,12 +22,22 @@ export interface TargetHost {
   description: string;
 }
 
-export interface ConfigProfile {
+export interface ScriptStepConfig {
   name: string;
-  description: string;
   script_path: string;
   parameters: string[];
   timeout_seconds: number;
+}
+
+export interface ConfigProfile {
+  name: string;
+  description: string;
+  // Legacy single-script fields
+  script_path?: string;
+  parameters?: string[];
+  timeout_seconds?: number;
+  // Multi-script sequential pipeline
+  scripts?: ScriptStepConfig[];
 }
 
 export interface ManagedService {
@@ -36,7 +46,8 @@ export interface ManagedService {
   name: string;
   service_type: 'windows_service' | 'systemd' | 'generic_process';
   verification_service_name: string;
-  current_profile: string;
+  active_profile_path?: string | null;
+  current_profile: string | null; // Null if file not found, empty, or uninitialized
   description: string;
   status: ServiceStatus;
   is_locked: boolean;
@@ -59,7 +70,7 @@ export interface JobRecord {
   service_id: string;
   service_name: string;
   target_profile: string;
-  previous_profile: string;
+  previous_profile: string | null;
   status: JobStatus;
   exit_code?: number;
   started_at: string;
@@ -76,4 +87,25 @@ export interface SwitchRequestPayload {
   service_id: string;
   profile_name: string;
   simulate_failure?: boolean;
+}
+
+/**
+ * Helper returning the list of executable script steps for a profile,
+ * supporting both multi-script `scripts: [...]` and legacy single-script fallback.
+ */
+export function getEffectiveScripts(profile: ConfigProfile): ScriptStepConfig[] {
+  if (profile.scripts && profile.scripts.length > 0) {
+    return profile.scripts;
+  }
+  if (profile.script_path) {
+    return [
+      {
+        name: 'Execute profile script',
+        script_path: profile.script_path,
+        parameters: profile.parameters || [],
+        timeout_seconds: profile.timeout_seconds || 300,
+      },
+    ];
+  }
+  return [];
 }

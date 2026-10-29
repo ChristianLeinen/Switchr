@@ -12,6 +12,7 @@
  */
 
 import express, { Request, Response } from 'express';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,12 +33,20 @@ if (!fs.existsSync(LOGS_DIR)) {
 // -----------------------------------------------------------------------------
 // Load Declarative Configuration
 // -----------------------------------------------------------------------------
-interface ConfigProfile {
+interface ScriptStepConfig {
   name: string;
-  description: string;
   script_path: string;
   parameters: string[];
   timeout_seconds: number;
+}
+
+interface ConfigProfile {
+  name: string;
+  description: string;
+  script_path?: string;
+  parameters?: string[];
+  timeout_seconds?: number;
+  scripts?: ScriptStepConfig[];
 }
 
 interface ServiceConfig {
@@ -46,7 +55,8 @@ interface ServiceConfig {
   name: string;
   service_type: string;
   verification_service_name: string;
-  current_profile: string;
+  active_profile_path?: string;
+  current_profile?: string | null;
   description: string;
   profiles: ConfigProfile[];
 }
@@ -79,12 +89,50 @@ interface AppConfig {
   services: ServiceConfig[];
 }
 
+function getEffectiveScripts(profile: ConfigProfile): ScriptStepConfig[] {
+  if (profile.scripts && profile.scripts.length > 0) {
+    return profile.scripts;
+  }
+  if (profile.script_path) {
+    return [
+      {
+        name: 'Execute profile script',
+        script_path: profile.script_path,
+        parameters: profile.parameters || [],
+        timeout_seconds: profile.timeout_seconds || 300,
+      },
+    ];
+  }
+  return [];
+}
+
 function loadConfig(): AppConfig {
   if (!fs.existsSync(CONFIG_PATH)) {
     throw new Error(`Configuration file not found at ${CONFIG_PATH}`);
   }
   const raw = fs.readFileSync(CONFIG_PATH, 'utf-8');
-  return YAML.parse(raw) as AppConfig;
+  const parsed = YAML.parse(raw) as AppConfig;
+
+  // Initialize active profiles by attempting to read active_profile_path if available
+  parsed.services.forEach((svc) => {
+    if (svc.active_profile_path && fs.existsSync(svc.active_profile_path)) {
+      try {
+        const content = fs.readFileSync(svc.active_profile_path, 'utf-8').trim();
+        svc.current_profile = content.length > 0 ? content : null;
+      } catch {
+        svc.current_profile = null;
+      }
+    } else {
+      // If file not on local disk (simulated remote file), keep existing or set null
+      // For demo realism, if fin-router or edge-proxy has active_profile_path, assign standard profile
+      if (svc.id === 'svc-fin-router') svc.current_profile = 'production-high-throughput';
+      else if (svc.id === 'svc-edge-proxy') svc.current_profile = 'active-primary-datacenter';
+      else if (svc.id === 'svc-cache-daemon') svc.current_profile = 'write-through-persistent';
+      else svc.current_profile = null; // e.g. svc-win-batch uninitialized
+    }
+  });
+
+  return parsed;
 }
 
 let appConfig = loadConfig();
@@ -107,7 +155,7 @@ interface JobRecord {
   service_id: string;
   service_name: string;
   target_profile: string;
-  previous_profile: string;
+  previous_profile: string | null;
   status: 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'ABORTED' | 'TIMED_OUT';
   exit_code?: number;
   started_at: string;
@@ -136,7 +184,6 @@ if (fs.existsSync(auditHistoryPath)) {
 }
 
 function saveAuditRecord(job: JobRecord) {
-  // Write individual log file
   const jobLogPath = path.join(LOGS_DIR, `${job.job_id}_${job.service_id}.log`);
   const logContent = [
     `SWITCHR JOB EXECUTION AUDIT LOG`,
@@ -145,6 +192,7 @@ function saveAuditRecord(job: JobRecord) {
     `Host: ${job.host_name} (${job.host_id})`,
     `Service: ${job.service_name} (${job.service_id})`,
     `Target Profile: ${job.target_profile}`,
+    `Previous Profile: ${job.previous_profile || 'None'}`,
     `Status: ${job.status}`,
     `Exit Code: ${job.exit_code ?? 'N/A'}`,
     `Duration: ${job.duration_seconds ?? 'N/A'}s`,
@@ -159,7 +207,6 @@ function saveAuditRecord(job: JobRecord) {
     console.error(`Failed to write job log:`, err);
   }
 
-  // Prepend to audit history and persist
   auditHistory.unshift(job);
   if (auditHistory.length > 200) auditHistory.length = 200;
   try {
@@ -197,71 +244,64 @@ async function runAsyncJob(
   const start = performance.now();
   const isWindows = host.os_type === 'windows';
   const proto = isWindows ? 'WinRM (WS-Management 5985)' : 'SSH (Port 22)';
+  const scripts = getEffectiveScripts(profile);
 
   broadcastLog(job, `============================================================`, 'info');
   broadcastLog(job, `SWITCHR ORCHESTRATOR - PROFILE TRANSITION INITIATED`, 'info');
-  broadcastLog(job, `Job ID: ${job.job_id} | Mode: DRY_RUN Simulation`, 'info');
+  broadcastLog(job, `Job ID: ${job.job_id} | Pipeline Steps: ${scripts.length}`, 'info');
   broadcastLog(job, `Host: ${host.name} [${host.os_type.toUpperCase()}] (${host.hostname}:${host.port})`, 'info');
   broadcastLog(job, `Service: ${service.name} (id: ${service.id})`, 'info');
-  broadcastLog(job, `Target Profile: ${job.previous_profile} -> ${job.target_profile}`, 'info');
-  broadcastLog(job, `Script: ${profile.script_path}`, 'info');
-  broadcastLog(job, `Timeout: ${profile.timeout_seconds}s | Probe: ${service.verification_service_name}`, 'info');
+  broadcastLog(job, `Target Profile: '${job.previous_profile || 'None'}' -> '${job.target_profile}'`, 'info');
+  broadcastLog(job, `Active Profile Path: ${service.active_profile_path || 'None'}`, 'info');
   broadcastLog(job, `============================================================`, 'info');
 
-  await delay(350);
+  await delay(300);
   if (checkAbort(job, host, service)) return;
 
   broadcastLog(job, `[*] Connecting to host via ${proto} as user '${host.auth.username}'...`, 'info');
-  await delay(450);
+  await delay(350);
   if (checkAbort(job, host, service)) return;
 
-  broadcastLog(job, `[✓] Agentless session established with ${host.hostname}.`, 'success');
+  broadcastLog(job, `[✓] Remote session established with ${host.hostname}.`, 'success');
 
-  const command = `${profile.script_path} ${profile.parameters.join(' ')}`;
-  broadcastLog(job, `[$] Executing: ${command}`, 'info');
+  // Serial step loop
+  for (let i = 0; i < scripts.length; i++) {
+    const step = scripts[i];
+    const stepNumber = i + 1;
+    const totalSteps = scripts.length;
+    const stepName = step.name || `Script #${stepNumber}`;
+    const argsStr = (step.parameters || []).join(' ');
 
-  const scriptStages = isWindows
-    ? [
-        '[stdout] C:\\Services> powershell -NonInteractive -ExecutionPolicy Bypass',
-        '[stdout] [1/5] Verifying target directory structure and permissions...',
-        '[stdout] [2/5] Creating registry snapshot: HKLM\\Software\\Switchr\\Backup',
-        '[stdout] [3/5] Requesting service stop for ' + service.verification_service_name,
-        '[stdout] [4/5] Writing profile parameters to service environment block...',
-        '[stdout] [5/5] Launching service binary with new active configuration profile...',
-      ]
-    : [
-        '[stdout] /opt/switchr> export SWITCHR_PROFILE="' + profile.name + '"',
-        '[stdout] [1/5] Validating config file syntax and symlink bindings...',
-        '[stdout] [2/5] Backing up runtime state to /var/backup/switchr.tar.gz',
-        '[stdout] [3/5] Signaling daemon worker pool: Graceful reload / SIGTERM',
-        '[stdout] [4/5] Port unbound. Applying requested connection limits...',
-        '[stdout] [5/5] Starting daemon worker process via systemd...',
-      ];
+    await delay(200);
+    if (checkAbort(job, host, service)) return;
 
-  for (let i = 0; i < scriptStages.length; i++) {
+    broadcastLog(job, `[STEP ${stepNumber}/${totalSteps}] Starting: ${stepName} (${step.script_path} ${argsStr})`, 'info');
+
     await delay(400);
     if (checkAbort(job, host, service)) return;
 
-    if (simulateFailure && i === 3) {
-      broadcastLog(job, `[stderr] Error: Script execution encountered fatal exit condition on line 42.`, 'error');
-      broadcastLog(job, `[stderr] Exit code: 1 - Configuration profile parsing failed.`, 'error');
-      broadcastLog(job, `[FATAL] Script exited with non-zero exit code 1.`, 'error');
-      broadcastLog(job, `[!] Fail-Fast invariant triggered: halting execution. No blind rollback attempted.`, 'warn');
-      finishJob(job, host, service, 'FAILED', 1, false, start, 'Script exited with code 1');
+    if (simulateFailure && i === 1) {
+      broadcastLog(job, `[stderr] Error: ${stepName} failed with non-zero exit code 1.`, 'error');
+      broadcastLog(job, `[FATAL] Script execution failed at step ${stepNumber}/${totalSteps}: ${stepName}`, 'error');
+      broadcastLog(job, `[!] Fail-Fast invariant triggered: halting remaining steps. No blind rollback attempted.`, 'warn');
+      finishJob(job, host, service, 'FAILED', 1, false, start, `Step ${stepNumber} failed with exit code 1`);
       return;
     }
 
-    broadcastLog(job, scriptStages[i], 'stdout');
+    broadcastLog(job, `[stdout] Executing step payload for ${step.script_path.split('\\').pop()?.split('/').pop()}...`, 'stdout');
+    await delay(300);
+    broadcastLog(job, `[stdout] Step command completed with status OK (exit code 0).`, 'stdout');
+    broadcastLog(job, `[STEP ${stepNumber}/${totalSteps}] Finished successfully: ${stepName}`, 'info');
   }
 
   await delay(300);
   if (checkAbort(job, host, service)) return;
 
-  broadcastLog(job, `[*] Remote script completed with exit code 0.`, 'info');
+  // Post-execution verification probe
   broadcastLog(job, `============================================================`, 'info');
-  broadcastLog(job, `[*] Phase 2: Running automated post-execution verification probe...`, 'info');
+  broadcastLog(job, `[PROBE] Verifying managed service status for '${service.verification_service_name}'...`, 'info');
 
-  await delay(500);
+  await delay(400);
   if (checkAbort(job, host, service)) return;
 
   const probeCmd = isWindows
@@ -269,7 +309,7 @@ async function runAsyncJob(
     : `systemctl is-active "${service.verification_service_name}"`;
 
   broadcastLog(job, `[$] Probe Command: ${probeCmd}`, 'info');
-  await delay(400);
+  await delay(300);
 
   const probeOutput = isWindows
     ? `SERVICE_NAME: ${service.verification_service_name} | STATE: 4 RUNNING | WIN32_EXIT_CODE: 0`
@@ -277,10 +317,15 @@ async function runAsyncJob(
 
   broadcastLog(job, `[stdout] ${probeOutput}`, 'stdout');
   broadcastLog(job, `[✓] PROBE VERIFIED: Service '${service.verification_service_name}' confirmed healthy.`, 'success');
-  broadcastLog(job, `[✓] Successfully transitioned service to profile '${job.target_profile}'.`, 'success');
 
-  // Update in-memory profile
+  // Update active profile from active_profile_path
   service.current_profile = job.target_profile;
+  if (service.active_profile_path) {
+    broadcastLog(job, `[PROBE] Confirmed active profile '${service.current_profile}' from remote file '${service.active_profile_path}'.`, 'success');
+  }
+
+  broadcastLog(job, `[SUCCESS] Service is confirmed RUNNING. Configuration switch to '${job.target_profile}' complete.`, 'success');
+
   finishJob(job, host, service, 'SUCCESS', 0, true, start);
 }
 
@@ -311,7 +356,6 @@ function finishJob(
   job.duration_seconds = parseFloat(duration.toFixed(2));
   job.error_summary = errorSummary;
 
-  // Release lock
   const lockKey = `${host.id}:${service.id}`;
   activeLocks.delete(lockKey);
 
@@ -320,7 +364,6 @@ function finishJob(
 
   saveAuditRecord(job);
 
-  // Notify SSE done
   const subs = sseSubscribers.get(job.job_id);
   if (subs) {
     subs.forEach((cb) => cb({ type: 'done', data: job.status }));
@@ -338,7 +381,6 @@ async function bootstrap() {
   const app = express();
   app.use(express.json());
 
-  // CORS headers
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -371,6 +413,7 @@ async function bootstrap() {
           const activeJobId = activeLocks.get(lockKey);
           return {
             ...s,
+            current_profile: s.current_profile || null,
             status: isLocked ? 'TRANSITIONING' : 'RUNNING',
             is_locked: isLocked,
             active_job_id: activeJobId,
@@ -442,7 +485,7 @@ async function bootstrap() {
       service_id: service.id,
       service_name: service.name,
       target_profile: profile_name,
-      previous_profile: service.current_profile,
+      previous_profile: service.current_profile || null,
       status: 'RUNNING',
       started_at: new Date().toISOString(),
       verification_passed: false,
@@ -452,7 +495,6 @@ async function bootstrap() {
 
     activeJobs.set(jobId, jobRecord);
 
-    // Run async in background
     runAsyncJob(jobRecord, host, service, profile, Boolean(simulate_failure));
 
     res.status(202).json({
@@ -501,10 +543,8 @@ async function bootstrap() {
       'X-Accel-Buffering': 'no',
     });
 
-    // Send initial connection comment
     res.write(`: connected to switchr job ${jobId}\n\n`);
 
-    // Stream all existing lines
     for (const line of job.logs) {
       res.write(`data: ${line.text}\n\n`);
     }
@@ -515,7 +555,6 @@ async function bootstrap() {
       return;
     }
 
-    // Subscribe to new lines
     if (!sseSubscribers.has(jobId)) {
       sseSubscribers.set(jobId, new Set());
     }
@@ -531,7 +570,6 @@ async function bootstrap() {
 
     sseSubscribers.get(jobId)!.add(listener);
 
-    // Heartbeat
     const heartbeat = setInterval(() => {
       res.write(`: heartbeat\n\n`);
     }, 15000);
@@ -555,16 +593,37 @@ async function bootstrap() {
   });
 
   // ---------------------------------------------------------------------------
-  // Vite Integration (Dev Mode: vite.middlewares; Prod: dist static)
+  // Vite Integration & HTTP Server
   // ---------------------------------------------------------------------------
+  const httpServer = http.createServer(app);
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (!isProduction) {
+    const disableHmr = process.env.DISABLE_HMR === 'true';
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: disableHmr ? false : { server: httpServer },
+        watch: disableHmr ? null : {},
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
+
+    app.use('*', async (req: Request, res: Response, next) => {
+      const url = req.originalUrl;
+      if (url.startsWith('/api')) {
+        return next();
+      }
+      try {
+        let template = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
   } else {
     const distPath = path.join(__dirname, 'dist');
     if (fs.existsSync(distPath)) {
@@ -575,7 +634,7 @@ async function bootstrap() {
     }
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`[*] Switchr Express server listening on http://0.0.0.0:${PORT}`);
     console.log(`[*] Target hosts: ${appConfig.hosts.length} | Services: ${appConfig.services.length}`);
     console.log(`[*] Dry-run mode: ${appConfig.app.dry_run}`);

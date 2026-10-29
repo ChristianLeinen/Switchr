@@ -9,6 +9,37 @@
     <meta property="og:description" content="Remote Service Configuration Orchestrator for Windows and Unix hosts with agentless execution, real-time SSE streaming, and concurrency locks." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      // AI Studio preview environment: HMR is disabled via DISABLE_HMR. Suppress transient WebSocket/transport errors.
+      window.addEventListener('error', function (event) {
+        var msg = (event && (event.message || (event.error && event.error.message))) || '';
+        var filename = (event && event.filename) || '';
+        if (
+          msg.includes('WebSocket') ||
+          msg.includes('@vite/client') ||
+          msg.includes('ModuleRunnerTransport') ||
+          msg.includes('createWebSocketModuleRunnerTransport') ||
+          filename.includes('@vite/client')
+        ) {
+          event.preventDefault();
+          if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+          return true;
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function (event) {
+        var reason = (event && event.reason && (event.reason.message || String(event.reason))) || '';
+        if (
+          reason.includes('WebSocket') ||
+          reason.includes('@vite/client') ||
+          reason.includes('ModuleRunnerTransport') ||
+          reason.includes('createWebSocketModuleRunnerTransport')
+        ) {
+          event.preventDefault();
+          if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+        }
+      }, true);
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet" />

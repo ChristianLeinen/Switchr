@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileCode, CheckCircle2, Copy, Check, Download, AlertCircle, ShieldCheck } from 'lucide-react';
-import { TargetHost, ManagedService } from '../types';
+import { TargetHost, ManagedService, getEffectiveScripts } from '../types';
 
 interface ConfigViewerProps {
   hosts: TargetHost[];
@@ -12,11 +12,11 @@ export const ConfigViewer: React.FC<ConfigViewerProps> = ({ hosts, services }) =
 
   // Reconstruct exact YAML from inventory
   const generateYaml = () => {
-    return `# switchr Orchestrator Configuration
+    return `# Switchr Orchestrator Configuration
 # Declarative inventory of target hosts, managed services, and configuration profiles.
 
 app:
-  name: "switchr"
+  name: "Switchr"
   version: "1.0.0"
   dry_run: true # Set to false in production to execute on real hosts
   default_job_timeout: 300 # seconds
@@ -41,26 +41,42 @@ ${hosts
 
 services:
 ${services
+  .map((s) => {
+    const profileLines = s.profiles
+      .map((p) => {
+        const steps = getEffectiveScripts(p);
+        if (steps.length > 0) {
+          return `      - name: "${p.name}"
+        description: "${p.description}"
+        scripts:
+${steps
   .map(
-    (s) => `  - id: "${s.id}"
+    (step) => `          - name: "${step.name}"
+            script_path: "${step.script_path}"
+            parameters: [${step.parameters.map((param) => `"${param}"`).join(', ')}]
+            timeout_seconds: ${step.timeout_seconds}`
+  )
+  .join('\n')}`;
+        }
+        return `      - name: "${p.name}"
+        description: "${p.description}"
+        script_path: "${p.script_path || ''}"
+        parameters: [${(p.parameters || []).map((param) => `"${param}"`).join(', ')}]
+        timeout_seconds: ${p.timeout_seconds || 300}`;
+      })
+      .join('\n\n');
+
+    return `  - id: "${s.id}"
     host_id: "${s.host_id}"
     name: "${s.name}"
     service_type: "${s.service_type}"
     verification_service_name: "${s.verification_service_name}"
-    current_profile: "${s.current_profile}"
+    ${s.active_profile_path ? `active_profile_path: "${s.active_profile_path}"` : `# active_profile_path: optional`}
     description: "${s.description}"
     profiles:
-${s.profiles
-  .map(
-    (p) => `      - name: "${p.name}"
-        description: "${p.description}"
-        script_path: "${p.script_path}"
-        parameters: [${p.parameters.map((param) => `"${param}"`).join(', ')}]
-        timeout_seconds: ${p.timeout_seconds}`
-  )
-  .join('\n')}
-`
-  )
+${profileLines}
+`;
+  })
   .join('\n')}
 `;
   };
@@ -88,7 +104,8 @@ ${s.profiles
     { label: 'Host Unique IDs & Ports Valid', passed: hosts.length > 0 && hosts.every((h) => h.id && h.port > 0) },
     { label: 'Authentication Schemas Validated', passed: hosts.every((h) => h.auth && h.auth.username) },
     { label: 'Services Bound to Target Hosts', passed: services.every((s) => hosts.some((h) => h.id === s.host_id)) },
-    { label: 'Unique Profile Names Per Service', passed: services.every((s) => new Set(s.profiles.map((p) => p.name)).size === s.profiles.length) },
+    { label: 'Sequential Multi-Script Pipelines Valid', passed: services.every((s) => s.profiles.every((p) => getEffectiveScripts(p).length > 0)) },
+    { label: 'Active Profile Path Configured', passed: services.some((s) => Boolean(s.active_profile_path)) },
     { label: 'Automated Post-Probe Definitions Active', passed: services.every((s) => Boolean(s.verification_service_name)) },
   ];
 
@@ -99,7 +116,7 @@ ${s.profiles
         <div>
           <h1 className="text-xl font-display font-bold text-white tracking-tight">Configuration Inspector</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Declarative <code className="text-sky-300">config.yaml</code> inventory governing target hosts, profiles, and verification probes.
+            Declarative <code className="text-sky-300">config.yaml</code> inventory governing target hosts, multi-script pipelines, and dynamic active profile paths.
           </p>
         </div>
 
@@ -125,7 +142,7 @@ ${s.profiles
       <div className="bg-[#0c1220] border border-slate-800 rounded-lg p-4">
         <div className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          Pydantic Schema Validation Rules
+          Configuration Schema Validation Rules
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {validations.map((v, i) => (
@@ -137,7 +154,7 @@ ${s.profiles
         </div>
       </div>
 
-      {/* Code Editor / Viewer */}
+      {/* Code Viewer */}
       <div className="bg-[#070b14] border border-slate-800 rounded-lg overflow-hidden">
         <div className="px-4 py-2.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
           <span className="flex items-center gap-2 text-slate-300">

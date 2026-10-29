@@ -259,8 +259,11 @@
           const profiles = svc.profiles || [];
           
           let optionsHtml = '';
+          if (!svc.current_profile) {
+            optionsHtml += `<option value="" disabled selected>-- Select profile to apply --</option>`;
+          }
           profiles.forEach(p => {
-            const isSelected = p.name === svc.current_profile ? 'selected' : '';
+            const isSelected = svc.current_profile && p.name === svc.current_profile ? 'selected' : '';
             optionsHtml += `<option value="${p.name}" ${isSelected}>${p.name}</option>`;
           });
 
@@ -333,20 +336,40 @@
 
       const select = document.getElementById(`sel_${hostId}_${serviceId}`);
       const targetProfileName = select.value;
+      if (!targetProfileName) {
+        alert("Please select a target profile first.");
+        return;
+      }
       const targetProfile = svc.profiles.find(p => p.name === targetProfileName);
 
       pendingSwitch = {
         hostId,
         serviceId,
         targetProfileName,
-        scriptPath: targetProfile ? targetProfile.script_path : ''
+        scriptPath: targetProfile ? (targetProfile.script_path || '') : ''
       };
 
       document.getElementById('modalHost').innerText = `${host.name} (${host.id})`;
       document.getElementById('modalService').innerText = `${svc.name} (${svc.id})`;
       document.getElementById('modalCurrentProfile').innerText = svc.current_profile || 'None';
       document.getElementById('modalTargetProfile').innerText = targetProfileName;
-      document.getElementById('modalScriptPath').innerText = targetProfile ? targetProfile.script_path : 'N/A';
+
+      const scriptModalContainer = document.getElementById('modalScriptPath');
+      if (targetProfile && targetProfile.scripts && targetProfile.scripts.length > 0) {
+        scriptModalContainer.innerHTML = targetProfile.scripts.map((s, idx) => `
+          <div class="flex items-start space-x-2 border-b border-slate-800/80 pb-1 last:border-b-0 last:pb-0">
+            <span class="text-indigo-400 font-bold select-none">${idx + 1}.</span>
+            <div class="flex-1">
+              <span class="text-slate-200 font-medium">${s.name || 'Script'}</span>
+              <div class="text-[10px] text-slate-400 break-all font-mono">${s.script_path} ${(s.parameters || []).join(' ')}</div>
+            </div>
+            <span class="text-[10px] text-slate-500 whitespace-nowrap">${s.timeout_seconds || 60}s</span>
+          </div>
+        `).join('');
+      } else {
+        scriptModalContainer.innerText = targetProfile ? (targetProfile.script_path || 'N/A') : 'N/A';
+      }
+
       document.getElementById('modalSimulateFailure').checked = false;
 
       document.getElementById('confirmModal').classList.remove('hidden');

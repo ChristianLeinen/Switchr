@@ -1,10 +1,12 @@
 import {
   ConfigProfile,
+  getEffectiveScripts,
   JobRecord,
   JobStatus,
   LogLine,
   ManagedService,
   OSType,
+  ScriptStepConfig,
   SwitchRequestPayload,
   TargetHost,
 } from '../types';
@@ -73,6 +75,7 @@ export const INITIAL_SERVICES: ManagedService[] = [
     name: 'Financial Transaction Router',
     service_type: 'windows_service',
     verification_service_name: 'FinRouterSvc',
+    active_profile_path: 'C:\\Services\\FinRouter\\active_profile.txt',
     current_profile: 'production-high-throughput',
     description: 'PCI-DSS compliant transaction gateway service',
     status: 'RUNNING',
@@ -81,23 +84,74 @@ export const INITIAL_SERVICES: ManagedService[] = [
       {
         name: 'production-high-throughput',
         description: 'Direct clearinghouse connections with 128 concurrent threads',
-        script_path: 'C:\\Services\\FinRouter\\scripts\\switch_profile.bat',
-        parameters: ['--profile', 'prod-high', '--pool-size', '128'],
-        timeout_seconds: 180,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\stop_service.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\apply_config.bat',
+            parameters: ['--profile', 'prod-high', '--pool-size', '128'],
+            timeout_seconds: 90,
+          },
+          {
+            name: 'Start service',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\start_service.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+        ],
       },
       {
         name: 'production-balanced',
         description: 'Standard daytime traffic profile with 64 thread pool',
-        script_path: 'C:\\Services\\FinRouter\\scripts\\switch_profile.bat',
-        parameters: ['--profile', 'prod-balanced', '--pool-size', '64'],
-        timeout_seconds: 180,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\stop_service.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\apply_config.bat',
+            parameters: ['--profile', 'prod-balanced', '--pool-size', '64'],
+            timeout_seconds: 90,
+          },
+          {
+            name: 'Start service',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\start_service.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+        ],
       },
       {
         name: 'maintenance-drain',
         description: 'Gracefully drain in-flight transactions and reject new requests',
-        script_path: 'C:\\Services\\FinRouter\\scripts\\switch_profile.bat',
-        parameters: ['--profile', 'drain'],
-        timeout_seconds: 240,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\stop_service.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\apply_config.bat',
+            parameters: ['--profile', 'drain'],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Start service',
+            script_path: 'C:\\Services\\FinRouter\\scripts\\start_service.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+        ],
       },
     ],
   },
@@ -107,24 +161,59 @@ export const INITIAL_SERVICES: ManagedService[] = [
     name: 'Nightly Settlement Worker',
     service_type: 'windows_service',
     verification_service_name: 'BatchSettlement',
-    current_profile: 'batch-standard',
+    active_profile_path: 'D:\\BatchApps\\Settlement\\active_profile.txt',
+    current_profile: null, // Simulated initial state: active profile file not yet initialized
     description: 'Reconciliation engine processing end-of-day batches',
-    status: 'RUNNING',
+    status: 'STOPPED',
     is_locked: false,
     profiles: [
       {
         name: 'batch-standard',
         description: 'Single-thread sequential ledger validation',
-        script_path: 'D:\\BatchApps\\Settlement\\bin\\apply_config.bat',
-        parameters: ['--mode', 'standard'],
-        timeout_seconds: 120,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: 'D:\\BatchApps\\Settlement\\bin\\stop.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: 'D:\\BatchApps\\Settlement\\bin\\apply_config.bat',
+            parameters: ['--mode', 'standard'],
+            timeout_seconds: 120,
+          },
+          {
+            name: 'Start service',
+            script_path: 'D:\\BatchApps\\Settlement\\bin\\start.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+        ],
       },
       {
         name: 'batch-stress-test',
         description: 'Synthetic load generation profile with mock transaction inputs',
-        script_path: 'D:\\BatchApps\\Settlement\\bin\\apply_config.bat',
-        parameters: ['--mode', 'stress-test', '--concurrency', '16'],
-        timeout_seconds: 300,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: 'D:\\BatchApps\\Settlement\\bin\\stop.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: 'D:\\BatchApps\\Settlement\\bin\\apply_config.bat',
+            parameters: ['--mode', 'stress-test', '--concurrency', '16'],
+            timeout_seconds: 300,
+          },
+          {
+            name: 'Start service',
+            script_path: 'D:\\BatchApps\\Settlement\\bin\\start.bat',
+            parameters: [],
+            timeout_seconds: 60,
+          },
+        ],
       },
     ],
   },
@@ -134,6 +223,7 @@ export const INITIAL_SERVICES: ManagedService[] = [
     name: 'Edge Ingress Gateway',
     service_type: 'systemd',
     verification_service_name: 'switchr-ingress',
+    active_profile_path: '/opt/switchr/active_profile.txt',
     current_profile: 'active-primary-datacenter',
     description: 'Reverse proxy managing traffic balancing and TLS termination',
     status: 'RUNNING',
@@ -142,23 +232,74 @@ export const INITIAL_SERVICES: ManagedService[] = [
       {
         name: 'active-primary-datacenter',
         description: 'Routes 100% of ingress traffic to Primary DC (Frankfurt)',
-        script_path: '/opt/switchr/scripts/switch_traffic.sh',
-        parameters: ['--region', 'eu-central-1', '--weight', '100'],
-        timeout_seconds: 90,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: '/opt/switchr/scripts/stop_ingress.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: '/opt/switchr/scripts/switch_traffic.sh',
+            parameters: ['--region', 'eu-central-1', '--weight', '100'],
+            timeout_seconds: 90,
+          },
+          {
+            name: 'Start service',
+            script_path: '/opt/switchr/scripts/start_ingress.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+        ],
       },
       {
         name: 'failover-secondary-datacenter',
         description: 'Emergency failover routing to Secondary DC (Dublin)',
-        script_path: '/opt/switchr/scripts/switch_traffic.sh',
-        parameters: ['--region', 'eu-west-1', '--weight', '100'],
-        timeout_seconds: 90,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: '/opt/switchr/scripts/stop_ingress.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: '/opt/switchr/scripts/switch_traffic.sh',
+            parameters: ['--region', 'eu-west-1', '--weight', '100'],
+            timeout_seconds: 90,
+          },
+          {
+            name: 'Start service',
+            script_path: '/opt/switchr/scripts/start_ingress.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+        ],
       },
       {
         name: 'split-50-50-canary',
         description: '50/50 dual-region traffic distribution for canary testing',
-        script_path: '/opt/switchr/scripts/switch_traffic.sh',
-        parameters: ['--canary', 'true', '--split', '50:50'],
-        timeout_seconds: 120,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: '/opt/switchr/scripts/stop_ingress.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: '/opt/switchr/scripts/switch_traffic.sh',
+            parameters: ['--canary', 'true', '--split', '50:50'],
+            timeout_seconds: 120,
+          },
+          {
+            name: 'Start service',
+            script_path: '/opt/switchr/scripts/start_ingress.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+        ],
       },
     ],
   },
@@ -168,6 +309,7 @@ export const INITIAL_SERVICES: ManagedService[] = [
     name: 'Redis Cache Partition',
     service_type: 'systemd',
     verification_service_name: 'redis-server',
+    active_profile_path: '/etc/redis/active_profile.txt',
     current_profile: 'write-through-persistent',
     description: 'High-availability in-memory cache and session synchronization',
     status: 'RUNNING',
@@ -176,16 +318,50 @@ export const INITIAL_SERVICES: ManagedService[] = [
       {
         name: 'write-through-persistent',
         description: 'AOF enabled every second with strict RDB snapshots',
-        script_path: '/usr/local/bin/redis-config-switch.sh',
-        parameters: ['--durability', 'strict'],
-        timeout_seconds: 60,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: '/usr/local/bin/redis-stop.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: '/usr/local/bin/redis-config-switch.sh',
+            parameters: ['--durability', 'strict'],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Start service',
+            script_path: '/usr/local/bin/redis-start.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+        ],
       },
       {
         name: 'in-memory-volatile',
         description: 'Persistence disabled for maximum throughput during migration',
-        script_path: '/usr/local/bin/redis-config-switch.sh',
-        parameters: ['--durability', 'volatile-lru'],
-        timeout_seconds: 60,
+        scripts: [
+          {
+            name: 'Stop service',
+            script_path: '/usr/local/bin/redis-stop.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+          {
+            name: 'Copy configuration',
+            script_path: '/usr/local/bin/redis-config-switch.sh',
+            parameters: ['--durability', 'volatile-lru'],
+            timeout_seconds: 60,
+          },
+          {
+            name: 'Start service',
+            script_path: '/usr/local/bin/redis-start.sh',
+            parameters: [],
+            timeout_seconds: 30,
+          },
+        ],
       },
     ],
   },
@@ -203,47 +379,26 @@ const SEED_AUDIT_LOGS: JobRecord[] = [
     previous_profile: 'split-50-50-canary',
     status: 'SUCCESS',
     exit_code: 0,
-    started_at: '2026-10-15T11:42:10.000Z',
-    completed_at: '2026-10-15T11:42:15.800Z',
+    started_at: '2026-10-29T11:42:10.000Z',
+    completed_at: '2026-10-29T11:42:15.800Z',
     duration_seconds: 5.8,
     verification_passed: true,
     is_simulation: true,
     logs: [
       { id: '1', timestamp: '11:42:10.120', text: '[*] Initializing SSH connection to 10.200.4.12:22...', type: 'info' },
       { id: '2', timestamp: '11:42:10.450', text: '[✓] SSH session established with deploy_agent (switchr_rsa)', type: 'success' },
-      { id: '3', timestamp: '11:42:10.800', text: '[$] Executing: /opt/switchr/scripts/switch_traffic.sh --region eu-central-1 --weight 100', type: 'info' },
-      { id: '4', timestamp: '11:42:11.500', text: '[stdout] Switching upstream DNS pool to Frankfurt-01 datacenter...', type: 'stdout' },
-      { id: '5', timestamp: '11:42:12.300', text: '[stdout] Traffic weighting updated: 100% to primary DC.', type: 'stdout' },
-      { id: '6', timestamp: '11:42:13.200', text: '[stdout] Reloading Nginx ingress worker pool: OK', type: 'stdout' },
-      { id: '7', timestamp: '11:42:14.100', text: '[*] Verification Probe: systemctl is-active switchr-ingress -> active', type: 'info' },
-      { id: '8', timestamp: '11:42:15.800', text: '[✓] Probe verified. Service is RUNNING.', type: 'success' },
-    ],
-  },
-  {
-    job_id: 'job-f4e3d2c1b0',
-    host_id: 'win-prod-01',
-    host_name: 'Windows Core Gateway',
-    os_type: 'windows',
-    service_id: 'svc-fin-router',
-    service_name: 'Financial Transaction Router',
-    target_profile: 'production-high-throughput',
-    previous_profile: 'production-balanced',
-    status: 'SUCCESS',
-    exit_code: 0,
-    started_at: '2026-10-15T09:15:00.000Z',
-    completed_at: '2026-10-15T09:15:06.400Z',
-    duration_seconds: 6.4,
-    verification_passed: true,
-    is_simulation: true,
-    logs: [
-      { id: '1', timestamp: '09:15:00.100', text: '[*] Establishing WinRM Session to 192.168.10.45:5985...', type: 'info' },
-      { id: '2', timestamp: '09:15:00.400', text: '[✓] WinRM authenticated as orchestrator_svc', type: 'success' },
-      { id: '3', timestamp: '09:15:01.000', text: '[$] Executing: C:\\Services\\FinRouter\\scripts\\switch_profile.bat --profile prod-high --pool-size 128', type: 'info' },
-      { id: '4', timestamp: '09:15:02.100', text: '[stdout] Applying registry configuration: ThreadPool=128', type: 'stdout' },
-      { id: '5', timestamp: '09:15:03.500', text: '[stdout] Stopping FinRouterSvc...', type: 'stdout' },
-      { id: '6', timestamp: '09:15:04.200', text: '[stdout] Starting FinRouterSvc with new profile...', type: 'stdout' },
-      { id: '7', timestamp: '09:15:05.100', text: '[*] Probe sc query FinRouterSvc -> STATE: 4 RUNNING', type: 'info' },
-      { id: '8', timestamp: '09:15:06.400', text: '[✓] Verification succeeded.', type: 'success' },
+      { id: '3', timestamp: '11:42:10.800', text: '[STEP 1/3] Starting: Stop service (/opt/switchr/scripts/stop_ingress.sh)', type: 'info' },
+      { id: '4', timestamp: '11:42:11.500', text: '[stdout] Gracefully stopped switchr-ingress systemd daemon.', type: 'stdout' },
+      { id: '5', timestamp: '11:42:11.900', text: '[STEP 1/3] Finished successfully: Stop service', type: 'info' },
+      { id: '6', timestamp: '11:42:12.100', text: '[STEP 2/3] Starting: Copy configuration (/opt/switchr/scripts/switch_traffic.sh --region eu-central-1 --weight 100)', type: 'info' },
+      { id: '7', timestamp: '11:42:12.900', text: '[stdout] Traffic weighting updated: 100% to primary DC.', type: 'stdout' },
+      { id: '8', timestamp: '11:42:13.200', text: '[STEP 2/3] Finished successfully: Copy configuration', type: 'info' },
+      { id: '9', timestamp: '11:42:13.400', text: '[STEP 3/3] Starting: Start service (/opt/switchr/scripts/start_ingress.sh)', type: 'info' },
+      { id: '10', timestamp: '11:42:14.000', text: '[stdout] Launched switchr-ingress daemon (PID 38412)', type: 'stdout' },
+      { id: '11', timestamp: '11:42:14.200', text: '[STEP 3/3] Finished successfully: Start service', type: 'info' },
+      { id: '12', timestamp: '11:42:14.500', text: '[PROBE] Verifying managed service status for \'switchr-ingress\'...', type: 'info' },
+      { id: '13', timestamp: '11:42:15.100', text: '[PROBE] Confirmed active profile \'active-primary-datacenter\' from remote file \'/opt/switchr/active_profile.txt\'.', type: 'success' },
+      { id: '14', timestamp: '11:42:15.800', text: '[SUCCESS] Service is confirmed RUNNING. Configuration switch to \'active-primary-datacenter\' complete.', type: 'success' },
     ],
   },
 ];
@@ -254,7 +409,7 @@ type JobCompleteSubscriber = (job: JobRecord) => void;
 class MockOrchestrator {
   private hosts: TargetHost[] = INITIAL_HOSTS;
   private services: ManagedService[] = INITIAL_SERVICES;
-  private activeLocks: Map<string, string> = new Map(); // key `${host_id}:${service_id}` -> job_id
+  private activeLocks: Map<string, string> = new Map();
   private jobs: Map<string, JobRecord> = new Map();
   private abortSignals: Map<string, boolean> = new Map();
   private subscribers: Map<string, Set<LogSubscriber>> = new Map();
@@ -349,7 +504,7 @@ class MockOrchestrator {
     const { host_id, service_id, profile_name, simulate_failure } = payload;
     const lockKey = `${host_id}:${service_id}`;
 
-    // 1. MUTEX LOCK CHECK: Strict 409 Conflict rejection
+    // Mutex lock enforcement (409 Conflict)
     if (this.activeLocks.has(lockKey)) {
       const existingJobId = this.activeLocks.get(lockKey);
       const err = new Error(`409 Conflict: Service '${service_id}' on host '${host_id}' is already locked by active job '${existingJobId}'`);
@@ -368,7 +523,6 @@ class MockOrchestrator {
 
     const jobId = `job-${Math.random().toString(36).substring(2, 10)}`;
 
-    // Acquire lock and mark service state
     this.activeLocks.set(lockKey, jobId);
     service.is_locked = true;
     service.active_job_id = jobId;
@@ -392,7 +546,6 @@ class MockOrchestrator {
 
     this.jobs.set(jobId, jobRecord);
 
-    // Asynchronous background execution simulating live SSE streaming
     this.runAsyncExecution(jobRecord, host, service, profile, Boolean(simulate_failure));
 
     return jobRecord;
@@ -407,7 +560,8 @@ class MockOrchestrator {
   ) {
     const startTime = performance.now();
     const isWindows = host.os_type === 'windows';
-    const proto = isWindows ? 'WinRM (WS-Management 5985)' : 'SSH (OpenSSH Port 22)';
+    const proto = isWindows ? 'WinRM (WS-Management 5985)' : 'SSH (Port 22)';
+    const scripts = getEffectiveScripts(profile);
 
     this.emitLine(job, {
       text: `============================================================`,
@@ -418,7 +572,7 @@ class MockOrchestrator {
       type: 'info',
     });
     this.emitLine(job, {
-      text: `Job ID: ${job.job_id} | Mode: DRY_RUN Simulation`,
+      text: `Job ID: ${job.job_id} | Pipeline Steps: ${scripts.length}`,
       type: 'info',
     });
     this.emitLine(job, {
@@ -430,15 +584,11 @@ class MockOrchestrator {
       type: 'info',
     });
     this.emitLine(job, {
-      text: `Transition: '${job.previous_profile}' -> '${job.target_profile}'`,
+      text: `Transition: '${job.previous_profile || 'None'}' -> '${job.target_profile}'`,
       type: 'info',
     });
     this.emitLine(job, {
-      text: `Script Path: ${profile.script_path}`,
-      type: 'info',
-    });
-    this.emitLine(job, {
-      text: `Timeout Budget: ${profile.timeout_seconds}s | Probe: ${service.verification_service_name}`,
+      text: `Active Profile Path: ${service.active_profile_path || 'None (in-memory only)'}`,
       type: 'info',
     });
     this.emitLine(job, {
@@ -446,83 +596,78 @@ class MockOrchestrator {
       type: 'info',
     });
 
-    await this.delay(350);
+    await this.delay(300);
     if (this.checkAborted(job, host, service)) return;
 
     this.emitLine(job, {
       text: `[*] Connecting via ${proto} using credential '${host.auth.username}'...`,
       type: 'info',
     });
-    await this.delay(450);
+    await this.delay(350);
     if (this.checkAborted(job, host, service)) return;
 
     this.emitLine(job, {
-      text: `[✓] Agentless session established with ${host.hostname}.`,
+      text: `[✓] Remote session established with ${host.hostname}.`,
       type: 'success',
     });
 
-    const command = `${profile.script_path} ${profile.parameters.join(' ')}`;
-    this.emitLine(job, {
-      text: `[$] Dispatching remote command: ${command}`,
-      type: 'info',
-    });
+    // Sequential script execution
+    for (let i = 0; i < scripts.length; i++) {
+      const step = scripts[i];
+      const stepNumber = i + 1;
+      const totalSteps = scripts.length;
+      const stepName = step.name || `Script #${stepNumber}`;
+      const argsStr = (step.parameters || []).join(' ');
 
-    // Simulated script execution lines
-    const executionLines = isWindows
-      ? [
-          '[stdout] C:\\Services> powershell -NonInteractive -ExecutionPolicy Bypass',
-          '[stdout] [1/5] Verifying target directory structure and permissions...',
-          '[stdout] [2/5] Creating registry snapshot: HKLM\\Software\\Switchr\\Backup',
-          '[stdout] [3/5] Requesting service stop for ' + service.verification_service_name,
-          '[stdout] [4/5] Writing profile parameters to service environment block...',
-          '[stdout] [5/5] Launching service binary with new active configuration profile...',
-        ]
-      : [
-          '[stdout] /opt/switchr> export SWITCHR_PROFILE="' + profile.name + '"',
-          '[stdout] [1/5] Validating config file syntax and symlink bindings...',
-          '[stdout] [2/5] Backing up runtime state to /var/backup/switchr.tar.gz',
-          '[stdout] [3/5] Signaling daemon worker pool: Graceful reload / SIGTERM',
-          '[stdout] [4/5] Port unbound. Applying requested connection limits...',
-          '[stdout] [5/5] Starting daemon worker process via systemd...',
-        ];
-
-    for (let i = 0; i < executionLines.length; i++) {
-      await this.delay(400 + Math.random() * 300);
+      await this.delay(200);
       if (this.checkAborted(job, host, service)) return;
 
-      // Simulated failure trigger if requested
-      if (simulateFailure && i === 3) {
+      this.emitLine(job, {
+        text: `[STEP ${stepNumber}/${totalSteps}] Starting: ${stepName} (${step.script_path} ${argsStr})`,
+        type: 'info',
+      });
+
+      await this.delay(400);
+      if (this.checkAborted(job, host, service)) return;
+
+      // Fail-fast test simulation
+      if (simulateFailure && i === 1) {
         this.emitLine(job, {
-          text: `[stderr] Error: Script execution encountered fatal exit condition on line 42.`,
+          text: `[stderr] Error: ${stepName} failed with non-zero exit code 1.`,
           type: 'error',
         });
         this.emitLine(job, {
-          text: `[stderr] Exit code: 1 - Configuration profile parsing failed.`,
+          text: `[FATAL] Script execution failed at step ${stepNumber}/${totalSteps}: ${stepName}`,
           type: 'error',
         });
         this.emitLine(job, {
-          text: `[FATAL] Script exited with non-zero exit code 1.`,
-          type: 'error',
-        });
-        this.emitLine(job, {
-          text: `[!] Fail-Fast invariant triggered: halting execution. No blind rollback attempted.`,
+          text: `[!] Fail-Fast invariant triggered: halting remaining steps. No blind rollback attempted.`,
           type: 'warn',
         });
 
-        this.finishJob(job, host, service, 'FAILED', 1, false, startTime, 'Script exited with non-zero code 1');
+        this.finishJob(job, host, service, 'FAILED', 1, false, startTime, `Step ${stepNumber} failed with exit code 1`);
         return;
       }
 
-      this.emitLine(job, { text: executionLines[i], type: 'stdout' });
+      this.emitLine(job, {
+        text: `[stdout] Executing step payload for ${step.script_path.split('\\').pop()?.split('/').pop()}...`,
+        type: 'stdout',
+      });
+      await this.delay(300);
+
+      this.emitLine(job, {
+        text: `[stdout] Step command completed with status OK (exit code 0).`,
+        type: 'stdout',
+      });
+
+      this.emitLine(job, {
+        text: `[STEP ${stepNumber}/${totalSteps}] Finished successfully: ${stepName}`,
+        type: 'info',
+      });
     }
 
     await this.delay(300);
     if (this.checkAborted(job, host, service)) return;
-
-    this.emitLine(job, {
-      text: `[*] Remote script completed with exit code 0.`,
-      type: 'info',
-    });
 
     // Post-Execution Verification Probe
     this.emitLine(job, {
@@ -530,10 +675,10 @@ class MockOrchestrator {
       type: 'info',
     });
     this.emitLine(job, {
-      text: `[*] Phase 2: Running automated post-execution verification probe...`,
+      text: `[PROBE] Verifying managed service status for '${service.verification_service_name}'...`,
       type: 'info',
     });
-    await this.delay(500);
+    await this.delay(400);
     if (this.checkAborted(job, host, service)) return;
 
     const probeCmd = isWindows
@@ -544,11 +689,11 @@ class MockOrchestrator {
       text: `[$] Probe Command: ${probeCmd}`,
       type: 'info',
     });
-    await this.delay(400);
+    await this.delay(300);
 
     const probeOutput = isWindows
       ? `SERVICE_NAME: ${service.verification_service_name} | STATE: 4 RUNNING | WIN32_EXIT_CODE: 0`
-      : `active (running) - Switchr Ingress Worker Pool [PID 38412]`;
+      : `active (running) - Switchr Managed Service [PID 41920]`;
 
     this.emitLine(job, {
       text: `[stdout] ${probeOutput}`,
@@ -559,12 +704,23 @@ class MockOrchestrator {
       text: `[✓] PROBE VERIFIED: Service '${service.verification_service_name}' confirmed healthy.`,
       type: 'success',
     });
+
+    // Refresh active profile from active_profile_path
+    if (service.active_profile_path) {
+      service.current_profile = job.target_profile;
+      this.emitLine(job, {
+        text: `[PROBE] Confirmed active profile '${service.current_profile}' from remote file '${service.active_profile_path}'.`,
+        type: 'success',
+      });
+    } else {
+      service.current_profile = job.target_profile;
+    }
+
     this.emitLine(job, {
-      text: `[✓] Successfully transitioned service to profile '${job.target_profile}'.`,
+      text: `[SUCCESS] Service is confirmed RUNNING. Configuration switch to '${job.target_profile}' complete.`,
       type: 'success',
     });
 
-    service.current_profile = job.target_profile;
     this.finishJob(job, host, service, 'SUCCESS', 0, true, startTime);
   }
 
@@ -598,7 +754,6 @@ class MockOrchestrator {
     job.duration_seconds = parseFloat(elapsed.toFixed(2));
     job.error_summary = errorSummary;
 
-    // Release lock and restore service status
     const lockKey = `${host.id}:${service.id}`;
     this.activeLocks.delete(lockKey);
     service.is_locked = false;
@@ -614,11 +769,9 @@ class MockOrchestrator {
       type: status === 'SUCCESS' ? 'success' : 'error',
     });
 
-    // Prepend to audit log history
     this.auditHistory = [job, ...this.auditHistory];
     this.saveAudit();
 
-    // Trigger complete listeners
     const completelist = this.completeSubscribers.get(job.job_id);
     if (completelist) {
       completelist.forEach((fn) => fn(job));

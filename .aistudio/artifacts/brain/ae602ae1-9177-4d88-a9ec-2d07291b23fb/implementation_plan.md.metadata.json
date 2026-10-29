@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan to remove all Python files, implement an Express TypeScript backend maintaining identical REST and SSE endpoints, and streamline the dashboard UI by hiding the export tab.",
-  "updatedAt": "2026-10-17T01:14:49.289602741Z",
-  "requestFeedback": true,
-  "userFacing": true
+  "summary":  "Implementation plan to update the Switchr frontend and development simulator for multi-script serial execution pipelines and dynamic active_profile_path detection.",
+  "updatedAt":  "2026-10-29T20:24:45.222313791Z",
+  "requestFeedback":  true,
+  "userFacing":  true
 }

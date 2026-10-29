@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShieldAlert, AlertTriangle, ArrowRight, X, Clock, Terminal, CheckCircle2 } from 'lucide-react';
-import { ConfigProfile, ManagedService, TargetHost } from '../types';
+import { ConfigProfile, getEffectiveScripts, ManagedService, TargetHost } from '../types';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -25,7 +25,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   const profile = service.profiles.find((p) => p.name === targetProfileName) || service.profiles[0];
   const isWindows = host.os_type === 'windows';
-  const command = `${profile.script_path} ${profile.parameters.join(' ')}`;
+  const effectiveScripts = getEffectiveScripts(profile);
+  const totalTimeoutSeconds = effectiveScripts.reduce((sum, s) => sum + (s.timeout_seconds || 60), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
@@ -38,7 +39,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-display font-bold text-white">Confirm Configuration Switch</h3>
-              <p className="text-xs text-slate-400">Agentless remote execution with mutual exclusion lock</p>
+              <p className="text-xs text-slate-400">Sequential multi-script pipeline with mutual exclusion lock</p>
             </div>
           </div>
           <button
@@ -70,7 +71,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
             <div className="flex justify-between items-center text-slate-400">
               <span>Current Profile:</span>
-              <span className="text-slate-400">{service.current_profile}</span>
+              <span className={service.current_profile ? 'text-slate-200' : 'text-slate-500 italic'}>
+                {service.current_profile || 'None (Unassigned)'}
+              </span>
             </div>
 
             <div className="flex justify-between items-center border-t border-slate-800/80 pt-2 text-slate-300">
@@ -88,18 +91,34 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             </div>
 
             <div className="flex justify-between items-center text-slate-500 text-[11px]">
-              <span>Timeout Budget:</span>
-              <span className="text-slate-300">{profile.timeout_seconds}s</span>
+              <span>Total Pipeline Timeout:</span>
+              <span className="text-slate-300">{totalTimeoutSeconds}s ({effectiveScripts.length} steps)</span>
             </div>
           </div>
 
-          {/* Command Preview */}
+          {/* Numbered Sequential Script Pipeline Preview */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-              Execution Command
+              Execution Pipeline (Sequential Scripts)
             </label>
-            <div className="p-3 bg-[#070b14] border border-slate-800 rounded text-xs font-mono text-emerald-400 break-all select-all">
-              {command}
+            <div className="bg-[#070b14] border border-slate-800 rounded-lg p-3 space-y-2 font-mono text-xs max-h-48 overflow-y-auto">
+              {effectiveScripts.map((step, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-2.5 pb-2 border-b border-slate-800/80 last:border-b-0 last:pb-0"
+                >
+                  <span className="text-sky-400 font-bold select-none">{idx + 1}.</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-slate-200 font-medium truncate">{step.name || 'Script'}</span>
+                      <span className="text-[10px] text-slate-500 shrink-0">{step.timeout_seconds || 60}s</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 font-mono break-all mt-0.5">
+                      {step.script_path} {(step.parameters || []).join(' ')}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -108,7 +127,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <div className="flex items-start gap-2.5 p-3 bg-rose-950/40 border border-rose-800/80 rounded-lg text-xs text-rose-300">
               <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Fail-Fast Test Mode Active:</span> This execution is configured to simulate an exit code 1 to demonstrate that execution halts immediately with forensic logs and no blind rollback.
+                <span className="font-bold">Fail-Fast Test Mode Active:</span> This execution is configured to simulate a script exit code 1 to demonstrate that execution halts immediately without attempting subsequent steps or rollback.
               </div>
             </div>
           )}
@@ -117,7 +136,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <div className="flex items-start gap-2 text-xs text-slate-400 bg-slate-900/60 p-3 rounded border border-slate-800/60">
             <ShieldAlert className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
             <span>
-              An in-memory lock will be held for <strong className="text-slate-300">({host.id}, {service.id})</strong>. Concurrent switch requests while this job runs will be rejected with HTTP 409 Conflict.
+              An in-memory lock will be held for <strong className="text-slate-300">({host.id}, {service.id})</strong>. Concurrent switch requests while this pipeline runs will be rejected with HTTP 409 Conflict.
             </span>
           </div>
         </div>
@@ -135,7 +154,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             className="px-4 py-2 text-xs font-medium bg-sky-600 hover:bg-sky-500 text-white rounded-md transition-colors flex items-center gap-1.5 shadow"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Confirm & Execute
+            Confirm & Execute Pipeline
           </button>
         </div>
       </div>
