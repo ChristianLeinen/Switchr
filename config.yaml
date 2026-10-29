@@ -66,31 +66,61 @@ services:
     profiles:
       - name: "production-high-throughput"
         description: "Direct clearinghouse connections with 128 concurrent threads"
-        script_path: "C:\\Services\\FinRouter\\scripts\\switch_profile.bat"
-        parameters:
-          - "--profile"
-          - "prod-high"
-          - "--pool-size"
-          - "128"
-        timeout_seconds: 180
+        scripts:
+          - name: "Stop service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\stop_service.bat"
+            parameters: []
+            timeout_seconds: 60
+          - name: "Copy configuration"
+            script_path: "C:\\Services\\FinRouter\\scripts\\apply_config.bat"
+            parameters:
+              - "--profile"
+              - "prod-high"
+              - "--pool-size"
+              - "128"
+            timeout_seconds: 90
+          - name: "Start service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\start_service.bat"
+            parameters: []
+            timeout_seconds: 60
 
       - name: "production-balanced"
         description: "Standard daytime traffic profile with 64 thread pool"
-        script_path: "C:\\Services\\FinRouter\\scripts\\switch_profile.bat"
-        parameters:
-          - "--profile"
-          - "prod-balanced"
-          - "--pool-size"
-          - "64"
-        timeout_seconds: 180
+        scripts:
+          - name: "Stop service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\stop_service.bat"
+            parameters: []
+            timeout_seconds: 60
+          - name: "Copy configuration"
+            script_path: "C:\\Services\\FinRouter\\scripts\\apply_config.bat"
+            parameters:
+              - "--profile"
+              - "prod-balanced"
+              - "--pool-size"
+              - "64"
+            timeout_seconds: 90
+          - name: "Start service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\start_service.bat"
+            parameters: []
+            timeout_seconds: 60
 
       - name: "maintenance-drain"
         description: "Gracefully drain in-flight transactions and reject new requests"
-        script_path: "C:\\Services\\FinRouter\\scripts\\switch_profile.bat"
-        parameters:
-          - "--profile"
-          - "drain"
-        timeout_seconds: 240
+        scripts:
+          - name: "Stop service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\stop_service.bat"
+            parameters: []
+            timeout_seconds: 60
+          - name: "Copy configuration"
+            script_path: "C:\\Services\\FinRouter\\scripts\\apply_config.bat"
+            parameters:
+              - "--profile"
+              - "drain"
+            timeout_seconds: 60
+          - name: "Start service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\start_service.bat"
+            parameters: []
+            timeout_seconds: 60
 
   - id: "svc-win-batch"
     host_id: "win-stage-02"
@@ -102,15 +132,35 @@ services:
     profiles:
       - name: "batch-standard"
         description: "Single-thread sequential ledger validation"
-        script_path: "D:\\BatchApps\\Settlement\\bin\\apply_config.bat"
-        parameters: ["--mode", "standard"]
-        timeout_seconds: 120
+        scripts:
+          - name: "Stop service"
+            script_path: "D:\\BatchApps\\Settlement\\bin\\stop.bat"
+            parameters: []
+            timeout_seconds: 60
+          - name: "Copy configuration"
+            script_path: "D:\\BatchApps\\Settlement\\bin\\apply_config.bat"
+            parameters: ["--mode", "standard"]
+            timeout_seconds: 120
+          - name: "Start service"
+            script_path: "D:\\BatchApps\\Settlement\\bin\\start.bat"
+            parameters: []
+            timeout_seconds: 60
 
       - name: "batch-stress-test"
         description: "Synthetic load generation profile with mock transaction inputs"
-        script_path: "D:\\BatchApps\\Settlement\\bin\\apply_config.bat"
-        parameters: ["--mode", "stress-test", "--concurrency", "16"]
-        timeout_seconds: 300
+        scripts:
+          - name: "Stop service"
+            script_path: "D:\\BatchApps\\Settlement\\bin\\stop.bat"
+            parameters: []
+            timeout_seconds: 60
+          - name: "Copy configuration"
+            script_path: "D:\\BatchApps\\Settlement\\bin\\apply_config.bat"
+            parameters: ["--mode", "stress-test", "--concurrency", "16"]
+            timeout_seconds: 300
+          - name: "Start service"
+            script_path: "D:\\BatchApps\\Settlement\\bin\\start.bat"
+            parameters: []
+            timeout_seconds: 60
 
   - id: "svc-edge-proxy"
     host_id: "unix-prod-01"
@@ -122,21 +172,51 @@ services:
     profiles:
       - name: "active-primary-datacenter"
         description: "Routes 100% of ingress traffic to Primary DC (Frankfurt)"
-        script_path: "/opt/switchr/scripts/switch_traffic.sh"
-        parameters: ["--region", "eu-central-1", "--weight", "100"]
-        timeout_seconds: 90
+        scripts:
+          - name: "Stop service"
+            script_path: "/opt/switchr/scripts/stop_ingress.sh"
+            parameters: []
+            timeout_seconds: 30
+          - name: "Copy configuration"
+            script_path: "/opt/switchr/scripts/switch_traffic.sh"
+            parameters: ["--region", "eu-central-1", "--weight", "100"]
+            timeout_seconds: 90
+          - name: "Start service"
+            script_path: "/opt/switchr/scripts/start_ingress.sh"
+            parameters: []
+            timeout_seconds: 30
 
       - name: "failover-secondary-datacenter"
         description: "Emergency failover routing to Secondary DC (Dublin)"
-        script_path: "/opt/switchr/scripts/switch_traffic.sh"
-        parameters: ["--region", "eu-west-1", "--weight", "100"]
-        timeout_seconds: 90
+        scripts:
+          - name: "Stop service"
+            script_path: "/opt/switchr/scripts/stop_ingress.sh"
+            parameters: []
+            timeout_seconds: 30
+          - name: "Copy configuration"
+            script_path: "/opt/switchr/scripts/switch_traffic.sh"
+            parameters: ["--region", "eu-west-1", "--weight", "100"]
+            timeout_seconds: 90
+          - name: "Start service"
+            script_path: "/opt/switchr/scripts/start_ingress.sh"
+            parameters: []
+            timeout_seconds: 30
 
       - name: "split-50-50-canary"
         description: "50/50 dual-region traffic distribution for canary testing"
-        script_path: "/opt/switchr/scripts/switch_traffic.sh"
-        parameters: ["--canary", "true", "--split", "50:50"]
-        timeout_seconds: 120
+        scripts:
+          - name: "Stop service"
+            script_path: "/opt/switchr/scripts/stop_ingress.sh"
+            parameters: []
+            timeout_seconds: 30
+          - name: "Copy configuration"
+            script_path: "/opt/switchr/scripts/switch_traffic.sh"
+            parameters: ["--canary", "true", "--split", "50:50"]
+            timeout_seconds: 120
+          - name: "Start service"
+            script_path: "/opt/switchr/scripts/start_ingress.sh"
+            parameters: []
+            timeout_seconds: 30
 
   - id: "svc-cache-daemon"
     host_id: "unix-db-cache-01"
@@ -148,12 +228,32 @@ services:
     profiles:
       - name: "write-through-persistent"
         description: "AOF enabled every second with strict RDB snapshots"
-        script_path: "/usr/local/bin/redis-config-switch.sh"
-        parameters: ["--durability", "strict"]
-        timeout_seconds: 60
+        scripts:
+          - name: "Stop service"
+            script_path: "/usr/local/bin/redis-stop.sh"
+            parameters: []
+            timeout_seconds: 30
+          - name: "Copy configuration"
+            script_path: "/usr/local/bin/redis-config-switch.sh"
+            parameters: ["--durability", "strict"]
+            timeout_seconds: 60
+          - name: "Start service"
+            script_path: "/usr/local/bin/redis-start.sh"
+            parameters: []
+            timeout_seconds: 30
 
       - name: "in-memory-volatile"
         description: "Persistence disabled for maximum throughput during migration"
-        script_path: "/usr/local/bin/redis-config-switch.sh"
-        parameters: ["--durability", "volatile-lru"]
-        timeout_seconds: 60
+        scripts:
+          - name: "Stop service"
+            script_path: "/usr/local/bin/redis-stop.sh"
+            parameters: []
+            timeout_seconds: 30
+          - name: "Copy configuration"
+            script_path: "/usr/local/bin/redis-config-switch.sh"
+            parameters: ["--durability", "volatile-lru"]
+            timeout_seconds: 60
+          - name: "Start service"
+            script_path: "/usr/local/bin/redis-start.sh"
+            parameters: []
+            timeout_seconds: 30

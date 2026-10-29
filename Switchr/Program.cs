@@ -67,7 +67,13 @@ app.MapGet("/api/inventory", (SwitchrConfig config, JobManager jobManager) =>
                 Description: p.Description,
                 ScriptPath: p.ScriptPath,
                 Parameters: p.Parameters,
-                TimeoutSeconds: p.TimeoutSeconds
+                TimeoutSeconds: p.TimeoutSeconds,
+                Scripts: p.GetEffectiveScripts().Select(s => new ScriptStepDto(
+                    Name: s.Name,
+                    ScriptPath: s.ScriptPath,
+                    Parameters: s.Parameters,
+                    TimeoutSeconds: s.TimeoutSeconds
+                )).ToList()
             )).ToList();
 
             servicesDto.Add(new ServiceStateViewDto(

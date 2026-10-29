@@ -28,25 +28,13 @@ public class MockExecutor : ICommandExecutor
         await Task.Delay(300, cancellationToken);
 
         yield return $"[EXEC] Invoking script: {scriptPath} {(string.IsNullOrWhiteSpace(arguments) ? "" : arguments)}";
-        await Task.Delay(600, cancellationToken);
-
-        yield return "[OUT] Step 1/3: Requesting managed service shutdown...";
-        await Task.Delay(800, cancellationToken);
-
-        yield return "[OUT] Step 1/3: Service successfully stopped.";
-        await Task.Delay(500, cancellationToken);
-
-        yield return "[OUT] Step 2/3: Deploying new configuration files to target directory...";
-        await Task.Delay(700, cancellationToken);
-
-        yield return "[OUT] Step 2/3: Configuration files copied and permissions verified.";
-        await Task.Delay(600, cancellationToken);
-
-        yield return "[OUT] Step 3/3: Restarting managed service...";
-        await Task.Delay(900, cancellationToken);
-
-        yield return "[OUT] Step 3/3: Service start signal issued successfully.";
         await Task.Delay(400, cancellationToken);
+
+        yield return $"[OUT] Running script payload for: {Path.GetFileName(scriptPath)}";
+        await Task.Delay(400, cancellationToken);
+
+        yield return "[OUT] Completed execution successfully with status OK.";
+        await Task.Delay(200, cancellationToken);
 
         yield return "[INFO] Script execution finished with exit code: 0";
     }

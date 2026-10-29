@@ -97,8 +97,12 @@ public class JobManager
         }
 
         var jobId = Guid.NewGuid().ToString("N")[..8];
-        var timeoutSec = profileConfig.TimeoutSeconds > 0 ? profileConfig.TimeoutSeconds : _config.App.DefaultJobTimeout;
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
+        var effectiveScripts = profileConfig.GetEffectiveScripts();
+        var totalTimeoutSec = effectiveScripts.Count > 0
+            ? effectiveScripts.Sum(s => s.TimeoutSeconds > 0 ? s.TimeoutSeconds : _config.App.DefaultJobTimeout)
+            : (profileConfig.TimeoutSeconds > 0 ? profileConfig.TimeoutSeconds : _config.App.DefaultJobTimeout);
+
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(totalTimeoutSec));
         var channel = Channel.CreateUnbounded<string>();
 
         var context = new SwitchJobContext(
@@ -158,14 +162,32 @@ public class JobManager
                 throw new InvalidOperationException("Simulated script execution failure.");
             }
 
-            await foreach (var line in executor.ExecuteCommandStreamAsync(
-                hostConfig,
-                profileConfig.ScriptPath,
-                profileConfig.ArgumentsString,
-                context.Cts.Token
-            ))
+            var scripts = profileConfig.GetEffectiveScripts();
+            if (scripts.Count == 0)
             {
-                await EmitLogAsync(context, line);
+                throw new InvalidOperationException($"No scripts configured for profile '{profileConfig.Name}'.");
+            }
+
+            for (int i = 0; i < scripts.Count; i++)
+            {
+                var step = scripts[i];
+                var stepNumber = i + 1;
+                var totalSteps = scripts.Count;
+                var stepName = string.IsNullOrWhiteSpace(step.Name) ? $"Script #{stepNumber}" : step.Name;
+
+                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Starting: {stepName} ({step.ScriptPath})");
+
+                await foreach (var line in executor.ExecuteCommandStreamAsync(
+                    hostConfig,
+                    step.ScriptPath,
+                    step.ArgumentsString,
+                    context.Cts.Token
+                ))
+                {
+                    await EmitLogAsync(context, line);
+                }
+
+                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Finished successfully: {stepName}");
             }
 
             // Post-execution verification probe
