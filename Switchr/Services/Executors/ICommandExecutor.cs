@@ -17,4 +17,10 @@ public interface ICommandExecutor
         string verificationName,
         CancellationToken cancellationToken
     );
+
+    Task<string?> ReadRemoteTextFileAsync(
+        HostConfig host,
+        string filePath,
+        CancellationToken cancellationToken = default
+    );
 }

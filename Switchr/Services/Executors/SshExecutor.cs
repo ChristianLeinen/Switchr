@@ -146,4 +146,48 @@ public class SshExecutor : ICommandExecutor
         var output = result.Trim().ToLowerInvariant();
         return output.Contains("active") || !string.IsNullOrWhiteSpace(output);
     }
+
+    public async Task<string?> ReadRemoteTextFileAsync(
+        HostConfig host,
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var authMethods = new List<AuthenticationMethod>();
+        var keyPath = host.EffectiveKeyPath;
+        var password = host.EffectivePassword;
+
+        if (!string.IsNullOrWhiteSpace(keyPath) && File.Exists(keyPath))
+        {
+            authMethods.Add(new PrivateKeyAuthenticationMethod(host.EffectiveUsername, new PrivateKeyFile(keyPath)));
+        }
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            authMethods.Add(new PasswordAuthenticationMethod(host.EffectiveUsername, password));
+        }
+
+        var connectionInfo = new Renci.SshNet.ConnectionInfo(host.Hostname, host.Port, host.EffectiveUsername, authMethods.ToArray())
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
+
+        try
+        {
+            using var client = new SshClient(connectionInfo);
+            await Task.Run(() => client.Connect(), cancellationToken);
+
+            var escapedPath = filePath.Replace("'", "'\\''");
+            var readCmd = $"test -f '{escapedPath}' && cat '{escapedPath}'";
+            using var cmd = client.CreateCommand(readCmd);
+            var result = await Task.Run(() => cmd.Execute(), cancellationToken);
+
+            var text = result?.Trim();
+            return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to read remote text file '{FilePath}' on {Host}", filePath, host.Hostname);
+            return null;
+        }
+    }
 }

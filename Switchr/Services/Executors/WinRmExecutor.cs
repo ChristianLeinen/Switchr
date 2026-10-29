@@ -179,4 +179,56 @@ public class WinRmExecutor : ICommandExecutor
             }
         }, cancellationToken);
     }
+
+    public async Task<string?> ReadRemoteTextFileAsync(
+        HostConfig host,
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await Task.Run(() =>
+        {
+            try
+            {
+                var scheme = host.UseSsl || host.Port == 5986 ? "https" : "http";
+                var targetUri = new Uri($"{scheme}://{host.Hostname}:{host.Port}/wsman");
+
+                var password = host.EffectivePassword ?? string.Empty;
+                var securePassword = new SecureString();
+                foreach (var c in password) securePassword.AppendChar(c);
+                securePassword.MakeReadOnly();
+
+                var cred = new PSCredential(host.EffectiveUsername, securePassword);
+                var connectionInfo = new WSManConnectionInfo(targetUri, "http://schemas.microsoft.com/powershell/Microsoft.PowerShell", cred)
+                {
+                    OpenTimeout = 10000,
+                    OperationTimeout = 15000
+                };
+
+                using var runspace = RunspaceFactory.CreateRunspace(connectionInfo);
+                runspace.Open();
+
+                using var ps = PowerShell.Create();
+                ps.Runspace = runspace;
+
+                // Safely escape the file path for PowerShell literal string
+                var escapedPath = filePath.Replace("'", "''");
+                ps.AddScript($"if (Test-Path -LiteralPath '{escapedPath}') {{ Get-Content -LiteralPath '{escapedPath}' -Raw }}");
+
+                var results = ps.Invoke();
+                if (results.Count > 0 && results[0]?.BaseObject != null)
+                {
+                    var text = results[0].BaseObject.ToString()?.Trim();
+                    return string.IsNullOrWhiteSpace(text) ? null : text;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to read remote text file '{FilePath}' on {Host}", filePath, host.Hostname);
+                return null;
+            }
+        }, cancellationToken);
+    }
 }

@@ -47,6 +47,54 @@ public class JobManager
         }
     }
 
+    public async Task InitializeActiveProfilesAsync(CancellationToken cancellationToken = default)
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        foreach (var svc in _config.Services)
+        {
+            if (string.IsNullOrWhiteSpace(svc.ActiveProfilePath))
+            {
+                svc.CurrentProfile = null;
+                continue;
+            }
+
+            var host = _config.GetHost(svc.HostId);
+            if (host == null)
+            {
+                _logger.LogWarning("Host '{HostId}' not found for service '{ServiceId}'.", svc.HostId, svc.Id);
+                svc.CurrentProfile = null;
+                continue;
+            }
+
+            try
+            {
+                ICommandExecutor executor = _config.App.DryRun
+                    ? scope.ServiceProvider.GetRequiredService<MockExecutor>()
+                    : host.OsType.Equals("windows", StringComparison.OrdinalIgnoreCase)
+                        ? scope.ServiceProvider.GetRequiredService<WinRmExecutor>()
+                        : scope.ServiceProvider.GetRequiredService<SshExecutor>();
+
+                var profileText = await executor.ReadRemoteTextFileAsync(host, svc.ActiveProfilePath, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(profileText))
+                {
+                    svc.CurrentProfile = profileText.Trim();
+                    _logger.LogInformation("Initialized active profile for service '{ServiceId}' to '{Profile}'.", svc.Id, svc.CurrentProfile);
+                }
+                else
+                {
+                    svc.CurrentProfile = null;
+                    _logger.LogInformation("Active profile file '{Path}' for service '{ServiceId}' returned empty or was not found.", svc.ActiveProfilePath, svc.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                svc.CurrentProfile = null;
+                _logger.LogWarning(ex, "Failed to read active profile file for service '{ServiceId}' at '{Path}'.", svc.Id, svc.ActiveProfilePath);
+            }
+        }
+    }
+
     public bool IsServiceLocked(string hostId, string serviceId)
     {
         var key = $"{hostId}:{serviceId}";
@@ -97,8 +145,12 @@ public class JobManager
         }
 
         var jobId = Guid.NewGuid().ToString("N")[..8];
-        var timeoutSec = profileConfig.TimeoutSeconds > 0 ? profileConfig.TimeoutSeconds : _config.App.DefaultJobTimeout;
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
+        var effectiveScripts = profileConfig.GetEffectiveScripts();
+        var totalTimeoutSec = effectiveScripts.Count > 0
+            ? effectiveScripts.Sum(s => s.TimeoutSeconds > 0 ? s.TimeoutSeconds : _config.App.DefaultJobTimeout)
+            : (profileConfig.TimeoutSeconds > 0 ? profileConfig.TimeoutSeconds : _config.App.DefaultJobTimeout);
+
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(totalTimeoutSec));
         var channel = Channel.CreateUnbounded<string>();
 
         var context = new SwitchJobContext(
@@ -158,14 +210,32 @@ public class JobManager
                 throw new InvalidOperationException("Simulated script execution failure.");
             }
 
-            await foreach (var line in executor.ExecuteCommandStreamAsync(
-                hostConfig,
-                profileConfig.ScriptPath,
-                profileConfig.ArgumentsString,
-                context.Cts.Token
-            ))
+            var scripts = profileConfig.GetEffectiveScripts();
+            if (scripts.Count == 0)
             {
-                await EmitLogAsync(context, line);
+                throw new InvalidOperationException($"No scripts configured for profile '{profileConfig.Name}'.");
+            }
+
+            for (int i = 0; i < scripts.Count; i++)
+            {
+                var step = scripts[i];
+                var stepNumber = i + 1;
+                var totalSteps = scripts.Count;
+                var stepName = string.IsNullOrWhiteSpace(step.Name) ? $"Script #{stepNumber}" : step.Name;
+
+                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Starting: {stepName} ({step.ScriptPath})");
+
+                await foreach (var line in executor.ExecuteCommandStreamAsync(
+                    hostConfig,
+                    step.ScriptPath,
+                    step.ArgumentsString,
+                    context.Cts.Token
+                ))
+                {
+                    await EmitLogAsync(context, line);
+                }
+
+                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Finished successfully: {stepName}");
             }
 
             // Post-execution verification probe
@@ -180,7 +250,40 @@ public class JobManager
             {
                 context.Status = "Succeeded";
                 context.ExitCode = 0;
-                serviceConfig.CurrentProfile = profileConfig.Name;
+
+                // Refresh active profile from active_profile_path if configured, otherwise fallback to switched profile
+                if (!string.IsNullOrWhiteSpace(serviceConfig.ActiveProfilePath))
+                {
+                    try
+                    {
+                        var readProfile = await executor.ReadRemoteTextFileAsync(
+                            hostConfig,
+                            serviceConfig.ActiveProfilePath,
+                            context.Cts.Token
+                        );
+
+                        if (!string.IsNullOrWhiteSpace(readProfile))
+                        {
+                            serviceConfig.CurrentProfile = readProfile.Trim();
+                            await EmitLogAsync(context, $"[PROBE] Confirmed active profile '{serviceConfig.CurrentProfile}' from remote file '{serviceConfig.ActiveProfilePath}'.");
+                        }
+                        else
+                        {
+                            serviceConfig.CurrentProfile = null;
+                            await EmitLogAsync(context, $"[WARN] Remote active profile file '{serviceConfig.ActiveProfilePath}' was empty or not found.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        serviceConfig.CurrentProfile = null;
+                        await EmitLogAsync(context, $"[WARN] Failed to read remote active profile file: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    serviceConfig.CurrentProfile = profileConfig.Name;
+                }
+
                 await EmitLogAsync(context, $"[SUCCESS] Service is confirmed RUNNING. Configuration switch to '{context.ProfileName}' complete.");
             }
             else

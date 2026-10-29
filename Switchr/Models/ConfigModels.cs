@@ -53,15 +53,11 @@ public record AuthConfig
     public string? PassphraseEnv { get; init; }
 }
 
-public record ProfileConfig
+public record ScriptStepConfig
 {
     [YamlMember(Alias = "name")]
     [JsonPropertyName("name")]
     public string Name { get; init; } = string.Empty;
-
-    [YamlMember(Alias = "description")]
-    [JsonPropertyName("description")]
-    public string Description { get; init; } = string.Empty;
 
     [YamlMember(Alias = "script_path")]
     [JsonPropertyName("script_path")]
@@ -79,6 +75,64 @@ public record ProfileConfig
     public string ArgumentsString => Parameters is { Count: > 0 }
         ? string.Join(" ", Parameters.Select(p => p.Contains(' ') ? $"\"{p}\"" : p))
         : string.Empty;
+}
+
+public record ProfileConfig
+{
+    [YamlMember(Alias = "name")]
+    [JsonPropertyName("name")]
+    public string Name { get; init; } = string.Empty;
+
+    [YamlMember(Alias = "description")]
+    [JsonPropertyName("description")]
+    public string Description { get; init; } = string.Empty;
+
+    // Legacy single-script configuration fields
+    [YamlMember(Alias = "script_path")]
+    [JsonPropertyName("script_path")]
+    public string ScriptPath { get; init; } = string.Empty;
+
+    [YamlMember(Alias = "parameters")]
+    [JsonPropertyName("parameters")]
+    public List<string> Parameters { get; init; } = new();
+
+    [YamlMember(Alias = "timeout_seconds")]
+    [JsonPropertyName("timeout_seconds")]
+    public int TimeoutSeconds { get; init; } = 300;
+
+    // Multi-script sequential configuration
+    [YamlMember(Alias = "scripts")]
+    [JsonPropertyName("scripts")]
+    public List<ScriptStepConfig> Scripts { get; init; } = new();
+
+    [JsonIgnore]
+    public string ArgumentsString => Parameters is { Count: > 0 }
+        ? string.Join(" ", Parameters.Select(p => p.Contains(' ') ? $"\"{p}\"" : p))
+        : string.Empty;
+
+    public IReadOnlyList<ScriptStepConfig> GetEffectiveScripts()
+    {
+        if (Scripts != null && Scripts.Count > 0)
+        {
+            return Scripts;
+        }
+
+        if (!string.IsNullOrWhiteSpace(ScriptPath))
+        {
+            return new List<ScriptStepConfig>
+            {
+                new()
+                {
+                    Name = "Execute profile script",
+                    ScriptPath = ScriptPath,
+                    Parameters = Parameters ?? new List<string>(),
+                    TimeoutSeconds = TimeoutSeconds > 0 ? TimeoutSeconds : 300
+                }
+            };
+        }
+
+        return Array.Empty<ScriptStepConfig>();
+    }
 }
 
 public record ServiceConfig
@@ -103,9 +157,13 @@ public record ServiceConfig
     [JsonPropertyName("verification_service_name")]
     public string VerificationServiceName { get; init; } = string.Empty;
 
-    [YamlMember(Alias = "current_profile")]
+    [YamlMember(Alias = "active_profile_path")]
+    [JsonPropertyName("active_profile_path")]
+    public string? ActiveProfilePath { get; init; }
+
+    [YamlIgnore]
     [JsonPropertyName("current_profile")]
-    public string CurrentProfile { get; set; } = string.Empty;
+    public string? CurrentProfile { get; set; } = null;
 
     [YamlMember(Alias = "description")]
     [JsonPropertyName("description")]
@@ -273,12 +331,20 @@ public record SwitchJobRequest
     public bool? DryRun { get; init; }
 }
 
+public record ScriptStepDto(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("script_path")] string ScriptPath,
+    [property: JsonPropertyName("parameters")] List<string> Parameters,
+    [property: JsonPropertyName("timeout_seconds")] int TimeoutSeconds
+);
+
 public record ProfileDto(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("script_path")] string ScriptPath,
     [property: JsonPropertyName("parameters")] List<string> Parameters,
-    [property: JsonPropertyName("timeout_seconds")] int TimeoutSeconds
+    [property: JsonPropertyName("timeout_seconds")] int TimeoutSeconds,
+    [property: JsonPropertyName("scripts")] List<ScriptStepDto> Scripts
 );
 
 public record ServiceStateViewDto(
@@ -287,7 +353,7 @@ public record ServiceStateViewDto(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("service_type")] string ServiceType,
     [property: JsonPropertyName("verification_service_name")] string VerificationServiceName,
-    [property: JsonPropertyName("current_profile")] string CurrentProfile,
+    [property: JsonPropertyName("current_profile")] string? CurrentProfile,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("status")] string Status, // "RUNNING" | "STOPPED" | "TRANSITIONING" | "ERROR"
     [property: JsonPropertyName("is_locked")] bool IsLocked,

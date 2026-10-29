@@ -39,6 +39,10 @@ builder.Services.AddSingleton<JobManager>();
 
 var app = builder.Build();
 
+// Initialize active profiles from configured remote file paths
+var jobManager = app.Services.GetRequiredService<JobManager>();
+await jobManager.InitializeActiveProfilesAsync();
+
 // Enable serving static frontend files from wwwroot
 app.UseDefaultFiles(new DefaultFilesOptions
 {
@@ -67,7 +71,13 @@ app.MapGet("/api/inventory", (SwitchrConfig config, JobManager jobManager) =>
                 Description: p.Description,
                 ScriptPath: p.ScriptPath,
                 Parameters: p.Parameters,
-                TimeoutSeconds: p.TimeoutSeconds
+                TimeoutSeconds: p.TimeoutSeconds,
+                Scripts: p.GetEffectiveScripts().Select(s => new ScriptStepDto(
+                    Name: s.Name,
+                    ScriptPath: s.ScriptPath,
+                    Parameters: s.Parameters,
+                    TimeoutSeconds: s.TimeoutSeconds
+                )).ToList()
             )).ToList();
 
             servicesDto.Add(new ServiceStateViewDto(

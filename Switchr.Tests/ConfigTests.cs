@@ -36,7 +36,7 @@ public class ConfigTests
             name: "Service1"
             service_type: "windows_service"
             verification_service_name: "Service1"
-            current_profile: "profA"
+            active_profile_path: "C:\\state\\active_profile.txt"
             description: "Service description"
             profiles:
               - name: "profA"
@@ -70,7 +70,8 @@ public class ConfigTests
         var svc = config.Services[0];
         Assert.Equal("svc1", svc.Id);
         Assert.Equal("Service1", svc.Name);
-        Assert.Equal("profA", svc.CurrentProfile);
+        Assert.Null(svc.CurrentProfile);
+        Assert.Equal("C:\\state\\active_profile.txt", svc.ActiveProfilePath);
 
         Assert.Single(svc.Profiles);
         var profile = svc.Profiles[0];
@@ -78,5 +79,80 @@ public class ConfigTests
         Assert.Equal("C:\\script.bat", profile.ScriptPath);
         Assert.Equal(2, profile.Parameters.Count);
         Assert.Equal("--mode A", profile.ArgumentsString);
+
+        // Fallback backward compatibility verification
+        var effectiveScripts = profile.GetEffectiveScripts();
+        Assert.Single(effectiveScripts);
+        Assert.Equal("C:\\script.bat", effectiveScripts[0].ScriptPath);
+        Assert.Equal("--mode A", effectiveScripts[0].ArgumentsString);
+    }
+
+    [Fact]
+    public void YamlDeserialization_MultiScriptConfig_ParsesProperly()
+    {
+        var yaml = """
+        app:
+          name: "Switchr"
+          version: "1.0.0"
+
+        hosts:
+          - id: "win-01"
+            name: "Host 1"
+            os_type: "windows"
+            hostname: "192.168.1.10"
+
+        services:
+          - id: "svc-fin"
+            host_id: "win-01"
+            name: "Financial Service"
+            verification_service_name: "FinSvc"
+            active_profile_path: "C:\\services\\profile.txt"
+            profiles:
+              - name: "prod-high"
+                description: "Production High Profile"
+                scripts:
+                  - name: "Stop service"
+                    script_path: "C:\\scripts\\stop.bat"
+                    parameters: ["--force"]
+                    timeout_seconds: 45
+                  - name: "Copy configuration"
+                    script_path: "C:\\scripts\\copy_config.bat"
+                    parameters: ["--env", "prod"]
+                    timeout_seconds: 90
+                  - name: "Start service"
+                    script_path: "C:\\scripts\\start.bat"
+                    timeout_seconds: 60
+        """;
+
+        var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
+            .Build();
+
+        var config = deserializer.Deserialize<SwitchrConfig>(yaml);
+
+        Assert.NotNull(config);
+        var svc = Assert.Single(config.Services);
+        var profile = Assert.Single(svc.Profiles);
+        Assert.Equal("prod-high", profile.Name);
+        Assert.Equal(3, profile.Scripts.Count);
+
+        var step1 = profile.Scripts[0];
+        Assert.Equal("Stop service", step1.Name);
+        Assert.Equal("C:\\scripts\\stop.bat", step1.ScriptPath);
+        Assert.Equal("--force", step1.ArgumentsString);
+        Assert.Equal(45, step1.TimeoutSeconds);
+
+        var step2 = profile.Scripts[1];
+        Assert.Equal("Copy configuration", step2.Name);
+        Assert.Equal("--env prod", step2.ArgumentsString);
+
+        var step3 = profile.Scripts[2];
+        Assert.Equal("Start service", step3.Name);
+        Assert.Empty(step3.Parameters);
+        Assert.Equal(60, step3.TimeoutSeconds);
+
+        var effectiveScripts = profile.GetEffectiveScripts();
+        Assert.Equal(3, effectiveScripts.Count);
     }
 }
