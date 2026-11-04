@@ -22,7 +22,7 @@ import { createServer as createViteServer } from 'vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = parseInt(process.env.APP_PORT || process.env.DEFAULT_APP_PORT || '3000', 10);
 const CONFIG_PATH = process.env.SWITCHR_CONFIG || path.join(__dirname, 'config.yaml');
 const LOGS_DIR = path.join(__dirname, 'logs');
 
