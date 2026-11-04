@@ -2,8 +2,8 @@ import React from 'react';
 import { Layers, Terminal, ShieldAlert, Cpu } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'fleet' | 'audit' | 'config';
-  onTabChange: (tab: 'fleet' | 'audit' | 'config') => void;
+  activeTab: 'fleet' | 'audit';
+  onTabChange: (tab: 'fleet' | 'audit') => void;
   activeLocksCount: number;
   onSimulateConflict: () => void;
 }
@@ -49,16 +49,6 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Audit History
-          </button>
-          <button
-            onClick={() => onTabChange('config')}
-            className={`whitespace-nowrap pb-0.5 border-b-2 transition-colors ${
-              activeTab === 'config'
-                ? 'border-sky-500 text-white font-semibold'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Configuration YAML
           </button>
         </nav>
 

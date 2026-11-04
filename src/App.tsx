@@ -6,13 +6,12 @@ import { FleetView } from './components/FleetView';
 import { ConfirmModal } from './components/ConfirmModal';
 import { TerminalDrawer } from './components/TerminalDrawer';
 import { AuditHistoryView } from './components/AuditHistoryView';
-import { ConfigViewer } from './components/ConfigViewer';
 import { orchestratorService } from './services/mockOrchestrator';
 import { JobRecord, ManagedService, TargetHost } from './types';
 import { ShieldAlert, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'fleet' | 'audit' | 'config'>('fleet');
+  const [activeTab, setActiveTab] = useState<'fleet' | 'audit'>('fleet');
   const [hosts, setHosts] = useState<TargetHost[]>([]);
   const [services, setServices] = useState<ManagedService[]>([]);
   const [auditHistory, setAuditHistory] = useState<JobRecord[]>([]);
@@ -435,10 +434,6 @@ export default function App() {
             }}
             onClearHistory={handleClearHistory}
           />
-        )}
-
-        {activeTab === 'config' && (
-          <ConfigViewer hosts={hosts} services={services} />
         )}
       </main>
 
