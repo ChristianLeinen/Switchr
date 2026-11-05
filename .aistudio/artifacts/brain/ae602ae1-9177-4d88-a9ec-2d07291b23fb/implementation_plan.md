@@ -1,56 +1,71 @@
-# Implementation Plan: Dark Mode & Light Mode Theme Toggle
+# Implementation Plan: Declutter Host Cards & Add Host Details Popup Modal
 
-Add a seamless dark/light theme toggle to the Switchr DevOps dashboard that supports system preference detection with persistent operator overrides, placed in the top navigation header.
+## Overview
+Declutter the host card headers in `FleetView` to give operators a clean, scannable overview while keeping all deep technical connection parameters accessible via a modal popup.
 
-## User Preferences & Requirements
-1. **Toggle Placement**: In the top navigation header next to telemetry badges.
-2. **Terminal Styling**: Keep the live execution terminal drawer and log view in dark terminal theme for realism and high contrast even when light mode is active.
-3. **Default Behavior**: Respect the user's OS system color preference (`prefers-color-scheme`) by default, and remember explicit toggle actions in `localStorage` under `'switchr-theme'`.
-4. **Cohesive Appearance**: Clean, modern enterprise DevOps styling in light mode (crisp slate/zinc surfaces, dark borders, high-contrast badges) matching the dark console aesthetic.
+---
+
+## User Specifications & Requirements
+1. **Remove from Host Card Header**:
+   - IP address / hostname (`host.hostname`)
+   - Connection port (`host.port`)
+   - Protocol indicator (`WinRM WS-Man` / `Paramiko SSH`)
+   - Authentication user information (`User: host.auth.username`)
+   - Managed services count text on the right (`{hostServices.length} managed services`)
+2. **Retain on Host Card Header**:
+   - Host OS badge (`WIN` / `NIX`)
+   - Host display name (`host.name`)
+   - Host description (`host.description`)
+3. **New Trigger**:
+   - Place an Info icon button (`Info` from `lucide-react`) on the right side of the host header.
+4. **Host Details Popup Modal**:
+   - Center modal dialog with backdrop blur.
+   - Dismissible via Escape key, close button, or clicking the backdrop.
+   - Styled seamlessly for both Light and Dark modes.
+   - Displays all connection, protocol, authentication, and inventory details clearly:
+     - Host ID & Name
+     - Operating System & Remote Transport Protocol (WinRM WS-Management vs Paramiko SSH)
+     - IP Address / Hostname & Port (with SSL indicator if applicable)
+     - Authentication Type (Password / Key) & Username
+     - Credential source (Environment variable / Key path)
+     - Managed Services breakdown on this host with status badges
 
 ---
 
 ## Proposed Changes
 
-### 1. Theme Management System
-- Create a dedicated hook/context or custom state manager in `src/hooks/useTheme.ts`:
-  - Detects initial theme from `localStorage.getItem('switchr-theme')` or `window.matchMedia('(prefers-color-scheme: dark)')`.
-  - Dynamically sets or removes the `dark` class on `document.documentElement` (`<html>`).
-  - Listens to system theme change events if no manual preference is saved.
-  - Exposes `theme: 'dark' | 'light'` and `toggleTheme()`.
+### 1. New Component: `HostDetailsModal.tsx`
+Create `src/components/HostDetailsModal.tsx`:
+- Accepts `host: TargetHost | null`, `services: ManagedService[]`, `isOpen: boolean`, and `onClose: () => void`.
+- Includes keyboard listener for `Escape` and background scroll lock while open.
+- Displays structured technical cards:
+  - **Connection & Protocol**: Hostname, Port, Protocol, Transport type.
+  - **Authentication**: Auth type (password/key), username, credential source.
+  - **Managed Services**: List of services mapped to this host with status and probe info.
+  - **Close button** at top and bottom.
 
-### 2. Styling System & Tailwind Configuration (`src/index.css`)
-- Configure `:root` and `.dark` variables or CSS utility overrides for backgrounds, text, and crisp scrollbars.
-- Ensure light mode body has `#f8fafc` (slate-50) background with `#0f172a` (slate-900) primary text, and dark mode retains `#090d16` with `#e2e8f0`.
-
-### 3. Header Component (`src/components/Header.tsx`)
-- Add Sun / Moon toggle button next to `DRY_RUN=True` badge and `Test 409 Lock` button.
-- Include tooltip / aria-label indicating "Switch to light mode" or "Switch to dark mode".
-- Adapt header background and borders to `bg-white/90 border-slate-200 text-slate-900` in light mode and `bg-[#070b14]/95 border-slate-800/80 text-white` in dark mode.
-
-### 4. Fleet & Audit Views (`src/components/FleetView.tsx`, `src/components/AuditHistoryView.tsx`)
-- Update host cards, search inputs, filter buttons, badges, and tables to use Tailwind `dark:` variants:
-  - Cards: `bg-white border-slate-200 text-slate-900 shadow-sm dark:bg-[#0c1220] dark:border-slate-800 dark:text-slate-100`.
-  - Badges & tags: maintain high contrast in both themes.
-  - Buttons: clear primary action contrast in both modes.
-
-### 5. Modals & Popups (`src/components/ConfirmModal.tsx`, `src/components/LegalModal.tsx`)
-- Adapt modal containers to look crisp in light mode (`bg-white border-slate-200 text-slate-800 shadow-2xl`) while retaining rich dark styling in dark mode.
-
-### 6. Terminal Drawer Preservation (`src/components/TerminalDrawer.tsx`)
-- Per the user's explicit preference, maintain the dark terminal aesthetic (`bg-[#05070e]`, green/sky/amber terminal logs) even when the app is in light mode.
-
-### 7. Footer Component (`src/components/Footer.tsx`)
-- Adapt footer borders, text colors, and legal link hovers for light and dark modes.
+### 2. Update `FleetView.tsx`
+- Remove the inline metadata row showing hostname, port, protocol, and username.
+- Replace the right-side text `{hostServices.length} managed services` with an Info icon button:
+  ```tsx
+  <button
+    onClick={() => setSelectedHostForDetails(host)}
+    title={`View technical details for ${host.name}`}
+    className="p-1.5 rounded-md text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+  >
+    <Info className="w-4 h-4" />
+  </button>
+  ```
+- Retain the OS badge, host name, and host description in the header.
+- Maintain `selectedHostForDetails: TargetHost | null` state and render `<HostDetailsModal />`.
 
 ---
 
 ## Verification Plan
-1. **Automated Verification**:
-   - Run `compile_applet` to check TypeScript compilation.
-   - Run `lint_applet` (`tsc --noEmit`) to verify no type or import errors.
-2. **Behavioral Testing**:
-   - Verify toggle changes the `dark` class on `<html>` and updates `localStorage`.
-   - Verify reloading the page retains the user's selected theme.
-   - Verify terminal drawer stays in high-contrast dark theme in both modes.
-   - Verify modal dialogs (Switch Confirmation, Legal popups) display cleanly in both themes.
+1. **Compilation & Type Check**:
+   - Run `compile_applet` and `lint_applet` (`tsc --noEmit`).
+2. **Visual & Interaction Verification**:
+   - Verify host cards are clean, displaying only badge, name, and description.
+   - Verify clicking the Info icon button opens the center modal with all technical details.
+   - Verify modal closes on Escape key, clicking Close, or clicking the backdrop.
+   - Verify responsive behavior and styling across both Light and Dark modes.

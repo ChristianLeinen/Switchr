@@ -12,8 +12,10 @@ import {
   Sliders,
   Flame,
   FileText,
+  Info,
 } from 'lucide-react';
 import { getEffectiveScripts, ManagedService, OSType, TargetHost } from '../types';
+import { HostDetailsModal } from './HostDetailsModal';
 
 interface FleetViewProps {
   hosts: TargetHost[];
@@ -34,6 +36,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, string>>({});
   const [simulateFailures, setSimulateFailures] = useState<Record<string, boolean>>({});
+  const [selectedHostForDetails, setSelectedHostForDetails] = useState<TargetHost | null>(null);
 
   const handleProfileSelect = (serviceId: string, profileName: string) => {
     setSelectedProfiles((prev) => ({ ...prev, [serviceId]: profileName }));
@@ -166,11 +169,11 @@ export const FleetView: React.FC<FleetViewProps> = ({
                 key={host.id}
                 className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800/90 rounded-lg overflow-hidden shadow-sm transition-colors duration-150"
               >
-                {/* Host Header */}
-                <div className="px-5 py-4 bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                {/* Host Header (Decluttered) */}
+                <div className="px-5 py-4 bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`w-8 h-8 rounded flex items-center justify-center font-mono text-xs font-bold ${
+                      className={`w-8 h-8 rounded flex items-center justify-center font-mono text-xs font-bold shrink-0 ${
                         isWindows
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-400 border border-blue-300 dark:border-blue-800/60'
                           : 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border border-amber-300 dark:border-amber-800/60'
@@ -179,26 +182,25 @@ export const FleetView: React.FC<FleetViewProps> = ({
                       {isWindows ? 'WIN' : 'NIX'}
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-base font-display font-bold text-slate-900 dark:text-white tracking-tight">{host.name}</h2>
-                        <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
-                          {host.hostname}:{host.port}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        <span>{isWindows ? 'WinRM WS-Man' : 'Paramiko SSH'}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>User: {host.auth.username}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{host.description}</span>
-                      </div>
+                    <div className="min-w-0">
+                      <h2 className="text-base font-display font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                        {host.name}
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                        {host.description}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    {hostServices.length} managed service{hostServices.length > 1 ? 's' : ''}
-                  </div>
+                  {/* Info Icon Button Opening Details Modal */}
+                  <button
+                    onClick={() => setSelectedHostForDetails(host)}
+                    aria-label={`View connection details for ${host.name}`}
+                    title={`View connection details for ${host.name}`}
+                    className="p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
                 </div>
 
                 {/* Services List */}
@@ -374,6 +376,14 @@ export const FleetView: React.FC<FleetViewProps> = ({
           })
         )}
       </div>
+
+      {/* Host Details Popup Modal */}
+      <HostDetailsModal
+        host={selectedHostForDetails}
+        services={services}
+        isOpen={Boolean(selectedHostForDetails)}
+        onClose={() => setSelectedHostForDetails(null)}
+      />
     </div>
   );
 };

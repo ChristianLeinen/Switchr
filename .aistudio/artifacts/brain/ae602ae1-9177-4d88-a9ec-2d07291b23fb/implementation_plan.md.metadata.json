@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan for adding a cohesive Dark Mode / Light Mode toggle to the Switchr DevOps orchestrator console. Respects system color scheme by default with persistent localStorage selection, adds Sun/Moon icon toggle in the top header next to telemetry, updates base backgrounds and cards with clean light/dark token classes, keeps the live terminal drawer dark for authentic DevOps aesthetics, and styles modal popups and footer cleanly across both themes.",
-  "updatedAt": "2026-11-05T00:16:14.526665266Z",
+  "summary": "Implementation plan to declutter the host cards in FleetView by removing the IP address (hostname), port, WinRM/Paramiko indicator, username, and service count text, replacing them with a sleek Info icon button that opens a focused, centered modal popup displaying comprehensive host connection details, security authentication, and managed service inventory.",
+  "updatedAt": "2026-11-05T02:09:46.513886952Z",
   "requestFeedback": true,
   "userFacing": true
 }
