@@ -8,11 +8,13 @@ import { TerminalDrawer } from './components/TerminalDrawer';
 import { AuditHistoryView } from './components/AuditHistoryView';
 import { Footer } from './components/Footer';
 import { LegalModal, LegalModalType } from './components/LegalModal';
+import { useTheme } from './hooks/useTheme';
 import { orchestratorService } from './services/mockOrchestrator';
 import { JobRecord, ManagedService, TargetHost } from './types';
 import { ShieldAlert, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'fleet' | 'audit'>('fleet');
   const [hosts, setHosts] = useState<TargetHost[]>([]);
   const [services, setServices] = useState<ManagedService[]>([]);
@@ -376,13 +378,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-slate-200 transition-colors duration-150">
       {/* Top Header */}
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
         activeLocksCount={activeLocksCount}
         onSimulateConflict={handleSimulateConflict}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Toast Notification Banner */}

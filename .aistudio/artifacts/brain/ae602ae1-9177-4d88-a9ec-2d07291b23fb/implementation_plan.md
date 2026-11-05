@@ -1,148 +1,56 @@
-# Switchr: Multi-Script Execution Pipeline & Active Profile Path Support
+# Implementation Plan: Dark Mode & Light Mode Theme Toggle
 
-Adapt the Switchr frontend and development server to support the updated C# backend architecture featuring sequential multi-script execution pipelines and dynamic remote file reading via `active_profile_path`.
+Add a seamless dark/light theme toggle to the Switchr DevOps dashboard that supports system preference detection with persistent operator overrides, placed in the top navigation header.
 
----
-
-### User Review & Critical Decisions
-
-> [!IMPORTANT]
-> The following decisions were clarified and guide this update:
-> - **Unassigned Active Profile**: When `current_profile` is null or empty (e.g. `active_profile_path` is not configured, file not found, or empty), display a clean `Active: None` indicator and prompt the operator with `-- Select profile to apply --`.
-> - **Multi-Script Pipeline in Confirmation Modal**: Render a numbered, sequential execution pipeline showing step names (e.g. `1. Stop service`, `2. Copy configuration`, `3. Start service`), script paths, parameters, and per-step timeout budgets.
-> - **Full Dev Server & Simulation Alignment**: Update `server.ts` and `mockOrchestrator.ts` to simulate serial step progression (`[STEP X/Y] Starting... -> Finished successfully...`), enforce fail-fast termination if any step fails, and read/write active profile states via `active_profile_path`.
+## User Preferences & Requirements
+1. **Toggle Placement**: In the top navigation header next to telemetry badges.
+2. **Terminal Styling**: Keep the live execution terminal drawer and log view in dark terminal theme for realism and high contrast even when light mode is active.
+3. **Default Behavior**: Respect the user's OS system color preference (`prefers-color-scheme`) by default, and remember explicit toggle actions in `localStorage` under `'switchr-theme'`.
+4. **Cohesive Appearance**: Clean, modern enterprise DevOps styling in light mode (crisp slate/zinc surfaces, dark borders, high-contrast badges) matching the dark console aesthetic.
 
 ---
 
-### 1. Overview & Core Concept
+## Proposed Changes
 
-The updated configuration model moves from a single script per profile to a **sequential multi-script pipeline** (`scripts: [...]`), where steps are executed strictly in order (e.g., stop service &rarr; deploy new config &rarr; start service). Execution halts immediately if any step fails. Furthermore, `current_profile` is no longer a static configuration field; it is dynamically resolved at runtime by reading a text file on the remote host specified by `active_profile_path`. If that file does not exist or is empty, `current_profile` remains `null`.
+### 1. Theme Management System
+- Create a dedicated hook/context or custom state manager in `src/hooks/useTheme.ts`:
+  - Detects initial theme from `localStorage.getItem('switchr-theme')` or `window.matchMedia('(prefers-color-scheme: dark)')`.
+  - Dynamically sets or removes the `dark` class on `document.documentElement` (`<html>`).
+  - Listens to system theme change events if no manual preference is saved.
+  - Exposes `theme: 'dark' | 'light'` and `toggleTheme()`.
 
-The frontend must cleanly reflect:
-1. **Dynamic Active Profile**: Gracefully display `None` when a service has no active profile detected, and enable initial profile selection without defaulting to a nonexistent profile.
-2. **Sequential Script Pipelines**: Visual pipeline display in the confirmation modal, service cards, and real-time terminal drawer, detailing step-by-step progress through the transition sequence.
-3. **Serial Step Streaming**: Streamline log output with clear step boundaries (`[STEP 1/3] Starting: Stop service...`).
+### 2. Styling System & Tailwind Configuration (`src/index.css`)
+- Configure `:root` and `.dark` variables or CSS utility overrides for backgrounds, text, and crisp scrollbars.
+- Ensure light mode body has `#f8fafc` (slate-50) background with `#0f172a` (slate-900) primary text, and dark mode retains `#090d16` with `#e2e8f0`.
 
----
+### 3. Header Component (`src/components/Header.tsx`)
+- Add Sun / Moon toggle button next to `DRY_RUN=True` badge and `Test 409 Lock` button.
+- Include tooltip / aria-label indicating "Switch to light mode" or "Switch to dark mode".
+- Adapt header background and borders to `bg-white/90 border-slate-200 text-slate-900` in light mode and `bg-[#070b14]/95 border-slate-800/80 text-white` in dark mode.
 
-### 2. User Experience & Visual Design
+### 4. Fleet & Audit Views (`src/components/FleetView.tsx`, `src/components/AuditHistoryView.tsx`)
+- Update host cards, search inputs, filter buttons, badges, and tables to use Tailwind `dark:` variants:
+  - Cards: `bg-white border-slate-200 text-slate-900 shadow-sm dark:bg-[#0c1220] dark:border-slate-800 dark:text-slate-100`.
+  - Badges & tags: maintain high contrast in both themes.
+  - Buttons: clear primary action contrast in both modes.
 
-Following the universal frontend design constitution and enterprise SaaS dashboard guidelines:
+### 5. Modals & Popups (`src/components/ConfirmModal.tsx`, `src/components/LegalModal.tsx`)
+- Adapt modal containers to look crisp in light mode (`bg-white border-slate-200 text-slate-800 shadow-2xl`) while retaining rich dark styling in dark mode.
 
-#### Fleet & Service View
-- **Active Profile Badge**:
-  - Populated state: `Active: <strong class="text-sky-300 font-normal">prod-high</strong>`
-  - Unassigned state (`current_profile === null`): `Active: <strong class="text-slate-500 font-normal">None</strong>`
-- **Profile Selector**:
-  - If `current_profile` is null, the select dropdown defaults to `-- Select profile to apply --` (`value=""`), requiring explicit user intent before enabling the switch button.
-- **Pipeline Indicator**:
-  - Displays a subtle metadata counter: `3 script steps · 210s total timeout`.
+### 6. Terminal Drawer Preservation (`src/components/TerminalDrawer.tsx`)
+- Per the user's explicit preference, maintain the dark terminal aesthetic (`bg-[#05070e]`, green/sky/amber terminal logs) even when the app is in light mode.
 
-#### Confirmation Modal
-- **Sequential Pipeline View**:
-  - Renders a clean numbered list of script steps:
-    ```
-    1. Stop service          C:\...\stop_service.bat             60s
-    2. Copy configuration    C:\...\apply_config.bat --mode ...  90s
-    3. Start service         C:\...\start_service.bat            60s
-    ```
-  - Displays total pipeline duration and failure warning.
-
-#### Real-Time Terminal Console
-- Streams serial step markers:
-  - `[STEP 1/3] Starting: Stop service (C:\...\stop.bat)`
-  - `[stdout] ...`
-  - `[STEP 1/3] Finished successfully: Stop service`
-  - `[STEP 2/3] Starting: Copy configuration...`
-- Automated post-execution verification probe runs only after all pipeline steps complete with exit code 0.
-- Confirms active profile update from `active_profile_path`.
+### 7. Footer Component (`src/components/Footer.tsx`)
+- Adapt footer borders, text colors, and legal link hovers for light and dark modes.
 
 ---
 
-### 3. Key Product Decisions & Trade-Offs
-
-#### Decision 1: Backward-Compatible Profile Resolution
-- *Chosen Approach*: Support both new `scripts: ScriptStepConfig[]` and legacy single-script `script_path` / `parameters` / `timeout_seconds` across TypeScript types, `server.ts`, and `mockOrchestrator.ts`.
-- *Why*: Allows zero-regression operation whether a profile defines multiple script steps or a single legacy script.
-
-#### Decision 2: Guarding Switch Execution on Unselected Profile
-- *Chosen Approach*: Disable the "Switch Profile" button when `selectedProfile === ""` (unassigned profile and no dropdown selection made yet).
-- *Why*: Prevents accidental execution with undefined parameters when a service has no active profile.
-
-#### Decision 3: Realistic Multi-Script Simulation in Development
-- *Chosen Approach*: Implement serial step delay loops in `server.ts` and `mockOrchestrator.ts` with matching `[STEP X/Y]` log lines, simulating the C# `JobManager` behavior faithfully in local preview.
-- *Why*: Guarantees that operators testing the web console observe the exact same streaming behavior and step timing as in production.
-
----
-
-### 4. Technical Architecture & Data Strategy
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Operator Web Interface                          │
-│  ┌───────────────────────┐ ┌──────────────────────┐ ┌───────────────┐  │
-│  │ Fleet View            │ │ Confirmation Modal   │ │ Live Terminal │  │
-│  │ Active: None / profA  │ │ Numbered Pipeline    │ │ Step 1/3 ->   │  │
-│  │ Profile Selector      │ │ Steps 1..N           │ │ Step 3/3 ->   │  │
-│  └───────────┬───────────┘ └──────────┬───────────┘ └───────▲───────┘  │
-└──────────────┼────────────────────────┼─────────────────────┼──────────┘
-               │                        │                     │
-               ▼                        ▼                     │
-┌─────────────────────────────────────────────────────────────┴──────────┐
-│             C# Production Backend / Node.js Dev Server                 │
-│                                                                        │
-│   • Reads active profile from 'active_profile_path'                    │
-│   • If file missing/empty -> current_profile = null                    │
-│   • Executes scripts in serial sequence:                               │
-│       Step 1: Execute -> wait exit code 0                              │
-│       Step 2: Execute -> wait exit code 0                              │
-│       Step N: Execute -> wait exit code 0                              │
-│   • Verification probe: sc query / systemctl is-active                 │
-│   • Refreshes active profile from file upon completion                 │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-#### Updated Type Definitions (`src/types.ts`)
-```typescript
-export interface ScriptStepConfig {
-  name: string;
-  script_path: string;
-  parameters: string[];
-  timeout_seconds: number;
-}
-
-export interface ConfigProfile {
-  name: string;
-  description: string;
-  // Legacy single-script fallback
-  script_path?: string;
-  parameters?: string[];
-  timeout_seconds?: number;
-  // Multi-script sequential pipeline
-  scripts?: ScriptStepConfig[];
-}
-
-export interface ManagedService {
-  id: string;
-  host_id: string;
-  name: string;
-  service_type: 'windows_service' | 'systemd' | 'generic_process';
-  verification_service_name: string;
-  active_profile_path?: string | null;
-  current_profile: string | null; // Nullable if not read or unconfigured
-  description: string;
-  status: ServiceStatus;
-  is_locked: boolean;
-  active_job_id?: string;
-  profiles: ConfigProfile[];
-}
-```
-
-#### Files to Modify
-1. `src/types.ts`: Add `ScriptStepConfig`, make `current_profile` nullable (`string | null`), add `active_profile_path`, and support `scripts` in `ConfigProfile`.
-2. `server.ts`: Update backend data models, implement serial step execution loop, load/write `active_profile_path`, and handle null `current_profile`.
-3. `src/services/mockOrchestrator.ts`: Update mock inventory with new `active_profile_path` and `scripts: [...]` from `config.yaml`, update serial execution logic, and manage `current_profile` nullability.
-4. `src/components/FleetView.tsx`: Render `Active: None` when `current_profile` is null, add default unselected option `-- Select profile to apply --`, and display step count.
-5. `src/components/ConfirmModal.tsx`: Render the numbered multi-script execution pipeline with step names, paths, arguments, and timeouts.
-6. `src/components/ConfigViewer.tsx`: Update YAML viewer and schema validator for `active_profile_path` and multi-script profiles.
-7. `static/index.html`: Update standalone dashboard to match the multi-script pipeline and null profile handling.
+## Verification Plan
+1. **Automated Verification**:
+   - Run `compile_applet` to check TypeScript compilation.
+   - Run `lint_applet` (`tsc --noEmit`) to verify no type or import errors.
+2. **Behavioral Testing**:
+   - Verify toggle changes the `dark` class on `<html>` and updates `localStorage`.
+   - Verify reloading the page retains the user's selected theme.
+   - Verify terminal drawer stays in high-contrast dark theme in both modes.
+   - Verify modal dialogs (Switch Confirmation, Legal popups) display cleanly in both themes.

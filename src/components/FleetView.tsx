@@ -64,34 +64,34 @@ export const FleetView: React.FC<FleetViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner / Summary Strip */}
-      <div className="bg-[#0f172a] border border-slate-800 rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
         <div>
-          <h1 className="text-xl font-display font-bold text-white tracking-tight">Managed Target Fleet</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Managed Target Fleet</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Serial multi-script execution pipelines with dynamic active profile resolution and strict concurrency locks.
           </p>
         </div>
 
-        <div className="flex items-center gap-6 text-xs text-slate-400 shrink-0">
+        <div className="flex items-center gap-6 text-xs text-slate-600 dark:text-slate-400 shrink-0">
           <div>
             <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px]">Hosts Fleet</div>
-            <div className="text-lg font-mono font-bold text-white tabular-nums">{hosts.length}</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums">{hosts.length}</div>
           </div>
-          <div className="w-px h-8 bg-slate-800" />
+          <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
           <div>
             <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px]">Services</div>
-            <div className="text-lg font-mono font-bold text-white tabular-nums">{totalServices}</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums">{totalServices}</div>
           </div>
-          <div className="w-px h-8 bg-slate-800" />
+          <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
           <div>
             <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px]">Active Locks</div>
-            <div className={`text-lg font-mono font-bold tabular-nums ${lockedServices > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+            <div className={`text-lg font-mono font-bold tabular-nums ${lockedServices > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {lockedServices}
             </div>
           </div>
           <button
             onClick={onRefresh}
-            className="p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 rounded-md transition-colors"
+            className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/60 rounded-md transition-colors"
             title="Refresh fleet states"
           >
             <RotateCw className="w-4 h-4" />
@@ -102,11 +102,13 @@ export const FleetView: React.FC<FleetViewProps> = ({
       {/* Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* OS Filter Segmented Control */}
-        <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-lg shrink-0">
+        <div className="flex items-center gap-1 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shrink-0 shadow-sm transition-colors duration-150">
           <button
             onClick={() => setOsFilter('all')}
             className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              osFilter === 'all' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              osFilter === 'all'
+                ? 'bg-sky-600 text-white font-semibold shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             All Hosts ({hosts.length})
@@ -114,7 +116,9 @@ export const FleetView: React.FC<FleetViewProps> = ({
           <button
             onClick={() => setOsFilter('windows')}
             className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              osFilter === 'windows' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              osFilter === 'windows'
+                ? 'bg-sky-600 text-white font-semibold shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             Windows / WinRM
@@ -122,7 +126,9 @@ export const FleetView: React.FC<FleetViewProps> = ({
           <button
             onClick={() => setOsFilter('unix')}
             className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              osFilter === 'unix' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              osFilter === 'unix'
+                ? 'bg-sky-600 text-white font-semibold shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             Linux / SSH
@@ -131,13 +137,13 @@ export const FleetView: React.FC<FleetViewProps> = ({
 
         {/* Search Input */}
         <div className="relative flex-1 sm:max-w-xs">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search host or service..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono shadow-sm transition-colors duration-150"
           />
         </div>
       </div>
@@ -145,10 +151,10 @@ export const FleetView: React.FC<FleetViewProps> = ({
       {/* Host Cards */}
       <div className="space-y-6">
         {filteredHosts.length === 0 ? (
-          <div className="text-center py-12 bg-slate-900/40 border border-slate-800 rounded-lg">
-            <Server className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <div className="text-sm font-medium text-slate-400">No matching hosts found</div>
-            <div className="text-xs text-slate-500 mt-1">Try clearing your search query or switching filters</div>
+          <div className="text-center py-12 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+            <Server className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
+            <div className="text-sm font-medium text-slate-600 dark:text-slate-400">No matching hosts found</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try clearing your search query or switching filters</div>
           </div>
         ) : (
           filteredHosts.map((host) => {
@@ -158,16 +164,16 @@ export const FleetView: React.FC<FleetViewProps> = ({
             return (
               <div
                 key={host.id}
-                className="bg-[#0c1220] border border-slate-800/90 rounded-lg overflow-hidden shadow-sm"
+                className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800/90 rounded-lg overflow-hidden shadow-sm transition-colors duration-150"
               >
                 {/* Host Header */}
-                <div className="px-5 py-4 bg-slate-900/60 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="px-5 py-4 bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-8 h-8 rounded flex items-center justify-center font-mono text-xs font-bold ${
                         isWindows
-                          ? 'bg-blue-950/80 text-blue-400 border border-blue-800/60'
-                          : 'bg-amber-950/80 text-amber-400 border border-amber-800/60'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-400 border border-blue-300 dark:border-blue-800/60'
+                          : 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border border-amber-300 dark:border-amber-800/60'
                       }`}
                     >
                       {isWindows ? 'WIN' : 'NIX'}
@@ -175,12 +181,12 @@ export const FleetView: React.FC<FleetViewProps> = ({
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base font-display font-bold text-white tracking-tight">{host.name}</h2>
-                        <span className="text-xs font-mono text-slate-400">
+                        <h2 className="text-base font-display font-bold text-slate-900 dark:text-white tracking-tight">{host.name}</h2>
+                        <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                           {host.hostname}:{host.port}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         <span>{isWindows ? 'WinRM WS-Man' : 'Paramiko SSH'}</span>
                         <span aria-hidden="true">·</span>
                         <span>User: {host.auth.username}</span>
@@ -190,16 +196,15 @@ export const FleetView: React.FC<FleetViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-xs text-slate-400 font-mono">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                     {hostServices.length} managed service{hostServices.length > 1 ? 's' : ''}
                   </div>
                 </div>
 
                 {/* Services List */}
-                <div className="divide-y divide-slate-800/60">
+                <div className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   {hostServices.map((service) => {
                     const isLocked = service.is_locked;
-                    // If current_profile is null and user hasn't selected anything, leave selectedProfile as empty
                     const selectedProfile = selectedProfiles[service.id] ?? (service.current_profile || '');
                     const isFailureSimulated = Boolean(simulateFailures[service.id]);
                     const isDifferentProfile = selectedProfile !== '' && selectedProfile !== service.current_profile;
@@ -207,48 +212,50 @@ export const FleetView: React.FC<FleetViewProps> = ({
                     return (
                       <div
                         key={service.id}
-                        className={`p-5 transition-colors ${
-                          isLocked ? 'bg-amber-950/10' : 'hover:bg-slate-900/30'
+                        className={`p-5 transition-colors duration-150 ${
+                          isLocked
+                            ? 'bg-amber-50/70 dark:bg-amber-950/10'
+                            : 'hover:bg-slate-50/80 dark:hover:bg-slate-900/30'
                         }`}
                       >
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           {/* Service Details */}
                           <div className="space-y-1.5 flex-1 min-w-0">
                             <div className="flex items-center gap-3">
-                              <h3 className="text-sm font-semibold text-slate-100">{service.name}</h3>
+                              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{service.name}</h3>
 
                               {/* Status Badge */}
                               {isLocked ? (
-                                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-400">
-                                  <Lock className="w-3 h-3 text-amber-400 animate-pulse" />
+                                <span className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-600 dark:text-amber-400 font-medium">
+                                  <Lock className="w-3 h-3 text-amber-500 dark:text-amber-400 animate-pulse" />
                                   TRANSITIONING (LOCKED)
                                 </span>
                               ) : service.status === 'ERROR' ? (
-                                <span className="inline-flex items-center gap-1 text-xs font-mono text-rose-400">
-                                  <AlertTriangle className="w-3 h-3 text-rose-400" />
+                                <span className="inline-flex items-center gap-1 text-xs font-mono text-rose-600 dark:text-rose-400 font-medium">
+                                  <AlertTriangle className="w-3 h-3 text-rose-500 dark:text-rose-400" />
                                   PROBE FAILED
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-400">
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-600 dark:text-emerald-400 font-medium">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
                                   RUNNING
                                 </span>
                               )}
                             </div>
 
                             {/* Service Metadata (Zero-Pill) */}
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 font-mono">
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono">
                               <span>
                                 Active:{' '}
                                 {service.current_profile ? (
-                                  <strong className="text-sky-300 font-normal">{service.current_profile}</strong>
+                                  <strong className="text-sky-600 dark:text-sky-300 font-normal">{service.current_profile}</strong>
                                 ) : (
-                                  <strong className="text-slate-500 font-normal">None</strong>
+                                  <strong className="text-slate-400 dark:text-slate-500 font-normal">None</strong>
                                 )}
                               </span>
                               <span aria-hidden="true">·</span>
                               <span>
-                                Probe: <span className="text-slate-300">{service.verification_service_name}</span>
+                                Probe: <span className="text-slate-700 dark:text-slate-300">{service.verification_service_name}</span>
                               </span>
                               {service.active_profile_path && (
                                 <>
@@ -262,7 +269,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
                               <span className="text-slate-500">{service.service_type}</span>
                             </div>
 
-                            <p className="text-xs text-slate-400 line-clamp-1">{service.description}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{service.description}</p>
                           </div>
 
                           {/* Profile Switch Controls */}
@@ -273,14 +280,14 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                 value={selectedProfile}
                                 onChange={(e) => handleProfileSelect(service.id, e.target.value)}
                                 disabled={isLocked}
-                                className={`text-xs font-mono px-3 py-2 bg-slate-900 border rounded-md text-slate-200 focus:outline-none focus:border-sky-500 transition-colors ${
+                                className={`text-xs font-mono px-3 py-2 bg-white dark:bg-slate-900 border rounded-md text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 transition-colors shadow-sm ${
                                   isLocked
-                                    ? 'border-slate-800 text-slate-600 cursor-not-allowed'
+                                    ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
                                     : !selectedProfile
-                                    ? 'border-amber-600/70 text-amber-300'
+                                    ? 'border-amber-500 text-amber-700 dark:text-amber-300'
                                     : isDifferentProfile
-                                    ? 'border-sky-500/80 text-sky-200'
-                                    : 'border-slate-700 text-slate-300'
+                                    ? 'border-sky-500 text-sky-700 dark:text-sky-200'
+                                    : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                                 }`}
                               >
                                 {!service.current_profile && (
@@ -306,16 +313,16 @@ export const FleetView: React.FC<FleetViewProps> = ({
                             {/* Failure Simulation Checkbox for Fail-Fast Testing */}
                             <label
                               title="Simulate script failure exit code 1 to verify fail-fast behavior and error log generation"
-                              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer select-none font-mono"
+                              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none font-mono"
                             >
                               <input
                                 type="checkbox"
                                 checked={isFailureSimulated}
                                 onChange={() => toggleSimulateFailure(service.id)}
                                 disabled={isLocked}
-                                className="rounded bg-slate-900 border-slate-700 text-rose-500 focus:ring-0 w-3.5 h-3.5"
+                                className="rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-rose-500 focus:ring-0 w-3.5 h-3.5"
                               />
-                              <span className={isFailureSimulated ? 'text-rose-400 font-bold' : ''}>Fail-Fast Test</span>
+                              <span className={isFailureSimulated ? 'text-rose-600 dark:text-rose-400 font-bold' : ''}>Fail-Fast Test</span>
                             </label>
 
                             {/* Switch Action Button */}
@@ -325,12 +332,12 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                 onInitiateSwitch(host, service, selectedProfile, isFailureSimulated);
                               }}
                               disabled={isLocked || !selectedProfile}
-                              className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                              className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-sm ${
                                 isLocked || !selectedProfile
-                                  ? 'bg-slate-800 text-slate-600 border border-slate-800 cursor-not-allowed'
+                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed'
                                   : isDifferentProfile
-                                  ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-sm'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                                  ? 'bg-sky-600 hover:bg-sky-500 text-white'
+                                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
                               }`}
                             >
                               {isLocked ? (
@@ -350,7 +357,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
                             {isLocked && service.active_job_id && (
                               <button
                                 onClick={() => onOpenLiveStream(service.active_job_id!, `${service.name} (Active Stream)`)}
-                                className="px-3 py-2 text-xs font-mono text-sky-400 hover:text-sky-300 bg-sky-950/40 hover:bg-sky-950/80 border border-sky-800/80 rounded-md transition-colors flex items-center gap-1.5"
+                                className="px-3 py-2 text-xs font-mono text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-950/80 border border-sky-300 dark:border-sky-800/80 rounded-md transition-colors flex items-center gap-1.5 shadow-sm"
                               >
                                 <Terminal className="w-3.5 h-3.5" />
                                 Live Stream
