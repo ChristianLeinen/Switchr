@@ -24,11 +24,11 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
         {/* Zone 1: Brand Zone */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center text-white shadow-md shadow-sky-950/40 overflow-hidden relative">
+          <div className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-700/80 dark:border-slate-700 flex items-center justify-center shadow-sm overflow-hidden relative group">
             <img
               src="/icon.svg"
               alt="Switchr Icon"
-              className="w-full h-full object-contain p-1.5"
+              className="w-full h-full object-contain p-1"
               onError={(e) => {
                 const target = e.currentTarget;
                 if (!target.dataset.triedPng) {
@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
             />
             <div style={{ display: 'none' }} className="w-full h-full items-center justify-center">
-              <Layers className="w-5 h-5 text-white" />
+              <Layers className="w-5 h-5 text-sky-400" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
