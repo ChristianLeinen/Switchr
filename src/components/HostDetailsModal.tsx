@@ -124,7 +124,7 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
             <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between font-bold">
               <span className="flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>Managed Services on Host</span>
+                <span>Managed Services & Runtime Metadata</span>
               </span>
               <span className="text-[10px] text-slate-500">
                 {hostServices.length} service{hostServices.length !== 1 ? 's' : ''}
@@ -132,26 +132,57 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
             </div>
             <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800/80 overflow-hidden">
               {hostServices.map((svc) => (
-                <div key={svc.id} className="p-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">{svc.name}</span>
-                      <span className="text-[10px] text-slate-500">({svc.id})</span>
+                <div key={svc.id} className="p-3.5 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100 truncate text-xs">{svc.name}</span>
+                        <span className="text-[10px] text-slate-500">({svc.id})</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{svc.description}</p>
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">
-                      Probe: {svc.verification_service_name}
+                    <div className="shrink-0 flex items-center gap-1 text-[11px]">
+                      {svc.is_locked ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                          <Lock className="w-3 h-3 animate-pulse" /> Locked
+                        </span>
+                      ) : svc.status === 'ERROR' ? (
+                        <span className="text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" /> Failed
+                        </span>
+                      ) : (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Running
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="shrink-0 flex items-center gap-1 text-[11px]">
-                    {svc.is_locked ? (
-                      <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-                        <Lock className="w-3 h-3" /> Locked
+
+                  {/* Enriched Metadata Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 pt-1.5 border-t border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-400 dark:text-slate-500">Active Profile:</span>
+                      <span className="font-semibold text-sky-600 dark:text-sky-300">
+                        {svc.current_profile || 'None'}
                       </span>
-                    ) : (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Running
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-400 dark:text-slate-500">Service Type:</span>
+                      <span className="text-slate-800 dark:text-slate-200">{svc.service_type}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-400 dark:text-slate-500">Probe Service:</span>
+                      <span className="text-slate-800 dark:text-slate-200 font-mono">{svc.verification_service_name}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-2 truncate">
+                      <span className="text-slate-400 dark:text-slate-500 shrink-0">Profile Path:</span>
+                      <span className="text-slate-800 dark:text-slate-200 font-mono truncate" title={svc.active_profile_path || 'Not configured'}>
+                        {svc.active_profile_path ? svc.active_profile_path.split('\\').pop()?.split('/').pop() : 'None'}
                       </span>
-                    )}
+                    </div>
                   </div>
                 </div>
               ))}

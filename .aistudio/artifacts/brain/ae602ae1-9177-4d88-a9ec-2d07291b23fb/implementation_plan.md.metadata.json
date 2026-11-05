@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan to declutter the host cards in FleetView by removing the IP address (hostname), port, WinRM/Paramiko indicator, username, and service count text, replacing them with a sleek Info icon button that opens a focused, centered modal popup displaying comprehensive host connection details, security authentication, and managed service inventory.",
-  "updatedAt": "2026-11-05T02:09:46.513886952Z",
+  "summary": "Implementation plan to declutter the service row details in FleetView by removing the inline metadata row (current_profile, verification_service_name, active_profile_path, and service_type) and the Fail-Fast Test checkbox. The removed metadata fields will be fully integrated into the HostDetailsModal under the Managed Services section, presenting a clean profile pill, verification probe name, profile file path, and service engine type.",
+  "updatedAt": "2026-11-05T02:41:31.247902756Z",
   "requestFeedback": true,
   "userFacing": true
 }

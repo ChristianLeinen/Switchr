@@ -35,15 +35,10 @@ export const FleetView: React.FC<FleetViewProps> = ({
   const [osFilter, setOsFilter] = useState<'all' | 'windows' | 'unix'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, string>>({});
-  const [simulateFailures, setSimulateFailures] = useState<Record<string, boolean>>({});
   const [selectedHostForDetails, setSelectedHostForDetails] = useState<TargetHost | null>(null);
 
   const handleProfileSelect = (serviceId: string, profileName: string) => {
     setSelectedProfiles((prev) => ({ ...prev, [serviceId]: profileName }));
-  };
-
-  const toggleSimulateFailure = (serviceId: string) => {
-    setSimulateFailures((prev) => ({ ...prev, [serviceId]: !prev[serviceId] }));
   };
 
   // Filter hosts
@@ -208,7 +203,6 @@ export const FleetView: React.FC<FleetViewProps> = ({
                   {hostServices.map((service) => {
                     const isLocked = service.is_locked;
                     const selectedProfile = selectedProfiles[service.id] ?? (service.current_profile || '');
-                    const isFailureSimulated = Boolean(simulateFailures[service.id]);
                     const isDifferentProfile = selectedProfile !== '' && selectedProfile !== service.current_profile;
 
                     return (
@@ -243,32 +237,6 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                   RUNNING
                                 </span>
                               )}
-                            </div>
-
-                            {/* Service Metadata (Zero-Pill) */}
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono">
-                              <span>
-                                Active:{' '}
-                                {service.current_profile ? (
-                                  <strong className="text-sky-600 dark:text-sky-300 font-normal">{service.current_profile}</strong>
-                                ) : (
-                                  <strong className="text-slate-400 dark:text-slate-500 font-normal">None</strong>
-                                )}
-                              </span>
-                              <span aria-hidden="true">·</span>
-                              <span>
-                                Probe: <span className="text-slate-700 dark:text-slate-300">{service.verification_service_name}</span>
-                              </span>
-                              {service.active_profile_path && (
-                                <>
-                                  <span aria-hidden="true">·</span>
-                                  <span className="text-slate-500" title={service.active_profile_path}>
-                                    Profile File: {service.active_profile_path.split('\\').pop()?.split('/').pop()}
-                                  </span>
-                                </>
-                              )}
-                              <span aria-hidden="true">·</span>
-                              <span className="text-slate-500">{service.service_type}</span>
                             </div>
 
                             <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{service.description}</p>
@@ -312,26 +280,11 @@ export const FleetView: React.FC<FleetViewProps> = ({
                               </select>
                             </div>
 
-                            {/* Failure Simulation Checkbox for Fail-Fast Testing */}
-                            <label
-                              title="Simulate script failure exit code 1 to verify fail-fast behavior and error log generation"
-                              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none font-mono"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isFailureSimulated}
-                                onChange={() => toggleSimulateFailure(service.id)}
-                                disabled={isLocked}
-                                className="rounded bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-rose-500 focus:ring-0 w-3.5 h-3.5"
-                              />
-                              <span className={isFailureSimulated ? 'text-rose-600 dark:text-rose-400 font-bold' : ''}>Fail-Fast Test</span>
-                            </label>
-
                             {/* Switch Action Button */}
                             <button
                               onClick={() => {
                                 if (!selectedProfile) return;
-                                onInitiateSwitch(host, service, selectedProfile, isFailureSimulated);
+                                onInitiateSwitch(host, service, selectedProfile, false);
                               }}
                               disabled={isLocked || !selectedProfile}
                               className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-sm ${
