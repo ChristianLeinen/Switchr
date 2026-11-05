@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan to declutter the service row details in FleetView by removing the inline metadata row (current_profile, verification_service_name, active_profile_path, and service_type) and the Fail-Fast Test checkbox. The removed metadata fields will be fully integrated into the HostDetailsModal under the Managed Services section, presenting a clean profile pill, verification probe name, profile file path, and service engine type.",
-  "updatedAt": "2026-11-05T02:41:31.247902756Z",
+  "summary": "Implementation plan to declutter the profile switch confirmation modal (ConfirmModal.tsx) by moving technical details (Verification Probe, Total Timeout, Numbered Sequential Script Execution Pipeline, and Fail-Fast Test Mode Warning) into an expandable accordion section labelled 'Execution Details', collapsed by default for an ultra-clean, minimal modal view.",
+  "updatedAt": "2026-11-05T21:39:28.241330240Z",
   "requestFeedback": true,
   "userFacing": true
 }

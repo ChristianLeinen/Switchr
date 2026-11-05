@@ -1,5 +1,16 @@
-import React from 'react';
-import { ShieldAlert, AlertTriangle, ArrowRight, X, Clock, Terminal, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  ShieldAlert,
+  AlertTriangle,
+  ArrowRight,
+  X,
+  Terminal,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Layers,
+} from 'lucide-react';
 import { ConfigProfile, getEffectiveScripts, ManagedService, TargetHost } from '../types';
 
 interface ConfirmModalProps {
@@ -21,6 +32,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const [showExecutionDetails, setShowExecutionDetails] = useState(false);
+
+  // Reset accordion state when opening or closing modal
+  useEffect(() => {
+    if (!isOpen) {
+      setShowExecutionDetails(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen || !host || !service) return null;
 
   const profile = service.profiles.find((p) => p.name === targetProfileName) || service.profiles[0];
@@ -52,8 +72,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-5">
-          {/* Transition Summary Grid */}
+        <div className="p-6 space-y-4">
+          {/* Transition Summary Grid (Clean & Compact) */}
           <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3 font-mono text-xs">
             <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
               <span>Target Host:</span>
@@ -83,55 +103,91 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               </span>
               <span className="text-sky-600 dark:text-sky-300 font-bold">{targetProfileName}</span>
             </div>
-
-            <div className="flex justify-between items-center text-slate-500 text-[11px]">
-              <span>Verification Probe:</span>
-              <span className="text-slate-700 dark:text-slate-300">
-                {isWindows ? `sc query "${service.verification_service_name}"` : `systemctl is-active "${service.verification_service_name}"`}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-slate-500 text-[11px]">
-              <span>Total Pipeline Timeout:</span>
-              <span className="text-slate-700 dark:text-slate-300">{totalTimeoutSeconds}s ({effectiveScripts.length} steps)</span>
-            </div>
           </div>
 
-          {/* Numbered Sequential Script Pipeline Preview */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">
-              Execution Pipeline (Sequential Scripts)
-            </label>
-            <div className="bg-slate-900 border border-slate-700 dark:border-slate-800 rounded-lg p-3 space-y-2 font-mono text-xs max-h-48 overflow-y-auto">
-              {effectiveScripts.map((step, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-2.5 pb-2 border-b border-slate-800 last:border-b-0 last:pb-0"
-                >
-                  <span className="text-sky-400 font-bold select-none">{idx + 1}.</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-slate-200 font-medium truncate">{step.name || 'Script'}</span>
-                      <span className="text-[10px] text-slate-400 shrink-0">{step.timeout_seconds || 60}s</span>
-                    </div>
-                    <div className="text-[11px] text-slate-400 font-mono break-all mt-0.5">
-                      {step.script_path} {(step.parameters || []).join(' ')}
-                    </div>
+          {/* Expandable Accordion: Execution Details */}
+          <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-slate-50/50 dark:bg-slate-900/30">
+            <button
+              type="button"
+              onClick={() => setShowExecutionDetails((prev) => !prev)}
+              aria-expanded={showExecutionDetails}
+              className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-mono text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors select-none"
+            >
+              <div className="flex items-center gap-2 font-medium">
+                {showExecutionDetails ? (
+                  <ChevronDown className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                )}
+                <span>Execution Details</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                  {effectiveScripts.length} {effectiveScripts.length === 1 ? 'step' : 'steps'} · {totalTimeoutSeconds}s
+                </span>
+              </div>
+              <span className="text-[11px] text-sky-600 dark:text-sky-400 underline-offset-2 hover:underline">
+                {showExecutionDetails ? 'Hide' : 'Show'}
+              </span>
+            </button>
+
+            {showExecutionDetails && (
+              <div className="p-4 pt-2 border-t border-slate-200 dark:border-slate-800/80 space-y-4 animate-in fade-in duration-150">
+                {/* Verification Probe & Timeout Summary */}
+                <div className="bg-white dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-2 text-xs font-mono">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-slate-500 dark:text-slate-400">
+                    <span className="shrink-0">Verification Probe:</span>
+                    <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px] break-all sm:text-right">
+                      {isWindows
+                        ? `sc query "${service.verification_service_name}"`
+                        : `systemctl is-active "${service.verification_service_name}"`}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/60 pt-2">
+                    <span>Total Timeout:</span>
+                    <span className="text-slate-800 dark:text-slate-300 font-semibold">
+                      {totalTimeoutSeconds}s ({effectiveScripts.length} sequential {effectiveScripts.length === 1 ? 'step' : 'steps'})
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Fail-Fast Warning if testing failure */}
-          {simulateFailure && (
-            <div className="flex items-start gap-2.5 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/80 rounded-lg text-xs text-rose-700 dark:text-rose-300">
-              <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold">Fail-Fast Test Mode Active:</span> This execution is configured to simulate a script exit code 1 to demonstrate that execution halts immediately without attempting subsequent steps or rollback.
+                {/* Numbered Sequential Script Pipeline Preview */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">
+                    Sequential Script Pipeline
+                  </label>
+                  <div className="bg-slate-100/90 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-2 font-mono text-xs max-h-48 overflow-y-auto">
+                    {effectiveScripts.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2.5 pb-2 border-b border-slate-200 dark:border-slate-800 last:border-b-0 last:pb-0"
+                      >
+                        <span className="text-sky-600 dark:text-sky-400 font-bold select-none">{idx + 1}.</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-slate-900 dark:text-slate-200 font-medium truncate">{step.name || 'Script'}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 shrink-0">{step.timeout_seconds || 60}s</span>
+                          </div>
+                          <div className="text-[11px] text-slate-600 dark:text-slate-400 font-mono break-all mt-0.5">
+                            {step.script_path} {(step.parameters || []).join(' ')}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fail-Fast Warning if testing failure */}
+                {simulateFailure && (
+                  <div className="flex items-start gap-2.5 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/80 rounded-lg text-xs text-rose-700 dark:text-rose-300">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Fail-Fast Test Mode Active:</span> This execution is configured to simulate a script exit code 1 to demonstrate that execution halts immediately without attempting subsequent steps or rollback.
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Operational Safety Lock Notice */}
           <div className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 p-3 rounded border border-slate-200 dark:border-slate-800/60">
