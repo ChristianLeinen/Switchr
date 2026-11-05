@@ -6,6 +6,8 @@ import { FleetView } from './components/FleetView';
 import { ConfirmModal } from './components/ConfirmModal';
 import { TerminalDrawer } from './components/TerminalDrawer';
 import { AuditHistoryView } from './components/AuditHistoryView';
+import { Footer } from './components/Footer';
+import { LegalModal, LegalModalType } from './components/LegalModal';
 import { orchestratorService } from './services/mockOrchestrator';
 import { JobRecord, ManagedService, TargetHost } from './types';
 import { ShieldAlert, CheckCircle2, AlertTriangle, X } from 'lucide-react';
@@ -16,6 +18,7 @@ export default function App() {
   const [services, setServices] = useState<ManagedService[]>([]);
   const [auditHistory, setAuditHistory] = useState<JobRecord[]>([]);
   const [activeLocksCount, setActiveLocksCount] = useState(0);
+  const [activeLegalModal, setActiveLegalModal] = useState<LegalModalType>(null);
 
   // Active Job Drawer State
   const [activeJob, setActiveJob] = useState<JobRecord | null>(null);
@@ -436,6 +439,15 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Footer with Legal & Copyright information */}
+      <Footer onOpenLegal={(type) => setActiveLegalModal(type)} />
+
+      {/* Legal Popups / Modal */}
+      <LegalModal
+        type={activeLegalModal}
+        onClose={() => setActiveLegalModal(null)}
+      />
 
       {/* Profile Switch Confirmation Modal */}
       <ConfirmModal
