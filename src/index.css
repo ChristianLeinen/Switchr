@@ -17,6 +17,23 @@
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
+  /* Hand cursor on all hyperlinks, buttons, and interactive elements */
+  button,
+  a,
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   html.dark body {
     background-color: #090d16;
     color: #e2e8f0;
