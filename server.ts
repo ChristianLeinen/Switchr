@@ -405,6 +405,7 @@ async function bootstrap() {
   // GET /api/inventory
   app.get('/api/inventory', (req: Request, res: Response) => {
     const hostsView = appConfig.hosts.map((host) => {
+      const { auth, ...safeHost } = host;
       const services = appConfig.services
         .filter((s) => s.host_id === host.id)
         .map((s) => {
@@ -421,7 +422,7 @@ async function bootstrap() {
         });
 
       return {
-        ...host,
+        ...safeHost,
         services,
       };
     });
@@ -583,6 +584,19 @@ async function bootstrap() {
   // GET /api/jobs/history
   app.get('/api/jobs/history', (req: Request, res: Response) => {
     res.json({ history: auditHistory });
+  });
+
+  // DELETE /api/jobs/history
+  app.delete('/api/jobs/history', (req: Request, res: Response) => {
+    auditHistory = [];
+    try {
+      if (fs.existsSync(auditHistoryPath)) {
+        fs.writeFileSync(auditHistoryPath, JSON.stringify([], null, 2), 'utf-8');
+      }
+    } catch (err) {
+      console.error('Failed to clear audit_history.json:', err);
+    }
+    res.json({ success: true, message: 'Audit history cleared successfully.' });
   });
 
   // GET /api/config/raw

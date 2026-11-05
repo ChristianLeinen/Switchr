@@ -18,7 +18,7 @@ export interface TargetHost {
   hostname: string;
   port: number;
   use_ssl?: boolean;
-  auth: HostAuth;
+  auth?: HostAuth;
   description: string;
 }
 

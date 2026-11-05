@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan to declutter the profile switch confirmation modal (ConfirmModal.tsx) by moving technical details (Verification Probe, Total Timeout, Numbered Sequential Script Execution Pipeline, and Fail-Fast Test Mode Warning) into an expandable accordion section labelled 'Execution Details', collapsed by default for an ultra-clean, minimal modal view.",
-  "updatedAt": "2026-11-05T21:39:28.241330240Z",
+  "summary": "Implementation plan for creating a complete, strict OpenAPI 3.0 YAML specification (docs/openapi.yaml) detailing all HTTP endpoints, query parameters, request bodies, JSON schemas, SSE streaming formats, error status codes (400, 404, 409, 500), and concurrency lock semantics needed to build the C# backend.",
+  "updatedAt": "2026-11-05T22:32:53.765874724Z",
   "requestFeedback": true,
   "userFacing": true
 }

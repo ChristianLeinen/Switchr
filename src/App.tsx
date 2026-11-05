@@ -371,10 +371,17 @@ export default function App() {
     }
   };
 
-  const handleClearHistory = () => {
+  const handleClearHistory = async () => {
+    try {
+      await fetch('/api/jobs/history', { method: 'DELETE' });
+    } catch {
+      // Backend request fallback
+    }
     localStorage.removeItem('switchr_audit_history');
-    refreshState();
-    showToast('success', 'Audit Reset', 'Audit history has been reset to defaults.');
+    orchestratorService.clearAuditHistory();
+    setAuditHistory([]);
+    await refreshState();
+    showToast('success', 'Audit Reset', 'Execution audit history has been cleared.');
   };
 
   return (

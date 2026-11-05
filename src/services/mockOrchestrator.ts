@@ -453,6 +453,15 @@ class MockOrchestrator {
     return this.auditHistory;
   }
 
+  public clearAuditHistory(): void {
+    this.auditHistory = [];
+    try {
+      localStorage.setItem('switchr_audit_history', JSON.stringify([]));
+    } catch {
+      // ignore
+    }
+  }
+
   public getActiveLocksCount(): number {
     return this.activeLocks.size;
   }
@@ -600,7 +609,7 @@ class MockOrchestrator {
     if (this.checkAborted(job, host, service)) return;
 
     this.emitLine(job, {
-      text: `[*] Connecting via ${proto} using credential '${host.auth.username}'...`,
+      text: `[*] Connecting via ${proto}...`,
       type: 'info',
     });
     await this.delay(350);

@@ -1,0 +1,623 @@
+openapi: 3.0.3
+info:
+  title: Switchr Orchestrator REST & Streaming API
+  version: 1.0.0
+  description: |
+    API specification for Switchr, an agentless remote service configuration orchestrator
+    for Windows (WinRM) and Unix/Linux (SSH) environments.
+    
+    This specification outlines all HTTP endpoints, JSON schemas, Server-Sent Events (SSE)
+    streaming specifications, error status codes (including HTTP 409 Conflict mutex rejection),
+    and payload requirements needed to power the Switchr web frontend.
+
+    Security Note: Authentication credentials (passwords, usernames, key paths) are strictly
+    managed server-side and are NEVER transmitted over the API or exposed to the client.
+
+servers:
+  - url: /
+    description: Current host server (ASP.NET Core / Express)
+
+paths:
+  /api/health:
+    get:
+      summary: System Health & Version
+      operationId: getHealth
+      description: Returns service readiness, runtime version, and dry-run simulation mode status.
+      responses:
+        '200':
+          description: Service is healthy and operational.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/inventory:
+    get:
+      summary: Managed Target Fleet & Service Inventory
+      operationId: getInventory
+      description: |
+        Retrieves the complete inventory of target hosts, mapped services, configuration profiles,
+        multi-script sequential execution pipelines, and active concurrency locks.
+        
+        Note: Host authentication credentials (usernames, passwords, key paths) are intentionally
+        omitted from this payload for security compliance.
+      responses:
+        '200':
+          description: Fleet inventory successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryResponse'
+
+  /api/jobs/switch:
+    post:
+      summary: Initiate Configuration Profile Switch
+      operationId: startSwitchJob
+      description: |
+        Dispatches a profile switch job for a specific managed service on a target host.
+        
+        Concurrency Invariant:
+        An in-memory mutual exclusion lock is held for the composite key `(host_id, service_id)`.
+        If an execution job is currently active for this service, the request is rejected with
+        an `HTTP 409 Conflict` status code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwitchJobRequest'
+      responses:
+        '200':
+          description: Switch job successfully queued and started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwitchJobResponse'
+        '202':
+          description: Switch job accepted and queued for execution.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwitchJobResponse'
+        '400':
+          description: Bad request (missing required parameters or invalid host/service/profile).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Host, service, or profile not found in inventory.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |
+            Concurrency Lock Conflict. An active job is currently holding the execution lock
+            for this host and service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictErrorResponse'
+
+  /api/jobs/{id}/abort:
+    post:
+      summary: Abort Running Job
+      operationId: abortJob
+      description: Signals an in-progress transition pipeline job to immediately halt execution.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the job to abort.
+          schema:
+            type: string
+            example: job-io7g3lc5
+      responses:
+        '200':
+          description: Abort signal registered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbortJobResponse'
+        '400':
+          description: Job cannot be aborted (not found or already completed).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Job ID not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/jobs/{id}/stream:
+    get:
+      summary: Real-Time SSE Log Stream
+      operationId: streamJobLogs
+      description: |
+        Server-Sent Events (SSE) feed providing live stdout/stderr streams, step progress,
+        probe results, and final termination status for an execution job.
+        
+        Stream Behavior:
+        1. On connect, flushes previously captured execution log lines (`data: <line>\n\n`).
+        2. Streams new lines as they occur in real time.
+        3. Emits `: heartbeat\n\n` comments every 15s to keep connections alive through proxies.
+        4. When the pipeline finishes or aborts, emits a final event:
+           `event: done\ndata: <SUCCESS | FAILED | ABORTED>\n\n`
+           and closes the HTTP stream.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique job identifier.
+          schema:
+            type: string
+            example: job-io7g3lc5
+      responses:
+        '200':
+          description: Real-time text/event-stream connection established.
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: text/event-stream
+            Cache-Control:
+              schema:
+                type: string
+                example: no-cache, no-transform
+            X-Accel-Buffering:
+              schema:
+                type: string
+                example: 'no'
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Chunked SSE stream formatted with `data:` and `event:` lines.
+        '404':
+          description: Job ID not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Job not found.
+
+  /api/jobs/history:
+    get:
+      summary: Retrieve Forensic Audit History
+      operationId: getAuditHistory
+      description: Retrieves the historical list of past execution job records, exit codes, probes, and logs.
+      responses:
+        '200':
+          description: Audit history records retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditHistoryResponse'
+    delete:
+      summary: Reset Audit History
+      operationId: clearAuditHistory
+      description: Clears all stored audit history records and resets persistent audit logs on the server.
+      responses:
+        '200':
+          description: Audit history successfully reset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearHistoryResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - app
+        - version
+        - dry_run
+      properties:
+        status:
+          type: string
+          example: healthy
+        app:
+          type: string
+          example: Switchr
+        version:
+          type: string
+          example: 1.0.0
+        dry_run:
+          type: boolean
+          example: true
+          description: When true, remote command executions are safely simulated without side-effects.
+
+    InventoryResponse:
+      type: object
+      required:
+        - app_version
+        - dry_run
+        - hosts
+        - active_locks_count
+      properties:
+        app_version:
+          type: string
+          example: 1.0.0
+        dry_run:
+          type: boolean
+          example: true
+        active_locks_count:
+          type: integer
+          example: 0
+          description: Total number of active concurrent execution locks currently held.
+        hosts:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostDto'
+
+    HostDto:
+      type: object
+      required:
+        - id
+        - name
+        - os_type
+        - hostname
+        - port
+        - description
+        - services
+      properties:
+        id:
+          type: string
+          example: win-prod-01
+        name:
+          type: string
+          example: Windows Core Gateway
+        os_type:
+          type: string
+          enum: [windows, unix]
+          example: windows
+        hostname:
+          type: string
+          example: 192.168.10.45
+        port:
+          type: integer
+          example: 5985
+        use_ssl:
+          type: boolean
+          example: false
+        description:
+          type: string
+          example: Primary Windows Server 2022 hosting Core Financial Routing daemon
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceDto'
+
+    ServiceDto:
+      type: object
+      required:
+        - id
+        - host_id
+        - name
+        - service_type
+        - verification_service_name
+        - current_profile
+        - description
+        - status
+        - is_locked
+        - profiles
+      properties:
+        id:
+          type: string
+          example: svc-fin-router
+        host_id:
+          type: string
+          example: win-prod-01
+        name:
+          type: string
+          example: Financial Transaction Router
+        service_type:
+          type: string
+          enum: [windows_service, systemd, generic_process]
+          example: windows_service
+        verification_service_name:
+          type: string
+          example: FinRouterSvc
+          description: System service name queried by sc.exe (Windows) or systemctl (Unix) to verify health.
+        active_profile_path:
+          type: string
+          nullable: true
+          example: C:\Services\FinRouter\active_profile.txt
+          description: Remote host file path containing the active profile name string.
+        current_profile:
+          type: string
+          nullable: true
+          example: production-balanced
+          description: Currently active profile name, or null if unassigned or uninitialized.
+        description:
+          type: string
+          example: Core financial transaction dispatcher and FIX protocol processor
+        status:
+          type: string
+          enum: [RUNNING, STOPPED, TRANSITIONING, ERROR]
+          example: RUNNING
+        is_locked:
+          type: boolean
+          example: false
+          description: True if an in-progress transition job currently holds a concurrency lock.
+        active_job_id:
+          type: string
+          nullable: true
+          example: null
+          description: Job ID holding the lock if is_locked is true.
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfigProfileDto'
+
+    ConfigProfileDto:
+      type: object
+      required:
+        - name
+        - description
+        - scripts
+      properties:
+        name:
+          type: string
+          example: production-balanced
+        description:
+          type: string
+          example: Balanced multi-thread pool (64 worker threads, standard timeouts)
+        script_path:
+          type: string
+          example: C:\Services\FinRouter\scripts\apply_config.bat
+          description: Legacy single-script path (optional fallback).
+        parameters:
+          type: array
+          items:
+            type: string
+          example: [--profile, prod-balanced, --pool-size, "64"]
+        timeout_seconds:
+          type: integer
+          example: 300
+        scripts:
+          type: array
+          description: Sequential multi-script pipeline executed in order with fail-fast halting.
+          items:
+            $ref: '#/components/schemas/ScriptStepDto'
+
+    ScriptStepDto:
+      type: object
+      required:
+        - name
+        - script_path
+        - parameters
+        - timeout_seconds
+      properties:
+        name:
+          type: string
+          example: Stop service
+        script_path:
+          type: string
+          example: C:\Services\FinRouter\scripts\stop_service.bat
+        parameters:
+          type: array
+          items:
+            type: string
+          example: []
+        timeout_seconds:
+          type: integer
+          example: 60
+
+    SwitchJobRequest:
+      type: object
+      required:
+        - host_id
+        - service_id
+        - profile_name
+      properties:
+        host_id:
+          type: string
+          example: win-prod-01
+        service_id:
+          type: string
+          example: svc-fin-router
+        profile_name:
+          type: string
+          example: production-balanced
+        simulate_failure:
+          type: boolean
+          default: false
+          description: Optional diagnostic flag to simulate script failure exit code 1.
+
+    SwitchJobResponse:
+      type: object
+      required:
+        - job_id
+        - host_id
+        - service_id
+        - target_profile
+        - status
+      properties:
+        job_id:
+          type: string
+          example: job-io7g3lc5
+        host_id:
+          type: string
+          example: win-prod-01
+        service_id:
+          type: string
+          example: svc-fin-router
+        target_profile:
+          type: string
+          example: production-balanced
+        status:
+          type: string
+          enum: [QUEUED, RUNNING]
+          example: RUNNING
+        message:
+          type: string
+          example: Profile switch job successfully queued and dispatched.
+
+    AbortJobResponse:
+      type: object
+      required:
+        - job_id
+        - status
+        - message
+      properties:
+        job_id:
+          type: string
+          example: job-io7g3lc5
+        status:
+          type: string
+          example: ABORTED
+        message:
+          type: string
+          example: Job job-io7g3lc5 abort signal sent.
+
+    AuditHistoryResponse:
+      type: object
+      required:
+        - history
+      properties:
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobRecordDto'
+
+    JobRecordDto:
+      type: object
+      required:
+        - job_id
+        - host_id
+        - host_name
+        - os_type
+        - service_id
+        - service_name
+        - target_profile
+        - status
+        - started_at
+        - verification_passed
+        - logs
+      properties:
+        job_id:
+          type: string
+          example: job-io7g3lc5
+        host_id:
+          type: string
+          example: win-prod-01
+        host_name:
+          type: string
+          example: Windows Core Gateway
+        os_type:
+          type: string
+          enum: [windows, unix]
+          example: windows
+        service_id:
+          type: string
+          example: svc-fin-router
+        service_name:
+          type: string
+          example: Financial Transaction Router
+        target_profile:
+          type: string
+          example: production-balanced
+        previous_profile:
+          type: string
+          nullable: true
+          example: production-high-throughput
+        status:
+          type: string
+          enum: [QUEUED, RUNNING, SUCCESS, FAILED, ABORTED, TIMED_OUT]
+          example: SUCCESS
+        exit_code:
+          type: integer
+          nullable: true
+          example: 0
+        started_at:
+          type: string
+          format: date-time
+          example: '2026-11-05T21:15:21.627Z'
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-11-05T21:15:25.990Z'
+        duration_seconds:
+          type: number
+          format: float
+          nullable: true
+          example: 4.36
+        verification_passed:
+          type: boolean
+          example: true
+        is_simulation:
+          type: boolean
+          example: true
+        error_summary:
+          type: string
+          nullable: true
+          example: null
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogLineDto'
+
+    LogLineDto:
+      type: object
+      required:
+        - id
+        - timestamp
+        - text
+        - type
+      properties:
+        id:
+          type: string
+          example: wfspvie
+        timestamp:
+          type: string
+          example: '21:15:21.628'
+        text:
+          type: string
+          example: '[STEP 1/3] Finished successfully: Stop service'
+        type:
+          type: string
+          enum: [stdout, stderr, info, success, warn, error]
+          example: info
+
+    ClearHistoryResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Audit history cleared successfully.
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Host 'win-prod-99' not found in inventory.
+        detail:
+          type: string
+          example: Invalid parameter
+
+    ConflictErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          example: Service 'svc-fin-router' on host 'win-prod-01' is already locked by active job 'job-io7g3lc5'
+        error:
+          type: string
+          example: Service is currently locked.

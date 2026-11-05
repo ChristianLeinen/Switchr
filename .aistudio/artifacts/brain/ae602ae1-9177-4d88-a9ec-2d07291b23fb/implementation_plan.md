@@ -1,48 +1,105 @@
-# Implementation Plan: Declutter Confirmation Modal with Expandable Execution Details
+# Implementation Plan: OpenAPI 3.0 API Specification (`docs/openapi.yaml`)
 
-Declutter `ConfirmModal.tsx` so that operators are greeted with a compact, minimal summary of the switch action (Target Host, Managed Service, Current Profile & Target Profile), while technical execution details (Verification Probe, Timeout, Pipeline Script Steps, and Fail-Fast warning) are cleanly tucked into a collapsible accordion section.
-
----
-
-## User Preferences & Requirements
-1. **Presentation Style**: An expandable accordion section labelled **"Execution Details"** embedded directly within the confirmation modal.
-2. **Initial State**: **Collapsed by default** for an uncluttered, compact dialog.
-3. **Information in Main/Default View**:
-   - Header with title and close button
-   - High-level switch summary:
-     - Target Host (with OS badge)
-     - Managed Service name
-     - Current Profile
-     - Target Profile (highlighted with arrow indicator)
-   - Operational Safety Lock Notice (HTTP 409 mutex explanation)
-   - Action buttons ("Cancel" and "Confirm & Execute Pipeline")
-4. **Information Moved into Collapsible "Execution Details" Accordion**:
-   - Verification Probe command / probe service name
-   - Total Pipeline Timeout & step count
-   - Sequential Script Pipeline preview (numbered steps, script path, parameters, individual step timeouts)
-   - Fail-Fast Test Mode warning (if active)
+Create an exhaustive, production-grade **OpenAPI 3.0 YAML specification** at `docs/openapi.yaml` documenting every REST endpoint, Server-Sent Events (SSE) streaming channel, HTTP status code, and JSON payload required by the Switchr frontend.
 
 ---
 
-## Proposed Changes
+## User Specifications & Requirements
+1. **Format**: **OpenAPI / Swagger 3.0 YAML** (`docs/openapi.yaml`).
+2. **Scope**: **HTTP JSON request/response schema specifications only** (pure contract specifications with clear descriptions, field types, nullability, examples, and status codes).
+3. **Backend Target**: Cleanly implementable in ASP.NET Core (.NET 8/9 Minimal APIs or Controllers).
 
-### `src/components/ConfirmModal.tsx`
-- Add local state: `const [showExecutionDetails, setShowExecutionDetails] = useState(false);`
-- Reset `showExecutionDetails` to `false` when modal opens or closes.
-- Use `ChevronDown` / `ChevronRight` (or `ChevronUp`) from `lucide-react` for a smooth, accessible toggle button.
-- Format the accordion:
-  - Header button: `Execution Details` with a step count pill (e.g. `2 steps · 360s`), chevron icon, and accessible `aria-expanded` attributes.
-  - Body: Contains the verification probe command, timeout, sequential script steps, and fail-fast warning.
-- Maintain responsive, high-contrast light and dark theme styling (`dark:bg-slate-900`, `border-slate-200 dark:border-slate-800`).
+---
+
+## Endpoints to Document in `docs/openapi.yaml`
+
+### 1. `GET /api/health`
+- **Purpose**: System readiness and version check.
+- **Response `200 OK`**:
+  - `status`: string (`"healthy"`)
+  - `app`: string (`"Switchr"`)
+  - `version`: string (`"1.0.0"`)
+  - `dry_run`: boolean
+
+### 2. `GET /api/inventory`
+- **Purpose**: Complete fleet inventory of managed hosts, services, active profiles, runtime locks, and pipeline configurations.
+- **Response `200 OK`**:
+  - `app_version`: string
+  - `dry_run`: boolean
+  - `active_locks_count`: integer
+  - `hosts`: Array of `HostDto`:
+    - `id`, `name`, `os_type` (`"windows"` | `"unix"`), `hostname`, `port`, `description`
+    - `auth`: `HostAuthDto` (`type`, `username`, optional `password_env`, `key_path`)
+    - `services`: Array of `ServiceDto`:
+      - `id`, `host_id`, `name`, `service_type` (`"windows_service"` | `"systemd"` | `"generic_process"`)
+      - `verification_service_name`: string
+      - `active_profile_path`: string or null
+      - `current_profile`: string or null
+      - `description`: string
+      - `status`: string (`"RUNNING"` | `"STOPPED"` | `"TRANSITIONING"` | `"ERROR"`)
+      - `is_locked`: boolean
+      - `active_job_id`: string or null
+      - `profiles`: Array of `ConfigProfileDto`:
+        - `name`, `description`
+        - `scripts`: Array of `ScriptStepDto` (`name`, `script_path`, `parameters`, `timeout_seconds`)
+        - Legacy fallback fields (`script_path`, `parameters`, `timeout_seconds`)
+
+### 3. `POST /api/jobs/switch`
+- **Purpose**: Initiate a profile switch job on a service with concurrency locking.
+- **Request Body (`application/json`)**:
+  - `host_id`: string (required)
+  - `service_id`: string (required)
+  - `profile_name`: string (required)
+  - `simulate_failure`: boolean (optional)
+- **Responses**:
+  - `200 OK` / `202 Accepted`: Job queued and started (`job_id`, `host_id`, `service_id`, `target_profile`, `status: "RUNNING"`, `message`)
+  - `400 Bad Request`: Missing parameters, host/service/profile not found
+  - `409 Conflict`: Mutual exclusion lock violation (`detail`: explaining active job ID)
+
+### 4. `POST /api/jobs/{id}/abort`
+- **Purpose**: Send an abort signal to a running execution job.
+- **Path Parameter**: `id` (Job ID)
+- **Responses**:
+  - `200 OK`: `job_id`, `status: "ABORTED"`, `message`
+  - `404 Not Found`: Job does not exist or not active
+
+### 5. `GET /api/jobs/{id}/stream`
+- **Purpose**: Real-time Server-Sent Events (SSE) log output and terminal feed.
+- **Content-Type**: `text/event-stream`
+- **Stream protocol**:
+  - Initial buffered lines: `data: <raw text>\n\n`
+  - Live lines as executed: `data: <raw text>\n\n`
+  - Heartbeat: `: heartbeat\n\n`
+  - Completion event: `event: done\ndata: <SUCCESS | FAILED | ABORTED>\n\n`
+- **Responses**:
+  - `200 OK`: Event stream opened
+  - `404 Not Found`: Job ID not found
+
+### 6. `GET /api/jobs/history`
+- **Purpose**: Retrieve forensic execution records.
+- **Response `200 OK`**:
+  - `history`: Array of `JobRecordDto`:
+    - `job_id`, `host_id`, `host_name`, `os_type`, `service_id`, `service_name`
+    - `target_profile`, `previous_profile`
+    - `status` (`"QUEUED"`, `"RUNNING"`, `"SUCCESS"`, `"FAILED"`, `"ABORTED"`, `"TIMED_OUT"`)
+    - `exit_code`: integer or null
+    - `started_at`: ISO 8601 string
+    - `completed_at`: ISO 8601 string or null
+    - `duration_seconds`: number or null
+    - `verification_passed`: boolean
+    - `logs`: Array of `LogLineDto` (`id`, `timestamp`, `text`, `type`)
+
+### 7. `DELETE /api/jobs/history`
+- **Purpose**: Clear forensic execution history and reset audit log records.
+- **Response `200 OK`**:
+  - `success`: boolean
+  - `message`: string
 
 ---
 
 ## Verification Plan
-1. **Compilation & Linting**:
-   - Run `compile_applet` and `lint_applet` (`tsc --noEmit`).
-2. **Interaction Verification**:
-   - Open confirmation modal from FleetView: verify dialog is compact, minimal, and only shows Host, Service, Current Profile -> Target Profile, and Lock Notice.
-   - Click "Execution Details" accordion: verify it smoothly expands to show Probe, Timeout, Pipeline Steps, and Fail-Fast details.
-   - Toggle accordion closed/open: verify smooth toggling.
-   - Confirm profile switch execution: verify job starts and streams normally.
-   - Verify styling across both Light Mode and Dark Mode.
+1. **YAML Syntax & Schema Validation**:
+   - Check YAML formatting, indentation, and OpenAPI 3.0.3 specification compliance.
+2. **Contract Completeness**:
+   - Verify every frontend model in `src/types.ts` is 100% matched by an OpenAPI schema definition.
+   - Verify all endpoint routes and query/path/body parameters match `server.ts` and `src/App.tsx`.
