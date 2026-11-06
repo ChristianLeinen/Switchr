@@ -9,18 +9,24 @@ namespace Switchr.Services;
 public record SwitchJobContext(
     string JobId,
     string HostId,
+    string HostName,
+    string OsType,
     string ServiceId,
-    string ProfileName,
+    string ServiceName,
+    string TargetProfile,
+    string? PreviousProfile,
     DateTime StartTime,
     CancellationTokenSource Cts,
     Channel<string> StreamChannel
 )
 {
     public DateTime? EndTime { get; set; }
-    public string Status { get; set; } = "Running";
+    public string Status { get; set; } = "RUNNING"; // "QUEUED", "RUNNING", "SUCCESS", "FAILED", "ABORTED", "TIMED_OUT"
     public int? ExitCode { get; set; }
     public string? ErrorMessage { get; set; }
-    public List<string> CapturedLogs { get; } = new();
+    public bool VerificationPassed { get; set; }
+    public bool IsSimulation { get; set; } = true;
+    public List<LogLineDto> CapturedLogs { get; } = new();
 }
 
 public class JobManager
@@ -111,7 +117,7 @@ public class JobManager
         return _activeJobs.Values
             .FirstOrDefault(j => string.Equals(j.HostId, hostId, StringComparison.OrdinalIgnoreCase) &&
                                  string.Equals(j.ServiceId, serviceId, StringComparison.OrdinalIgnoreCase) &&
-                                 j.Status == "Running")?.JobId;
+                                 j.Status == "RUNNING")?.JobId;
     }
 
     public async Task<string> StartSwitchJobAsync(SwitchJobRequest request)
@@ -141,10 +147,11 @@ public class JobManager
         // Attempt non-blocking lock acquisition
         if (!await sem.WaitAsync(0))
         {
-            throw new InvalidOperationException($"Managed Service '{request.ServiceId}' on '{request.HostId}' is currently locked by another active switch job.");
+            var existingJobId = GetActiveJobId(request.HostId, request.ServiceId);
+            throw new InvalidOperationException($"Service '{request.ServiceId}' on host '{request.HostId}' is already locked by active job '{existingJobId}'");
         }
 
-        var jobId = Guid.NewGuid().ToString("N")[..8];
+        var jobId = $"job-{Guid.NewGuid().ToString("N")[..8]}";
         var effectiveScripts = profileConfig.GetEffectiveScripts();
         var totalTimeoutSec = effectiveScripts.Count > 0
             ? effectiveScripts.Sum(s => s.TimeoutSeconds > 0 ? s.TimeoutSeconds : _config.App.DefaultJobTimeout)
@@ -152,16 +159,24 @@ public class JobManager
 
         var cts = new CancellationTokenSource(TimeSpan.FromSeconds(totalTimeoutSec));
         var channel = Channel.CreateUnbounded<string>();
+        var isDryRun = request.DryRun ?? _config.App.DryRun;
 
         var context = new SwitchJobContext(
             jobId,
             request.HostId,
+            hostConfig.Name,
+            hostConfig.OsType,
             request.ServiceId,
+            serviceConfig.Name,
             request.ProfileName,
+            serviceConfig.CurrentProfile,
             DateTime.UtcNow,
             cts,
             channel
-        );
+        )
+        {
+            IsSimulation = isDryRun
+        };
 
         _activeJobs[jobId] = context;
 
@@ -190,7 +205,7 @@ public class JobManager
         SwitchJobRequest request
     )
     {
-        await EmitLogAsync(context, $"[SWITCHR] Starting Switch Job {context.JobId} for {context.HostId}/{context.ServiceId} -> '{context.ProfileName}'");
+        await EmitLogAsync(context, $"[SWITCHR] Starting Switch Job {context.JobId} for {context.HostId}/{context.ServiceId} -> '{context.TargetProfile}'", "info");
 
         using var scope = _serviceProvider.CreateScope();
         var isDryRun = request.DryRun ?? _config.App.DryRun;
@@ -204,9 +219,9 @@ public class JobManager
         {
             if (request.SimulateFailure == true)
             {
-                await EmitLogAsync(context, "[INFO] Simulated failure mode requested.");
+                await EmitLogAsync(context, "[INFO] Simulated failure mode requested.", "info");
                 await Task.Delay(500, context.Cts.Token);
-                await EmitLogAsync(context, "[ERROR] Simulated execution failure encountered during configuration application.");
+                await EmitLogAsync(context, "[ERROR] Simulated execution failure encountered during configuration application.", "error");
                 throw new InvalidOperationException("Simulated script execution failure.");
             }
 
@@ -223,7 +238,7 @@ public class JobManager
                 var totalSteps = scripts.Count;
                 var stepName = string.IsNullOrWhiteSpace(step.Name) ? $"Script #{stepNumber}" : step.Name;
 
-                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Starting: {stepName} ({step.ScriptPath})");
+                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Starting: {stepName} ({step.ScriptPath})", "info");
 
                 await foreach (var line in executor.ExecuteCommandStreamAsync(
                     hostConfig,
@@ -232,14 +247,15 @@ public class JobManager
                     context.Cts.Token
                 ))
                 {
-                    await EmitLogAsync(context, line);
+                    var logType = line.Contains("[stderr]", StringComparison.OrdinalIgnoreCase) ? "stderr" : "stdout";
+                    await EmitLogAsync(context, line, logType);
                 }
 
-                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Finished successfully: {stepName}");
+                await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Finished successfully: {stepName}", "info");
             }
 
             // Post-execution verification probe
-            await EmitLogAsync(context, $"[PROBE] Verifying managed service status for '{serviceConfig.VerificationServiceName}'...");
+            await EmitLogAsync(context, $"[PROBE] Verifying managed service status for '{serviceConfig.VerificationServiceName}'...", "info");
             var isRunning = await executor.VerifyServiceRunningAsync(
                 hostConfig,
                 serviceConfig.VerificationServiceName,
@@ -248,8 +264,9 @@ public class JobManager
 
             if (isRunning)
             {
-                context.Status = "Succeeded";
+                context.Status = "SUCCESS";
                 context.ExitCode = 0;
+                context.VerificationPassed = true;
 
                 // Refresh active profile from active_profile_path if configured, otherwise fallback to switched profile
                 if (!string.IsNullOrWhiteSpace(serviceConfig.ActiveProfilePath))
@@ -265,18 +282,18 @@ public class JobManager
                         if (!string.IsNullOrWhiteSpace(readProfile))
                         {
                             serviceConfig.CurrentProfile = readProfile.Trim();
-                            await EmitLogAsync(context, $"[PROBE] Confirmed active profile '{serviceConfig.CurrentProfile}' from remote file '{serviceConfig.ActiveProfilePath}'.");
+                            await EmitLogAsync(context, $"[PROBE] Confirmed active profile '{serviceConfig.CurrentProfile}' from remote file '{serviceConfig.ActiveProfilePath}'.", "success");
                         }
                         else
                         {
                             serviceConfig.CurrentProfile = null;
-                            await EmitLogAsync(context, $"[WARN] Remote active profile file '{serviceConfig.ActiveProfilePath}' was empty or not found.");
+                            await EmitLogAsync(context, $"[WARN] Remote active profile file '{serviceConfig.ActiveProfilePath}' was empty or not found.", "warn");
                         }
                     }
                     catch (Exception ex)
                     {
                         serviceConfig.CurrentProfile = null;
-                        await EmitLogAsync(context, $"[WARN] Failed to read remote active profile file: {ex.Message}");
+                        await EmitLogAsync(context, $"[WARN] Failed to read remote active profile file: {ex.Message}", "warn");
                     }
                 }
                 else
@@ -284,27 +301,32 @@ public class JobManager
                     serviceConfig.CurrentProfile = profileConfig.Name;
                 }
 
-                await EmitLogAsync(context, $"[SUCCESS] Service is confirmed RUNNING. Configuration switch to '{context.ProfileName}' complete.");
+                await EmitLogAsync(context, $"[SUCCESS] Service is confirmed RUNNING. Configuration switch to '{context.TargetProfile}' complete.", "success");
             }
             else
             {
-                context.Status = "Failed";
+                context.Status = "FAILED";
                 context.ExitCode = 1;
+                context.VerificationPassed = false;
                 context.ErrorMessage = "Post-transition verification probe reported service NOT running.";
-                await EmitLogAsync(context, $"[ERROR] Post-execution probe failed: Service is not running.");
+                await EmitLogAsync(context, $"[ERROR] Post-execution probe failed: Service is not running.", "error");
             }
         }
         catch (OperationCanceledException)
         {
-            context.Status = "Aborted";
+            context.Status = "ABORTED";
+            context.ExitCode = -1;
+            context.VerificationPassed = false;
             context.ErrorMessage = "Job was aborted by operator or timed out.";
-            await EmitLogAsync(context, "[ABORT] Switch job was terminated.");
+            await EmitLogAsync(context, "[ABORT] Switch job was terminated.", "warn");
         }
         catch (Exception ex)
         {
-            context.Status = "Failed";
+            context.Status = "FAILED";
+            context.ExitCode = 1;
+            context.VerificationPassed = false;
             context.ErrorMessage = ex.Message;
-            await EmitLogAsync(context, $"[ERROR] Fatal execution error: {ex.Message}");
+            await EmitLogAsync(context, $"[ERROR] Fatal execution error: {ex.Message}", "error");
         }
         finally
         {
@@ -315,7 +337,7 @@ public class JobManager
 
     public bool AbortJob(string jobId)
     {
-        if (_activeJobs.TryGetValue(jobId, out var context) && context.Status == "Running")
+        if (_activeJobs.TryGetValue(jobId, out var context) && context.Status == "RUNNING")
         {
             context.Cts.Cancel();
             return true;
@@ -329,9 +351,9 @@ public class JobManager
         return context;
     }
 
-    public async Task<List<SwitchJobStatusResponse>> GetHistoryAsync()
+    public async Task<List<JobRecordDto>> GetHistoryAsync()
     {
-        var list = new List<SwitchJobStatusResponse>();
+        var list = new List<JobRecordDto>();
         var logDir = _config.App.LogDir;
         if (!Directory.Exists(logDir)) return list;
 
@@ -340,7 +362,7 @@ public class JobManager
             try
             {
                 var json = await File.ReadAllTextAsync(file);
-                var dto = JsonSerializer.Deserialize<SwitchJobStatusResponse>(json);
+                var dto = JsonSerializer.Deserialize<JobRecordDto>(json);
                 if (dto != null) list.Add(dto);
             }
             catch (Exception ex)
@@ -352,11 +374,37 @@ public class JobManager
         return list;
     }
 
-    private async Task EmitLogAsync(SwitchJobContext context, string line)
+    public void ClearAuditHistory()
     {
-        var timestamped = $"[{DateTime.UtcNow:HH:mm:ss}] {line}";
-        context.CapturedLogs.Add(timestamped);
-        await context.StreamChannel.Writer.WriteAsync(timestamped);
+        var logDir = _config.App.LogDir;
+        if (Directory.Exists(logDir))
+        {
+            foreach (var file in Directory.GetFiles(logDir, "job-*.*"))
+            {
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete log file {File}", file);
+                }
+            }
+        }
+    }
+
+    private async Task EmitLogAsync(SwitchJobContext context, string line, string type = "stdout")
+    {
+        var now = DateTime.UtcNow;
+        var timeStr = $"{now:HH:mm:ss}.{now.Millisecond:D3}";
+        var logLine = new LogLineDto(
+            Guid.NewGuid().ToString("N")[..8],
+            timeStr,
+            line,
+            type
+        );
+        context.CapturedLogs.Add(logLine);
+        await context.StreamChannel.Writer.WriteAsync(line);
     }
 
     private async Task PersistAuditLogAsync(SwitchJobContext context)
@@ -367,20 +415,32 @@ public class JobManager
             var jsonPath = Path.Combine(logDir, $"job-{context.StartTime:yyyyMMdd_HHmmss}_{context.JobId}.json");
             var txtPath = Path.Combine(logDir, $"job-{context.StartTime:yyyyMMdd_HHmmss}_{context.JobId}.log");
 
-            var dto = new SwitchJobStatusResponse(
+            var durationSeconds = context.EndTime.HasValue
+                ? Math.Round((context.EndTime.Value - context.StartTime).TotalSeconds, 2)
+                : (double?)null;
+
+            var dto = new JobRecordDto(
                 context.JobId,
                 context.HostId,
+                context.HostName,
+                context.OsType,
                 context.ServiceId,
-                context.ProfileName,
+                context.ServiceName,
+                context.TargetProfile,
+                context.PreviousProfile,
                 context.Status,
+                context.ExitCode,
                 context.StartTime,
                 context.EndTime,
-                context.ExitCode,
-                context.ErrorMessage
+                durationSeconds,
+                context.VerificationPassed,
+                context.IsSimulation,
+                context.ErrorMessage,
+                context.CapturedLogs
             );
 
             await File.WriteAllTextAsync(jsonPath, JsonSerializer.Serialize(dto, new JsonSerializerOptions { WriteIndented = true }));
-            await File.WriteAllLinesAsync(txtPath, context.CapturedLogs);
+            await File.WriteAllLinesAsync(txtPath, context.CapturedLogs.Select(l => $"[{l.Timestamp}] {l.Text}"));
         }
         catch (Exception ex)
         {

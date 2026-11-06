@@ -104,7 +104,7 @@ public class JobManagerTests
         Assert.NotEmpty(lines);
         Assert.Contains(lines, l => l.Contains("[SWITCHR] Starting Switch Job"));
         Assert.Contains(lines, l => l.Contains("[SUCCESS]"));
-        Assert.Equal("Succeeded", job.Status);
+        Assert.Equal("SUCCESS", job.Status);
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public class JobManagerTests
             lines.Add(line);
         }
 
-        Assert.Equal("Succeeded", job.Status);
+        Assert.Equal("SUCCESS", job.Status);
         Assert.Equal(0, job.ExitCode);
 
         // Verify serial step progression
@@ -309,7 +309,7 @@ public class JobManagerTests
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             await foreach (var _ in job.StreamChannel.Reader.ReadAllAsync(cts.Token)) { }
 
-            Assert.Equal("Succeeded", job.Status);
+            Assert.Equal("SUCCESS", job.Status);
             Assert.Equal("profB", config.Services[0].CurrentProfile);
         }
         finally
@@ -333,4 +333,36 @@ public class JobManagerTests
         Assert.NotNull(job);
         Assert.True(job.Cts.IsCancellationRequested);
     }
+
+    [Fact]
+    public async Task ClearAuditHistory_DeletesAllPersistedJobFiles()
+    {
+        var (manager, config) = CreateTestJobManager();
+
+        var request = new SwitchJobRequest("host1", "svc1", "profA");
+        var jobId = await manager.StartSwitchJobAsync(request);
+        var job = manager.GetJob(jobId);
+        Assert.NotNull(job);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await foreach (var _ in job.StreamChannel.Reader.ReadAllAsync(cts.Token)) { }
+
+        // Wait for background execution and audit log persistence
+        for (int i = 0; i < 20; i++)
+        {
+            var h = await manager.GetHistoryAsync();
+            if (h.Count > 0) break;
+            await Task.Delay(100);
+        }
+
+        var historyBefore = await manager.GetHistoryAsync();
+        Assert.NotEmpty(historyBefore);
+
+        // Act: Clear audit history
+        manager.ClearAuditHistory();
+
+        var historyAfter = await manager.GetHistoryAsync();
+        Assert.Empty(historyAfter);
+    }
 }
+

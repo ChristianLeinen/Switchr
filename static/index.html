@@ -88,15 +88,19 @@
           <h3 class="text-base font-semibold text-slate-300">Execution Audit Trail</h3>
           <p class="text-xs text-slate-500">Immutable operational history and verification logs</p>
         </div>
-        <button onclick="loadHistory()" class="text-xs text-indigo-400 hover:underline">Refresh History</button>
+        <div class="flex items-center space-x-3">
+          <button onclick="clearHistory()" class="text-xs text-red-400 hover:text-red-300 transition">Clear History</button>
+          <span class="text-slate-700">|</span>
+          <button onclick="loadHistory()" class="text-xs text-indigo-400 hover:underline">Refresh History</button>
+        </div>
       </div>
       <div class="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900/40">
         <table class="w-full text-left text-xs text-slate-300">
           <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase tracking-wider">
             <tr>
               <th class="px-4 py-3">Timestamp</th>
-              <th class="px-4 py-3">Host ID</th>
-              <th class="px-4 py-3">Service ID</th>
+              <th class="px-4 py-3">Host</th>
+              <th class="px-4 py-3">Service</th>
               <th class="px-4 py-3">Target Profile</th>
               <th class="px-4 py-3">Status</th>
               <th class="px-4 py-3">Exit Code</th>
@@ -142,8 +146,8 @@
           <span id="modalTargetProfile" class="font-mono font-bold text-indigo-400"></span>
         </div>
         <div class="py-1">
-          <span class="text-slate-400 block mb-1">Target Script:</span>
-          <div id="modalScriptPath" class="font-mono text-[11px] text-slate-300 bg-slate-900 px-2 py-1 rounded break-all"></div>
+          <span class="text-slate-400 block mb-1">Execution Pipeline (Sequential Scripts):</span>
+          <div id="modalScriptPath" class="space-y-1.5 font-mono text-[11px] text-slate-300 bg-slate-900 p-2 rounded"></div>
         </div>
       </div>
 
@@ -290,8 +294,8 @@
 
               <div class="flex items-center space-x-2 mt-2">
                 <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-700/50">${serviceTypeBadge}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono">
-                  Active: <strong>${svc.current_profile || 'N/A'}</strong>
+                <span class="text-[10px] px-2 py-0.5 rounded ${svc.current_profile ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20' : 'bg-slate-800/40 text-slate-400 border border-slate-700/50'} font-mono">
+                  Active: <strong>${svc.current_profile || 'None'}</strong>
                 </span>
               </div>
 
@@ -346,7 +350,7 @@
         hostId,
         serviceId,
         targetProfileName,
-        scriptPath: targetProfile ? (targetProfile.script_path || '') : ''
+        scriptPath: targetProfile ? targetProfile.script_path : ''
       };
 
       document.getElementById('modalHost').innerText = `${host.name} (${host.id})`;
@@ -367,7 +371,7 @@
           </div>
         `).join('');
       } else {
-        scriptModalContainer.innerText = targetProfile ? (targetProfile.script_path || 'N/A') : 'N/A';
+        scriptModalContainer.innerText = targetProfile ? targetProfile.script_path : 'N/A';
       }
 
       document.getElementById('modalSimulateFailure').checked = false;
@@ -400,13 +404,13 @@
 
         if (res.status === 409) {
           const err = await res.json();
-          alert(`Concurrency Conflict (HTTP 409): ${err.error}`);
+          alert(`Concurrency Conflict (HTTP 409): ${err.detail || err.error}`);
           return;
         }
 
         if (!res.ok) {
           const err = await res.json();
-          alert(`Failed to start job: ${err.error || res.statusText}`);
+          alert(`Failed to start job: ${err.detail || err.error || res.statusText}`);
           return;
         }
 
@@ -440,9 +444,10 @@
         appendLog(event.data);
       };
 
-      currentEventSource.addEventListener('done', () => {
-        appendLog("[SYSTEM] Stream completed.");
-        document.getElementById('terminalStatusText').innerText = "Execution completed.";
+      currentEventSource.addEventListener('done', (event) => {
+        const finalStatus = event.data || 'COMPLETED';
+        appendLog(`[SYSTEM] Stream completed: ${finalStatus}`);
+        document.getElementById('terminalStatusText').innerText = `Execution completed (${finalStatus}).`;
         currentEventSource.close();
         currentEventSource = null;
         hideActiveBanner();
@@ -517,10 +522,27 @@
       document.getElementById('terminalLogs').innerHTML = '';
     }
 
+    async function clearHistory() {
+      if (!confirm("Are you sure you want to clear all execution audit history records?")) return;
+      try {
+        const res = await fetch('/api/jobs/history', { method: 'DELETE' });
+        if (res.ok) {
+          loadHistory();
+        } else {
+          const err = await res.json();
+          alert(`Failed to clear history: ${err.message || res.statusText}`);
+        }
+      } catch (err) {
+        console.error("Failed to clear history:", err);
+        alert(`Error clearing history: ${err.message}`);
+      }
+    }
+
     async function loadHistory() {
       try {
         const res = await fetch('/api/jobs/history');
-        const history = await res.json();
+        const data = await res.json();
+        const history = Array.isArray(data) ? data : (data.history || []);
         const tbody = document.getElementById('historyTableBody');
         tbody.innerHTML = '';
 
@@ -535,17 +557,17 @@
           const isRunning = item.status === 'Running' || item.status === 'RUNNING';
           const badgeClass = isSuccess ? 'text-emerald-400' : isRunning ? 'text-indigo-400' : 'text-red-400';
 
-          const startTime = item.start_time || item.startTime;
-          const hostId = item.host_id || item.hostId;
-          const serviceId = item.service_id || item.serviceId;
-          const profileName = item.profile_name || item.profileName;
+          const startTime = item.started_at || item.start_time || item.startTime;
+          const hostDisplay = item.host_name ? `${item.host_name} (${item.host_id})` : (item.host_id || item.hostId);
+          const serviceDisplay = item.service_name ? `${item.service_name} (${item.service_id})` : (item.service_id || item.serviceId);
+          const targetProfile = item.target_profile || item.profile_name || item.profileName;
           const exitCode = item.exit_code !== undefined ? item.exit_code : (item.exitCode !== undefined ? item.exitCode : '-');
 
           row.innerHTML = `
             <td class="px-4 py-3 font-mono text-slate-400">${startTime ? new Date(startTime).toLocaleString() : '-'}</td>
-            <td class="px-4 py-3 font-semibold text-slate-200">${hostId}</td>
-            <td class="px-4 py-3">${serviceId}</td>
-            <td class="px-4 py-3 font-mono text-indigo-300 font-bold">${profileName}</td>
+            <td class="px-4 py-3 font-semibold text-slate-200">${hostDisplay}</td>
+            <td class="px-4 py-3">${serviceDisplay}</td>
+            <td class="px-4 py-3 font-mono text-indigo-300 font-bold">${targetProfile}</td>
             <td class="px-4 py-3 font-bold ${badgeClass}">● ${item.status}</td>
             <td class="px-4 py-3 font-mono">${exitCode !== null ? exitCode : '-'}</td>
           `;

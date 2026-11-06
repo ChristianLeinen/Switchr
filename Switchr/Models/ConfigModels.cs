@@ -353,6 +353,7 @@ public record ServiceStateViewDto(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("service_type")] string ServiceType,
     [property: JsonPropertyName("verification_service_name")] string VerificationServiceName,
+    [property: JsonPropertyName("active_profile_path")] string? ActiveProfilePath,
     [property: JsonPropertyName("current_profile")] string? CurrentProfile,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("status")] string Status, // "RUNNING" | "STOPPED" | "TRANSITIONING" | "ERROR"
@@ -367,6 +368,7 @@ public record HostStateViewDto(
     [property: JsonPropertyName("os_type")] string OsType,
     [property: JsonPropertyName("hostname")] string Hostname,
     [property: JsonPropertyName("port")] int Port,
+    [property: JsonPropertyName("use_ssl")] bool UseSsl,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("services")] List<ServiceStateViewDto> Services
 );
@@ -378,14 +380,64 @@ public record InventoryResponseDto(
     [property: JsonPropertyName("active_locks_count")] int ActiveLocksCount
 );
 
-public record SwitchJobStatusResponse(
+public record HealthResponse(
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("app")] string App,
+    [property: JsonPropertyName("version")] string Version,
+    [property: JsonPropertyName("dry_run")] bool DryRun
+);
+
+public record ClearHistoryResponse(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("message")] string Message
+);
+
+public record LogLineDto(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("timestamp")] string Timestamp,
+    [property: JsonPropertyName("text")] string Text,
+    [property: JsonPropertyName("type")] string Type
+);
+
+public record JobRecordDto(
+    [property: JsonPropertyName("job_id")] string JobId,
+    [property: JsonPropertyName("host_id")] string HostId,
+    [property: JsonPropertyName("host_name")] string HostName,
+    [property: JsonPropertyName("os_type")] string OsType,
+    [property: JsonPropertyName("service_id")] string ServiceId,
+    [property: JsonPropertyName("service_name")] string ServiceName,
+    [property: JsonPropertyName("target_profile")] string TargetProfile,
+    [property: JsonPropertyName("previous_profile")] string? PreviousProfile,
+    [property: JsonPropertyName("status")] string Status, // "QUEUED" | "RUNNING" | "SUCCESS" | "FAILED" | "ABORTED" | "TIMED_OUT"
+    [property: JsonPropertyName("exit_code")] int? ExitCode,
+    [property: JsonPropertyName("started_at")] DateTime StartedAt,
+    [property: JsonPropertyName("completed_at")] DateTime? CompletedAt,
+    [property: JsonPropertyName("duration_seconds")] double? DurationSeconds,
+    [property: JsonPropertyName("verification_passed")] bool VerificationPassed,
+    [property: JsonPropertyName("is_simulation")] bool IsSimulation,
+    [property: JsonPropertyName("error_summary")] string? ErrorSummary,
+    [property: JsonPropertyName("logs")] List<LogLineDto> Logs
+);
+
+public record AuditHistoryResponse(
+    [property: JsonPropertyName("history")] List<JobRecordDto> History
+);
+
+public record SwitchJobResponse(
     [property: JsonPropertyName("job_id")] string JobId,
     [property: JsonPropertyName("host_id")] string HostId,
     [property: JsonPropertyName("service_id")] string ServiceId,
-    [property: JsonPropertyName("profile_name")] string ProfileName,
-    [property: JsonPropertyName("status")] string Status, // "Running", "Succeeded", "Failed", "Aborted"
-    [property: JsonPropertyName("start_time")] DateTime StartTime,
-    [property: JsonPropertyName("end_time")] DateTime? EndTime,
-    [property: JsonPropertyName("exit_code")] int? ExitCode,
-    [property: JsonPropertyName("error_message")] string? ErrorMessage
+    [property: JsonPropertyName("target_profile")] string TargetProfile,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("message")] string Message
+);
+
+public record ConflictErrorResponse(
+    [property: JsonPropertyName("detail")] string Detail,
+    [property: JsonPropertyName("error")] string Error
+);
+
+public record ErrorResponse(
+    [property: JsonPropertyName("error")] string Error,
+    [property: JsonPropertyName("detail")] string? Detail = null
 );

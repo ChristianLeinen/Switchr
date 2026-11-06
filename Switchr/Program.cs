@@ -51,6 +51,17 @@ app.UseDefaultFiles(new DefaultFilesOptions
 app.UseStaticFiles();
 
 // REST API Endpoints
+app.MapGet("/api/health", (SwitchrConfig config) =>
+{
+    var response = new HealthResponse(
+        Status: "healthy",
+        App: config.App.Name,
+        Version: config.App.Version,
+        DryRun: config.App.DryRun
+    );
+    return Results.Ok(response);
+});
+
 app.MapGet("/api/inventory", (SwitchrConfig config, JobManager jobManager) =>
 {
     var hostsDto = new List<HostStateViewDto>();
@@ -86,6 +97,7 @@ app.MapGet("/api/inventory", (SwitchrConfig config, JobManager jobManager) =>
                 Name: svc.Name,
                 ServiceType: svc.ServiceType,
                 VerificationServiceName: svc.VerificationServiceName,
+                ActiveProfilePath: svc.ActiveProfilePath,
                 CurrentProfile: svc.CurrentProfile,
                 Description: svc.Description,
                 Status: status,
@@ -101,6 +113,7 @@ app.MapGet("/api/inventory", (SwitchrConfig config, JobManager jobManager) =>
             OsType: host.OsType,
             Hostname: host.Hostname,
             Port: host.Port,
+            UseSsl: host.UseSsl,
             Description: host.Description,
             Services: servicesDto
         ));
@@ -118,28 +131,36 @@ app.MapGet("/api/inventory", (SwitchrConfig config, JobManager jobManager) =>
 
 app.MapPost("/api/jobs/switch", async (SwitchJobRequest request, JobManager jobManager) =>
 {
+    if (string.IsNullOrWhiteSpace(request.HostId) ||
+        string.IsNullOrWhiteSpace(request.ServiceId) ||
+        string.IsNullOrWhiteSpace(request.ProfileName))
+    {
+        return Results.BadRequest(new ErrorResponse("host_id, service_id, and profile_name are required", "Missing required parameters"));
+    }
+
     try
     {
         var jobId = await jobManager.StartSwitchJobAsync(request);
-        return Results.Ok(new
-        {
-            job_id = jobId,
-            jobId,
-            host_id = request.HostId,
-            service_id = request.ServiceId,
-            target_profile = request.ProfileName,
-            status = "RUNNING",
-            message = "Switch job queued and started."
-        });
+        return Results.Accepted($"/api/jobs/{jobId}/stream", new SwitchJobResponse(
+            JobId: jobId,
+            HostId: request.HostId,
+            ServiceId: request.ServiceId,
+            TargetProfile: request.ProfileName,
+            Status: "RUNNING",
+            Message: "Profile switch job successfully queued and dispatched."
+        ));
     }
     catch (KeyNotFoundException ex)
     {
-        return Results.NotFound(new { error = ex.Message });
+        return Results.NotFound(new ErrorResponse(ex.Message, "Entity not found"));
     }
     catch (InvalidOperationException ex)
     {
         // 409 Conflict when execution lock is active
-        return Results.Conflict(new { error = ex.Message });
+        return Results.Conflict(new ConflictErrorResponse(
+            Detail: ex.Message,
+            Error: "Service is currently locked."
+        ));
     }
     catch (Exception ex)
     {
@@ -151,8 +172,8 @@ app.MapPost("/api/jobs/{id}/abort", (string id, JobManager jobManager) =>
 {
     var aborted = jobManager.AbortJob(id);
     return aborted
-        ? Results.Ok(new { job_id = id, jobId = id, status = "ABORTED", message = $"Job {id} abort signal issued." })
-        : Results.BadRequest(new { error = $"Job {id} cannot be aborted (not found or already finished)." });
+        ? Results.Ok(new { job_id = id, status = "ABORTED", message = $"Job {id} abort signal sent." })
+        : Results.BadRequest(new ErrorResponse($"Job {id} cannot be aborted (not found or already completed).", "Invalid state"));
 });
 
 app.MapGet("/api/jobs/{id}/stream", async (string id, JobManager jobManager, HttpContext context) =>
@@ -161,22 +182,51 @@ app.MapGet("/api/jobs/{id}/stream", async (string id, JobManager jobManager, Htt
     if (job == null)
     {
         context.Response.StatusCode = 404;
+        context.Response.ContentType = "text/plain";
         await context.Response.WriteAsync("Job not found.");
         return;
     }
 
     context.Response.Headers.Append("Content-Type", "text/event-stream");
-    context.Response.Headers.Append("Cache-Control", "no-cache");
+    context.Response.Headers.Append("Cache-Control", "no-cache, no-transform");
     context.Response.Headers.Append("X-Accel-Buffering", "no");
+
+    await context.Response.WriteAsync($": connected to switchr job {id}\n\n");
+    await context.Response.Body.FlushAsync();
 
     // Flush past captured lines first
     foreach (var pastLine in job.CapturedLogs.ToList())
     {
-        await context.Response.WriteAsync($"data: {pastLine}\n\n");
+        await context.Response.WriteAsync($"data: {pastLine.Text}\n\n");
         await context.Response.Body.FlushAsync();
     }
 
-    // Stream live lines
+    if (job.Status != "RUNNING" && job.Status != "QUEUED")
+    {
+        await context.Response.WriteAsync($"event: done\ndata: {job.Status}\n\n");
+        await context.Response.Body.FlushAsync();
+        return;
+    }
+
+    // Stream live lines with heartbeat
+    using var heartbeatCts = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+    var heartbeatTask = Task.Run(async () =>
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(15));
+        while (!heartbeatCts.Token.IsCancellationRequested && await timer.WaitForNextTickAsync(heartbeatCts.Token))
+        {
+            try
+            {
+                await context.Response.WriteAsync(": heartbeat\n\n", heartbeatCts.Token);
+                await context.Response.Body.FlushAsync(heartbeatCts.Token);
+            }
+            catch
+            {
+                break;
+            }
+        }
+    }, heartbeatCts.Token);
+
     try
     {
         await foreach (var line in job.StreamChannel.Reader.ReadAllAsync(context.RequestAborted))
@@ -189,15 +239,31 @@ app.MapGet("/api/jobs/{id}/stream", async (string id, JobManager jobManager, Htt
     {
         // Client disconnected from stream
     }
+    finally
+    {
+        heartbeatCts.Cancel();
+        try { await heartbeatTask; } catch { }
+    }
 
-    await context.Response.WriteAsync("event: done\ndata: [STREAM_COMPLETED]\n\n");
+    // Emit final event with the actual outcome status (SUCCESS, FAILED, or ABORTED)
+    var finalStatus = string.IsNullOrWhiteSpace(job.Status) || job.Status == "RUNNING" ? "SUCCESS" : job.Status;
+    await context.Response.WriteAsync($"event: done\ndata: {finalStatus}\n\n");
     await context.Response.Body.FlushAsync();
 });
 
 app.MapGet("/api/jobs/history", async (JobManager jobManager) =>
 {
     var history = await jobManager.GetHistoryAsync();
-    return Results.Ok(history);
+    return Results.Ok(new AuditHistoryResponse(history));
+});
+
+app.MapDelete("/api/jobs/history", (JobManager jobManager) =>
+{
+    jobManager.ClearAuditHistory();
+    return Results.Ok(new ClearHistoryResponse(
+        Success: true,
+        Message: "Audit history cleared successfully."
+    ));
 });
 
 app.Run();
