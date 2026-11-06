@@ -161,10 +161,14 @@ sc.exe start Switchr
 
 ## REST API Reference
 
+For the comprehensive, formal API specification including JSON schemas, parameters, response codes, SSE stream formats, and examples, refer to [`docs/openapi.yaml`](docs/openapi.yaml).
+
 | Endpoint | Method | Request Payload | Description |
 | :--- | :--- | :--- | :--- |
-| `/api/inventory` | `GET` | — | Returns target fleet inventory, managed services, active profiles, and active concurrency locks. |
-| `/api/jobs/switch` | `POST` | `{"host_id": "...", "service_id": "...", "profile_name": "..."}` | Initiates a configuration switch. Returns `{ "job_id": "..." }` or `HTTP 409 Conflict` if the service is locked. |
-| `/api/jobs/{id}/abort` | `POST` | — | Sends a cancellation signal to a running switch job. |
-| `/api/jobs/{id}/stream` | `GET` | — | Server-Sent Events (SSE) endpoint streaming live console lines (`text/event-stream`). |
-| `/api/jobs/history` | `GET` | — | Returns persistent execution history and audit records from disk. |
+| `/api/health` | `GET` | — | Returns service readiness, runtime version, and dry-run simulation mode status. |
+| `/api/inventory` | `GET` | — | Retrieves managed target fleet, services, profiles, sequential scripts, and active concurrency locks. *(Host authentication credentials are intentionally excluded for security).* |
+| `/api/jobs/switch` | `POST` | `{"host_id": "...", "service_id": "...", "profile_name": "...", "simulate_failure"?: boolean}` | Dispatches a profile switch job. Returns `202 Accepted` with job metadata, or `409 Conflict` if the service execution mutex is locked. |
+| `/api/jobs/{id}/abort` | `POST` | — | Signals an active transition pipeline job to immediately halt execution. |
+| `/api/jobs/{id}/stream` | `GET` | — | Real-time Server-Sent Events (SSE) feed (`text/event-stream`) streaming execution output, heartbeat comments, and a final completion event (`done`). |
+| `/api/jobs/history` | `GET` | — | Retrieves the persistent historical list of execution job records, exit codes, probes, and logs. |
+| `/api/jobs/history` | `DELETE` | — | Resets and clears all stored execution audit records and logs on the server. |
