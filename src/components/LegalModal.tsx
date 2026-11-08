@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ShieldCheck, Scale, FileText, Lock, Building2 } from 'lucide-react';
 
 export type LegalModalType = 'impressum' | 'privacy' | 'disclaimer' | 'trademarks' | null;
@@ -6,9 +6,33 @@ export type LegalModalType = 'impressum' | 'privacy' | 'disclaimer' | 'trademark
 interface LegalModalProps {
   type: LegalModalType;
   onClose: () => void;
+  onSelectTab?: (tab: 'impressum' | 'privacy' | 'disclaimer' | 'trademarks') => void;
 }
 
-export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
+interface TabDefinition {
+  id: 'impressum' | 'privacy' | 'disclaimer' | 'trademarks';
+  label: string;
+  shortLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const TABS: TabDefinition[] = [
+  { id: 'impressum', label: 'Legal Notice', shortLabel: 'Impressum', icon: Building2 },
+  { id: 'privacy', label: 'Privacy Policy', shortLabel: 'Privacy', icon: Lock },
+  { id: 'disclaimer', label: 'Disclaimer', shortLabel: 'Disclaimer', icon: Scale },
+  { id: 'trademarks', label: 'Trademarks & Copyright', shortLabel: 'Trademarks', icon: FileText },
+];
+
+export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectTab }) => {
+  const [activeTab, setActiveTab] = useState<'impressum' | 'privacy' | 'disclaimer' | 'trademarks'>('impressum');
+
+  // Synchronize internal active tab whenever the modal is triggered with a specific type from outside
+  useEffect(() => {
+    if (type) {
+      setActiveTab(type);
+    }
+  }, [type]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -25,6 +49,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
 
   if (!type) return null;
 
+  const handleTabClick = (tabId: 'impressum' | 'privacy' | 'disclaimer' | 'trademarks') => {
+    setActiveTab(tabId);
+    if (onSelectTab) onSelectTab(tabId);
+  };
+
   return (
     <div
       role="dialog"
@@ -37,19 +66,20 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900/95 shadow-2xl shadow-black/80 text-slate-800 dark:text-slate-200 overflow-hidden transition-colors duration-150"
       >
-        {/* Header */}
+        {/* Header Bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
           <div className="flex items-center gap-3">
-            {type === 'impressum' && <Building2 className="w-5 h-5 text-sky-600 dark:text-sky-400" />}
-            {type === 'privacy' && <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
-            {type === 'disclaimer' && <Scale className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
-            {type === 'trademarks' && <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
-            <h2 id="legal-modal-title" className="text-base font-semibold text-slate-900 dark:text-white tracking-wide">
-              {type === 'impressum' && 'Legal Notice (Impressum)'}
-              {type === 'privacy' && 'Privacy Policy (GDPR / DSGVO)'}
-              {type === 'disclaimer' && 'Legal Disclaimer'}
-              {type === 'trademarks' && 'Trademarks & Copyright Notice'}
-            </h2>
+            <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/60 border border-sky-300 dark:border-sky-800/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+              <Scale className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 id="legal-modal-title" className="text-base font-semibold text-slate-900 dark:text-white tracking-wide">
+                Compliance & Legal Center
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                EU regulations, GDPR privacy policies, operator liability & trademark notices
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -60,10 +90,60 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 text-sm text-slate-600 dark:text-slate-300 space-y-5 leading-relaxed font-sans">
-          {type === 'impressum' && (
-            <div className="space-y-4">
+        {/* TabControl Navigation Strip */}
+        <div className="px-6 bg-slate-100/70 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800">
+          <nav
+            role="tablist"
+            aria-label="Legal Sections"
+            className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto scrollbar-none py-1.5"
+          >
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  id={`tab-${tab.id}`}
+                  aria-selected={isActive}
+                  aria-controls={`tabpanel-${tab.id}`}
+                  onClick={() => handleTabClick(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'bg-white dark:bg-slate-800 text-sky-600 dark:text-white shadow-sm border border-slate-200 dark:border-slate-700'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/40'
+                  }`}
+                >
+                  <Icon
+                    className={`w-3.5 h-3.5 ${
+                      isActive
+                        ? tab.id === 'impressum'
+                          ? 'text-sky-600 dark:text-sky-400'
+                          : tab.id === 'privacy'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : tab.id === 'disclaimer'
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-purple-600 dark:text-purple-400'
+                        : 'text-slate-400'
+                    }`}
+                  />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.shortLabel}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Tab Content Body */}
+        <div
+          role="tabpanel"
+          id={`tabpanel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+          className="flex-1 overflow-y-auto px-6 py-5 text-sm text-slate-600 dark:text-slate-300 space-y-5 leading-relaxed font-sans"
+        >
+          {activeTab === 'impressum' && (
+            <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-xs text-sky-800 dark:text-sky-200">
                 Information pursuant to § 5 of the German Telemedia Act (TMG) and § 18 Section 2 of the German Interstate Media Treaty (MStV):
               </div>
@@ -96,8 +176,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
             </div>
           )}
 
-          {type === 'privacy' && (
-            <div className="space-y-4">
+          {activeTab === 'privacy' && (
+            <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-800 dark:text-emerald-200">
                 Data Protection & Privacy Notice pursuant to the General Data Protection Regulation (EU GDPR / DSGVO - Articles 13 & 14):
               </div>
@@ -132,8 +212,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
             </div>
           )}
 
-          {type === 'disclaimer' && (
-            <div className="space-y-4">
+          {activeTab === 'disclaimer' && (
+            <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-800 dark:text-amber-200">
                 Limitation of Liability pursuant to §§ 7–10 of the German Telemedia Act (TMG):
               </div>
@@ -161,8 +241,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
             </div>
           )}
 
-          {type === 'trademarks' && (
-            <div className="space-y-4">
+          {activeTab === 'trademarks' && (
+            <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 text-xs text-purple-800 dark:text-purple-200">
                 Copyright and Third-Party Trademarks Notice:
               </div>
