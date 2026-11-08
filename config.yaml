@@ -122,6 +122,25 @@ services:
             parameters: []
             timeout_seconds: 60
 
+  - id: "svc-fin-restart"
+    host_id: "win-prod-01"
+    name: "Financial Transaction Restart"
+    service_type: "windows_service"
+    verification_service_name: "FinRouterSvc"
+    description: "Restart service"
+    profiles:
+      - name: "Restart"
+        description: "Restart the service without changing the configuration"
+        scripts:
+          - name: "Stop service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\stop_service.bat"
+            parameters: []
+            timeout_seconds: 60
+          - name: "Start service"
+            script_path: "C:\\Services\\FinRouter\\scripts\\start_service.bat"
+            parameters: []
+            timeout_seconds: 60
+
   - id: "svc-win-batch"
     host_id: "win-stage-02"
     name: "Nightly Settlement Worker"
