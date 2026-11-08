@@ -45,6 +45,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   const profile = service.profiles.find((p) => p.name === targetProfileName) || service.profiles[0];
   const isWindows = host.os_type === 'windows';
+  const isSingleProfile = service.profiles.length === 1;
   const effectiveScripts = getEffectiveScripts(profile);
   const totalTimeoutSeconds = effectiveScripts.reduce((sum, s) => sum + (s.timeout_seconds || 60), 0);
 
@@ -58,7 +59,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               <Terminal className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-display font-bold text-slate-900 dark:text-white">Confirm Configuration Switch</h3>
+              <h3 className="text-base font-display font-bold text-slate-900 dark:text-white">
+                {isSingleProfile ? 'Confirm Execution' : 'Confirm Configuration Switch'}
+              </h3>
             </div>
           </div>
           <button
@@ -89,16 +92,18 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               <span className="text-slate-900 dark:text-slate-200 font-semibold">{service.name}</span>
             </div>
 
-            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-              <span>Current Profile:</span>
-              <span className={service.current_profile ? 'text-slate-900 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500 italic'}>
-                {service.current_profile || 'None (Unassigned)'}
-              </span>
-            </div>
+            {!isSingleProfile && (
+              <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                <span>Current Profile:</span>
+                <span className={service.current_profile ? 'text-slate-900 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500 italic'}>
+                  {service.current_profile || 'None (Unassigned)'}
+                </span>
+              </div>
+            )}
 
-            <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800/80 pt-2 text-slate-700 dark:text-slate-300">
+            <div className={`flex justify-between items-center ${!isSingleProfile ? 'border-t border-slate-200 dark:border-slate-800/80 pt-2' : ''} text-slate-700 dark:text-slate-300`}>
               <span className="text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1">
-                <ArrowRight className="w-3.5 h-3.5" /> Target Profile:
+                <ArrowRight className="w-3.5 h-3.5" /> {isSingleProfile ? 'Action Pipeline:' : 'Target Profile:'}
               </span>
               <span className="text-sky-600 dark:text-sky-300 font-bold">{targetProfileName}</span>
             </div>

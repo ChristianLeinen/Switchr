@@ -13,6 +13,7 @@ import {
   Flame,
   FileText,
   Info,
+  Play,
 } from 'lucide-react';
 import { getEffectiveScripts, ManagedService, OSType, TargetHost } from '../types';
 import { HostDetailsModal } from './HostDetailsModal';
@@ -195,8 +196,12 @@ export const FleetView: React.FC<FleetViewProps> = ({
                 <div className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   {hostServices.map((service) => {
                     const isLocked = service.is_locked;
-                    const selectedProfile = selectedProfiles[service.id] ?? (service.current_profile || '');
-                    const isDifferentProfile = selectedProfile !== '' && selectedProfile !== service.current_profile;
+                    const isSingleProfile = service.profiles.length === 1;
+                    const soleProfile = isSingleProfile ? service.profiles[0].name : '';
+                    const selectedProfile = isSingleProfile
+                      ? soleProfile
+                      : selectedProfiles[service.id] ?? (service.current_profile || '');
+                    const isDifferentProfile = !isSingleProfile && selectedProfile !== '' && selectedProfile !== service.current_profile;
 
                     return (
                       <div
@@ -234,61 +239,69 @@ export const FleetView: React.FC<FleetViewProps> = ({
                             <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{service.description}</p>
                           </div>
 
-                          {/* Profile Switch Controls */}
+                          {/* Profile Switch / Execution Controls */}
                           <div className="flex flex-wrap items-center gap-3 shrink-0">
-                            {/* Profile Dropdown */}
-                            <div className="relative">
-                              <select
-                                value={selectedProfile}
-                                onChange={(e) => handleProfileSelect(service.id, e.target.value)}
-                                disabled={isLocked}
-                                className={`text-xs font-mono px-3 py-2 bg-white dark:bg-slate-900 border rounded-md text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 transition-colors shadow-sm ${isLocked
-                                  ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                                  : !selectedProfile
-                                    ? 'border-amber-500 text-amber-700 dark:text-amber-300'
-                                    : isDifferentProfile
-                                      ? 'border-sky-500 text-sky-700 dark:text-sky-200'
-                                      : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                                  }`}
-                              >
-                                {!service.current_profile && (
-                                  <option value="" disabled>
-                                    -- Select profile to apply --
-                                  </option>
-                                )}
-                                {service.profiles.map((p) => {
-                                  const steps = getEffectiveScripts(p);
-                                  const totalTimeout = steps.reduce(
-                                    (sum, s) => sum + (s.timeout_seconds || 60),
-                                    0
-                                  );
-                                  return (
-                                    <option key={p.name} value={p.name}>
-                                      {p.name} ({steps.length} {steps.length === 1 ? 'step' : 'steps'}, {totalTimeout}s)
+                            {/* Profile Dropdown (Only rendered for multi-profile services) */}
+                            {!isSingleProfile && (
+                              <div className="relative">
+                                <select
+                                  value={selectedProfile}
+                                  onChange={(e) => handleProfileSelect(service.id, e.target.value)}
+                                  disabled={isLocked}
+                                  className={`text-xs font-mono px-3 py-2 bg-white dark:bg-slate-900 border rounded-md text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 transition-colors shadow-sm ${isLocked
+                                    ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                                    : !selectedProfile
+                                      ? 'border-amber-500 text-amber-700 dark:text-amber-300'
+                                      : isDifferentProfile
+                                        ? 'border-sky-500 text-sky-700 dark:text-sky-200'
+                                        : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                                    }`}
+                                >
+                                  {!service.current_profile && (
+                                    <option value="" disabled>
+                                      -- Select profile to apply --
                                     </option>
-                                  );
-                                })}
-                              </select>
-                            </div>
+                                  )}
+                                  {service.profiles.map((p) => {
+                                    const steps = getEffectiveScripts(p);
+                                    const totalTimeout = steps.reduce(
+                                      (sum, s) => sum + (s.timeout_seconds || 60),
+                                      0
+                                    );
+                                    return (
+                                      <option key={p.name} value={p.name}>
+                                        {p.name} ({steps.length} {steps.length === 1 ? 'step' : 'steps'}, {totalTimeout}s)
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              </div>
+                            )}
 
-                            {/* Switch Action Button */}
+                            {/* Action Button: Execute (Single profile) vs Switch Profile (Multiple profiles) */}
                             <button
                               onClick={() => {
                                 if (!selectedProfile) return;
                                 onInitiateSwitch(host, service, selectedProfile, false);
                               }}
                               disabled={isLocked || !selectedProfile}
-                              className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-sm ${isLocked || !selectedProfile
-                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed'
-                                : isDifferentProfile
-                                  ? 'bg-sky-600 hover:bg-sky-500 text-white'
+                              className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-sm ${
+                                isLocked || !selectedProfile
+                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed'
+                                  : isDifferentProfile
+                                  ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-sky-950/20'
                                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
-                                }`}
+                              }`}
                             >
                               {isLocked ? (
                                 <>
                                   <Lock className="w-3.5 h-3.5" />
                                   Locked
+                                </>
+                              ) : isSingleProfile ? (
+                                <>
+                                  <Play className="w-3.5 h-3.5 fill-current" />
+                                  Execute
                                 </>
                               ) : (
                                 <>

@@ -1,105 +1,41 @@
-# Implementation Plan: OpenAPI 3.0 API Specification (`docs/openapi.yaml`)
+# Implementation Plan: Single-Profile Command Execution (No Redundant Dropdown)
 
-Create an exhaustive, production-grade **OpenAPI 3.0 YAML specification** at `docs/openapi.yaml` documenting every REST endpoint, Server-Sent Events (SSE) streaming channel, HTTP status code, and JSON payload required by the Switchr frontend.
-
----
-
-## User Specifications & Requirements
-1. **Format**: **OpenAPI / Swagger 3.0 YAML** (`docs/openapi.yaml`).
-2. **Scope**: **HTTP JSON request/response schema specifications only** (pure contract specifications with clear descriptions, field types, nullability, examples, and status codes).
-3. **Backend Target**: Cleanly implementable in ASP.NET Core (.NET 8/9 Minimal APIs or Controllers).
+## Overview
+When a managed service has only one profile defined (e.g. `svc-fin-restart` with its single `"Restart"` profile and no `active_profile_path`), selecting a profile from a dropdown is redundant. We will hide the dropdown list completely and replace the "Switch Profile" button with a dedicated **"Execute"** button featuring a **Play icon** and a sky accent background.
 
 ---
 
-## Endpoints to Document in `docs/openapi.yaml`
+## Changes
 
-### 1. `GET /api/health`
-- **Purpose**: System readiness and version check.
-- **Response `200 OK`**:
-  - `status`: string (`"healthy"`)
-  - `app`: string (`"Switchr"`)
-  - `version`: string (`"1.0.0"`)
-  - `dry_run`: boolean
+### 1. Update `FleetView.tsx`
+- Determine if the service has a single profile: `const isSingleProfile = service.profiles.length === 1;`
+- For single-profile services:
+  - Automatically select the sole profile (`service.profiles[0].name`) so execution is ready immediately without requiring prior selection.
+  - **Hide the `<select>` dropdown entirely**.
+  - Show the action button with:
+    - Text: **`Execute`** (when unlocked)
+    - Icon: `<Play className="w-3.5 h-3.5 fill-current" />`
+    - Background: `bg-sky-600 hover:bg-sky-500 text-white shadow-sm`
+- For multi-profile services:
+  - Retain the dropdown selector and existing "Switch Profile" button.
+- Ensure transitioning / locked states (`<Lock /> Locked`, disabled click) work identically for single-profile and multi-profile services.
 
-### 2. `GET /api/inventory`
-- **Purpose**: Complete fleet inventory of managed hosts, services, active profiles, runtime locks, and pipeline configurations.
-- **Response `200 OK`**:
-  - `app_version`: string
-  - `dry_run`: boolean
-  - `active_locks_count`: integer
-  - `hosts`: Array of `HostDto`:
-    - `id`, `name`, `os_type` (`"windows"` | `"unix"`), `hostname`, `port`, `description`
-    - `auth`: `HostAuthDto` (`type`, `username`, optional `password_env`, `key_path`)
-    - `services`: Array of `ServiceDto`:
-      - `id`, `host_id`, `name`, `service_type` (`"windows_service"` | `"systemd"` | `"generic_process"`)
-      - `verification_service_name`: string
-      - `active_profile_path`: string or null
-      - `current_profile`: string or null
-      - `description`: string
-      - `status`: string (`"RUNNING"` | `"STOPPED"` | `"TRANSITIONING"` | `"ERROR"`)
-      - `is_locked`: boolean
-      - `active_job_id`: string or null
-      - `profiles`: Array of `ConfigProfileDto`:
-        - `name`, `description`
-        - `scripts`: Array of `ScriptStepDto` (`name`, `script_path`, `parameters`, `timeout_seconds`)
-        - Legacy fallback fields (`script_path`, `parameters`, `timeout_seconds`)
+### 2. Update `mockOrchestrator.ts` & Local Sync
+- Add the `svc-fin-restart` service to `INITIAL_SERVICES` in `src/services/mockOrchestrator.ts` so client-side fallback remains in sync with the updated `config.yaml`.
 
-### 3. `POST /api/jobs/switch`
-- **Purpose**: Initiate a profile switch job on a service with concurrency locking.
-- **Request Body (`application/json`)**:
-  - `host_id`: string (required)
-  - `service_id`: string (required)
-  - `profile_name`: string (required)
-  - `simulate_failure`: boolean (optional)
-- **Responses**:
-  - `200 OK` / `202 Accepted`: Job queued and started (`job_id`, `host_id`, `service_id`, `target_profile`, `status: "RUNNING"`, `message`)
-  - `400 Bad Request`: Missing parameters, host/service/profile not found
-  - `409 Conflict`: Mutual exclusion lock violation (`detail`: explaining active job ID)
-
-### 4. `POST /api/jobs/{id}/abort`
-- **Purpose**: Send an abort signal to a running execution job.
-- **Path Parameter**: `id` (Job ID)
-- **Responses**:
-  - `200 OK`: `job_id`, `status: "ABORTED"`, `message`
-  - `404 Not Found`: Job does not exist or not active
-
-### 5. `GET /api/jobs/{id}/stream`
-- **Purpose**: Real-time Server-Sent Events (SSE) log output and terminal feed.
-- **Content-Type**: `text/event-stream`
-- **Stream protocol**:
-  - Initial buffered lines: `data: <raw text>\n\n`
-  - Live lines as executed: `data: <raw text>\n\n`
-  - Heartbeat: `: heartbeat\n\n`
-  - Completion event: `event: done\ndata: <SUCCESS | FAILED | ABORTED>\n\n`
-- **Responses**:
-  - `200 OK`: Event stream opened
-  - `404 Not Found`: Job ID not found
-
-### 6. `GET /api/jobs/history`
-- **Purpose**: Retrieve forensic execution records.
-- **Response `200 OK`**:
-  - `history`: Array of `JobRecordDto`:
-    - `job_id`, `host_id`, `host_name`, `os_type`, `service_id`, `service_name`
-    - `target_profile`, `previous_profile`
-    - `status` (`"QUEUED"`, `"RUNNING"`, `"SUCCESS"`, `"FAILED"`, `"ABORTED"`, `"TIMED_OUT"`)
-    - `exit_code`: integer or null
-    - `started_at`: ISO 8601 string
-    - `completed_at`: ISO 8601 string or null
-    - `duration_seconds`: number or null
-    - `verification_passed`: boolean
-    - `logs`: Array of `LogLineDto` (`id`, `timestamp`, `text`, `type`)
-
-### 7. `DELETE /api/jobs/history`
-- **Purpose**: Clear forensic execution history and reset audit log records.
-- **Response `200 OK`**:
-  - `success`: boolean
-  - `message`: string
+### 3. Update `ConfirmModal.tsx`
+- When a service has only 1 profile or has no `current_profile`:
+  - Show `Action / Profile:` instead of `Target Profile:`, or adapt the transition row so it doesn't look like a profile swap if `current_profile` is absent.
+  - The confirm button says `Confirm & Execute Pipeline`.
 
 ---
 
 ## Verification Plan
-1. **YAML Syntax & Schema Validation**:
-   - Check YAML formatting, indentation, and OpenAPI 3.0.3 specification compliance.
-2. **Contract Completeness**:
-   - Verify every frontend model in `src/types.ts` is 100% matched by an OpenAPI schema definition.
-   - Verify all endpoint routes and query/path/body parameters match `server.ts` and `src/App.tsx`.
+1. **Compilation & Linting**:
+   - Run `compile_applet` and `lint_applet` (`tsc --noEmit`).
+2. **UI Verification**:
+   - Verify that `svc-fin-restart` on `win-prod-01` displays **no dropdown**.
+   - Verify the action button reads **"Execute"** with a **Play icon** in sky accent.
+   - Verify clicking "Execute" opens the confirmation modal for the `"Restart"` pipeline and displays the steps (`Stop service`, `Start service`).
+   - Verify confirming starts the pipeline and streams execution logs to the drawer cleanly.
+   - Verify multi-profile services (like `svc-fin-router` and `svc-edge-proxy`) retain their dropdowns and "Switch Profile" buttons unchanged.

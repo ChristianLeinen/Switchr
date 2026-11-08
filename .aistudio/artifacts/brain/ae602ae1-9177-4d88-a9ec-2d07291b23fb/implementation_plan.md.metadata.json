@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan for creating a complete, strict OpenAPI 3.0 YAML specification (docs/openapi.yaml) detailing all HTTP endpoints, query parameters, request bodies, JSON schemas, SSE streaming formats, error status codes (400, 404, 409, 500), and concurrency lock semantics needed to build the C# backend.",
-  "updatedAt": "2026-11-05T22:32:53.765874724Z",
-  "requestFeedback": true,
-  "userFacing": true
+  "summary":  "Implementation plan for adapting the FleetView controls when a managed service has only a single profile (or action command like Restart): hide the redundant dropdown selector and render an 'Execute' button styled with a Play icon and sky accent. Also ensure the confirmation dialog cleanly adapts its labels for single-action executions.",
+  "updatedAt":  "2026-11-08T04:56:25.839634962Z",
+  "requestFeedback":  true,
+  "userFacing":  true
 }
