@@ -189,7 +189,12 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
             <span className="text-slate-400">Exit Code: {job.exit_code ?? 'running...'}</span>
             <span className="text-slate-600">|</span>
             <span className="text-slate-400">
-              Probe: {job.verification_passed ? 'VERIFIED' : isRunning ? 'pending...' : 'FAILED'}
+              Probe:{' '}
+              {job.verification_passed || isSuccess || job.logs?.some((l) => l.text.includes('[✓] PROBE VERIFIED'))
+                ? 'VERIFIED'
+                : isRunning
+                ? 'pending...'
+                : 'FAILED'}
             </span>
           </div>
 

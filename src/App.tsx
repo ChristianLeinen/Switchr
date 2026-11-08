@@ -206,10 +206,20 @@ export default function App() {
 
     eventSource.addEventListener('done', (event: any) => {
       const finalStatus = event.data || 'SUCCESS';
-      setActiveJob((prev) => (prev ? { ...prev, status: finalStatus as any } : null));
+      const isSuccess = finalStatus === 'SUCCESS';
+      setActiveJob((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: finalStatus as any,
+              verification_passed: isSuccess,
+              exit_code: isSuccess ? 0 : prev.exit_code ?? 1,
+            }
+          : null
+      );
       eventSource.close();
       refreshState();
-      if (finalStatus === 'SUCCESS') {
+      if (isSuccess) {
         showToast('success', 'Configuration Switch Succeeded', `${job.service_name} verified RUNNING.`);
       } else {
         showToast('error', 'Job Failed (Fail-Fast)', 'Service probe or transition failed.');
