@@ -53,10 +53,7 @@ export const AuditHistoryView: React.FC<AuditHistoryViewProps> = ({
       {/* Header Strip */}
       <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Audit Execution History</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Forensic execution records, exit codes, stdout/stderr streams, and probe results.
-          </p>
+          <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Audit History</h1>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -87,11 +84,10 @@ export const AuditHistoryView: React.FC<AuditHistoryViewProps> = ({
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                statusFilter === st
-                  ? 'bg-sky-600 text-white font-semibold shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${statusFilter === st
+                ? 'bg-sky-600 text-white font-semibold shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
             >
               {st === 'all' ? `All (${history.length})` : st}
             </button>
@@ -148,11 +144,10 @@ export const AuditHistoryView: React.FC<AuditHistoryViewProps> = ({
                       <td className="px-4 py-3 text-slate-900 dark:text-slate-200">
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                              rec.os_type === 'windows'
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                                : 'bg-amber-100 text-amber-700 dark:bg-orange-950 dark:text-orange-300'
-                            }`}
+                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${rec.os_type === 'windows'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                              : 'bg-amber-100 text-amber-700 dark:bg-orange-950 dark:text-orange-300'
+                              }`}
                           >
                             {rec.os_type === 'windows' ? 'WIN' : 'NIX'}
                           </span>
@@ -168,15 +163,14 @@ export const AuditHistoryView: React.FC<AuditHistoryViewProps> = ({
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1 font-semibold ${
-                            isSuccess
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : isFailed
+                          className={`inline-flex items-center gap-1 font-semibold ${isSuccess
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : isFailed
                               ? 'text-rose-600 dark:text-rose-400'
                               : isAborted
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-slate-500 dark:text-slate-400'
-                          }`}
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : 'text-slate-500 dark:text-slate-400'
+                            }`}
                         >
                           {isSuccess && <CheckCircle2 className="w-3 h-3" />}
                           {isFailed && <AlertTriangle className="w-3 h-3" />}

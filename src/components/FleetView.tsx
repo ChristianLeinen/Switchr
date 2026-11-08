@@ -64,10 +64,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
       {/* Top Banner / Summary Strip */}
       <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Managed Target Fleet</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Serial multi-script execution pipelines with dynamic active profile resolution and strict concurrency locks.
-          </p>
+          <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Fleet & Services</h1>
         </div>
 
         <div className="flex items-center gap-6 text-xs text-slate-600 dark:text-slate-400 shrink-0">
@@ -103,31 +100,28 @@ export const FleetView: React.FC<FleetViewProps> = ({
         <div className="flex items-center gap-1 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shrink-0 shadow-sm transition-colors duration-150">
           <button
             onClick={() => setOsFilter('all')}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              osFilter === 'all'
-                ? 'bg-sky-600 text-white font-semibold shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${osFilter === 'all'
+              ? 'bg-sky-600 text-white font-semibold shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
           >
             All Hosts ({hosts.length})
           </button>
           <button
             onClick={() => setOsFilter('windows')}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              osFilter === 'windows'
-                ? 'bg-sky-600 text-white font-semibold shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${osFilter === 'windows'
+              ? 'bg-sky-600 text-white font-semibold shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
           >
             Windows / WinRM
           </button>
           <button
             onClick={() => setOsFilter('unix')}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-              osFilter === 'unix'
-                ? 'bg-sky-600 text-white font-semibold shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${osFilter === 'unix'
+              ? 'bg-sky-600 text-white font-semibold shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
           >
             Linux / SSH
           </button>
@@ -168,11 +162,10 @@ export const FleetView: React.FC<FleetViewProps> = ({
                 <div className="px-5 py-4 bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`w-8 h-8 rounded flex items-center justify-center font-mono text-xs font-bold shrink-0 ${
-                        isWindows
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-400 border border-blue-300 dark:border-blue-800/60'
-                          : 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border border-amber-300 dark:border-amber-800/60'
-                      }`}
+                      className={`w-8 h-8 rounded flex items-center justify-center font-mono text-xs font-bold shrink-0 ${isWindows
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-400 border border-blue-300 dark:border-blue-800/60'
+                        : 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border border-amber-300 dark:border-amber-800/60'
+                        }`}
                     >
                       {isWindows ? 'WIN' : 'NIX'}
                     </div>
@@ -208,11 +201,10 @@ export const FleetView: React.FC<FleetViewProps> = ({
                     return (
                       <div
                         key={service.id}
-                        className={`p-5 transition-colors duration-150 ${
-                          isLocked
-                            ? 'bg-amber-50/70 dark:bg-amber-950/10'
-                            : 'hover:bg-slate-50/80 dark:hover:bg-slate-900/30'
-                        }`}
+                        className={`p-5 transition-colors duration-150 ${isLocked
+                          ? 'bg-amber-50/70 dark:bg-amber-950/10'
+                          : 'hover:bg-slate-50/80 dark:hover:bg-slate-900/30'
+                          }`}
                       >
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           {/* Service Details */}
@@ -250,15 +242,14 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                 value={selectedProfile}
                                 onChange={(e) => handleProfileSelect(service.id, e.target.value)}
                                 disabled={isLocked}
-                                className={`text-xs font-mono px-3 py-2 bg-white dark:bg-slate-900 border rounded-md text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 transition-colors shadow-sm ${
-                                  isLocked
-                                    ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                                    : !selectedProfile
+                                className={`text-xs font-mono px-3 py-2 bg-white dark:bg-slate-900 border rounded-md text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 transition-colors shadow-sm ${isLocked
+                                  ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                                  : !selectedProfile
                                     ? 'border-amber-500 text-amber-700 dark:text-amber-300'
                                     : isDifferentProfile
-                                    ? 'border-sky-500 text-sky-700 dark:text-sky-200'
-                                    : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                                }`}
+                                      ? 'border-sky-500 text-sky-700 dark:text-sky-200'
+                                      : 'border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                                  }`}
                               >
                                 {!service.current_profile && (
                                   <option value="" disabled>
@@ -287,13 +278,12 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                 onInitiateSwitch(host, service, selectedProfile, false);
                               }}
                               disabled={isLocked || !selectedProfile}
-                              className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-sm ${
-                                isLocked || !selectedProfile
-                                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed'
-                                  : isDifferentProfile
+                              className={`px-3.5 py-2 text-xs font-medium rounded-md flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-sm ${isLocked || !selectedProfile
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed'
+                                : isDifferentProfile
                                   ? 'bg-sky-600 hover:bg-sky-500 text-white'
                                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700'
-                              }`}
+                                }`}
                             >
                               {isLocked ? (
                                 <>
