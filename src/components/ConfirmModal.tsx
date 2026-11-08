@@ -59,7 +59,6 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-display font-bold text-slate-900 dark:text-white">Confirm Configuration Switch</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Sequential multi-script pipeline with mutual exclusion lock</p>
             </div>
           </div>
           <button
@@ -187,14 +186,6 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 )}
               </div>
             )}
-          </div>
-
-          {/* Operational Safety Lock Notice */}
-          <div className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 p-3 rounded border border-slate-200 dark:border-slate-800/60">
-            <ShieldAlert className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
-            <span>
-              An in-memory lock will be held for <strong className="text-slate-800 dark:text-slate-300">({host.id}, {service.id})</strong>. Concurrent switch requests while this pipeline runs will be rejected with HTTP 409 Conflict.
-            </span>
           </div>
         </div>
 
