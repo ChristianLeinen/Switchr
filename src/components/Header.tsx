@@ -6,6 +6,7 @@ interface HeaderProps {
   activeTab: 'fleet' | 'audit';
   onTabChange: (tab: 'fleet' | 'audit') => void;
   activeLocksCount: number;
+  dryRun: boolean;
   onSimulateConflict: () => void;
   theme: ThemeMode;
   onToggleTheme: () => void;
@@ -15,6 +16,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   onTabChange,
   activeLocksCount,
+  dryRun,
   onSimulateConflict,
   theme,
   onToggleTheme,
@@ -78,28 +80,34 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Zone 3: Primary Actions, Telemetry & Theme Toggle */}
         <div className="flex items-center gap-3 shrink-0">
           {/* Telemetry Badges */}
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 dark:bg-slate-900 border border-amber-300/80 dark:border-slate-800 text-[11px] text-amber-700 dark:text-amber-400 font-medium">
-              <Cpu className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-              DRY_RUN=True
-            </span>
-            {activeLocksCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-mono font-medium">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                {activeLocksCount} lock{activeLocksCount > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
+          {(dryRun || activeLocksCount > 0) && (
+            <div className="flex items-center gap-2 text-xs font-mono">
+              {dryRun && (
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 dark:bg-slate-900 border border-amber-300/80 dark:border-slate-800 text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+                  <Cpu className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  DRY_RUN=True
+                </span>
+              )}
+              {activeLocksCount > 0 && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-mono font-medium">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                  {activeLocksCount} lock{activeLocksCount > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          )}
 
-          {/* Test 409 Lock button */}
-          <button
-            onClick={onSimulateConflict}
-            title="Test 409 Conflict rejection by triggering concurrent switches on the same service"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-amber-800 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-200 bg-amber-100/80 dark:bg-amber-950/40 hover:bg-amber-200 dark:hover:bg-amber-950/70 border border-amber-300 dark:border-amber-700/60 rounded-md transition-colors whitespace-nowrap"
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            Test 409 Lock
-          </button>
+          {/* Test 409 Lock button (only shown in dry-run mode) */}
+          {dryRun && (
+            <button
+              onClick={onSimulateConflict}
+              title="Test 409 Conflict rejection by triggering concurrent switches on the same service"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-amber-800 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-200 bg-amber-100/80 dark:bg-amber-950/40 hover:bg-amber-200 dark:hover:bg-amber-950/70 border border-amber-300 dark:border-amber-700/60 rounded-md transition-colors whitespace-nowrap"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Test 409 Lock
+            </button>
+          )}
 
           {/* Dark / Light Mode Toggle Button */}
           <button

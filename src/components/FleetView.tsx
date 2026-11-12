@@ -15,7 +15,7 @@ import {
   Info,
   Play,
 } from 'lucide-react';
-import { getEffectiveScripts, ManagedService, OSType, TargetHost } from '../types';
+import { ManagedService, OSType, TargetHost } from '../types';
 import { HostDetailsModal } from './HostDetailsModal';
 
 interface FleetViewProps {
@@ -262,18 +262,11 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                       -- Select profile to apply --
                                     </option>
                                   )}
-                                  {service.profiles.map((p) => {
-                                    const steps = getEffectiveScripts(p);
-                                    const totalTimeout = steps.reduce(
-                                      (sum, s) => sum + (s.timeout_seconds || 60),
-                                      0
-                                    );
-                                    return (
-                                      <option key={p.name} value={p.name}>
-                                        {p.name} ({steps.length} {steps.length === 1 ? 'step' : 'steps'}, {totalTimeout}s)
-                                      </option>
-                                    );
-                                  })}
+                                  {service.profiles.map((p) => (
+                                    <option key={p.name} value={p.name}>
+                                      {p.description || p.name}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
                             )}

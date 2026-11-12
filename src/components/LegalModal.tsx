@@ -152,8 +152,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Service Provider / Operator:</h3>
                 <p className="font-mono text-xs text-slate-700 dark:text-slate-300">
                   Leinensoft<br />
-                  Proprietor / Responsible Person: Luke Leinen<br />
-                  Email: <a href="mailto:luke@leinensoft.de" className="text-sky-600 dark:text-sky-400 underline hover:text-sky-500 dark:hover:text-sky-300">luke@leinensoft.de</a><br />
+                  Proprietor / Responsible Person: Christian Leinen<br />
+                  Email: <a href="mailto:christian@leinensoft.de" className="text-sky-600 dark:text-sky-400 underline hover:text-sky-500 dark:hover:text-sky-300">christian@leinensoft.de</a><br />
                   Website: <a href="https://leinensoft.de" target="_blank" rel="noopener noreferrer" className="text-sky-600 dark:text-sky-400 underline hover:text-sky-500 dark:hover:text-sky-300">https://leinensoft.de</a><br />
                   Germany / European Union
                 </p>
@@ -162,7 +162,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Responsible for Content pursuant to § 18 Sec. 2 MStV:</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  Luke Leinen (Address as indicated above)
+                  Christian Leinen (Address as indicated above)
                 </p>
               </div>
 
@@ -185,7 +185,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">1. Data Controller</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  The data controller within the meaning of the GDPR is Luke Leinen (Leinensoft), Contact: <a href="mailto:luke@leinensoft.de" className="text-emerald-600 dark:text-emerald-400 underline">luke@leinensoft.de</a>.
+                  The data controller within the meaning of the GDPR is Christian Leinen (Leinensoft), Contact: <a href="mailto:christian@leinensoft.de" className="text-emerald-600 dark:text-emerald-400 underline">christian@leinensoft.de</a>.
                 </p>
               </div>
 

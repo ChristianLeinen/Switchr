@@ -20,6 +20,7 @@ export default function App() {
   const [services, setServices] = useState<ManagedService[]>([]);
   const [auditHistory, setAuditHistory] = useState<JobRecord[]>([]);
   const [activeLocksCount, setActiveLocksCount] = useState(0);
+  const [dryRun, setDryRun] = useState(false);
   const [activeLegalModal, setActiveLegalModal] = useState<LegalModalType>(null);
 
   // Active Job Drawer State
@@ -53,6 +54,7 @@ export default function App() {
         setHosts(data.hosts);
         setServices(allServices);
         setActiveLocksCount(data.active_locks_count ?? 0);
+        setDryRun(Boolean(data.dry_run));
 
         // Fetch audit history
         const hRes = await fetch('/api/jobs/history');
@@ -70,6 +72,7 @@ export default function App() {
     setServices([...orchestratorService.getServices()]);
     setAuditHistory([...orchestratorService.getAuditHistory()]);
     setActiveLocksCount(orchestratorService.getActiveLocksCount());
+    setDryRun(true);
   };
 
   useEffect(() => {
@@ -401,6 +404,7 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         activeLocksCount={activeLocksCount}
+        dryRun={dryRun}
         onSimulateConflict={handleSimulateConflict}
         theme={theme}
         onToggleTheme={toggleTheme}

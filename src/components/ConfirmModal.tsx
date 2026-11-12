@@ -44,6 +44,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   if (!isOpen || !host || !service) return null;
 
   const profile = service.profiles.find((p) => p.name === targetProfileName) || service.profiles[0];
+  const currentProfileObj = service.current_profile
+    ? service.profiles.find((p) => p.name === service.current_profile)
+    : undefined;
+  const currentProfileDisplay = service.current_profile
+    ? currentProfileObj?.description || service.current_profile
+    : null;
+  const targetProfileDisplay = profile?.description || targetProfileName;
   const isWindows = host.os_type === 'windows';
   const isSingleProfile = service.profiles.length === 1;
   const effectiveScripts = getEffectiveScripts(profile);
@@ -93,19 +100,19 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             </div>
 
             {!isSingleProfile && (
-              <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                <span>Current Profile:</span>
-                <span className={service.current_profile ? 'text-slate-900 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500 italic'}>
-                  {service.current_profile || 'None (Unassigned)'}
+              <div className="flex justify-between items-start gap-4 text-slate-500 dark:text-slate-400">
+                <span className="shrink-0">Current Profile:</span>
+                <span className={`text-right ${currentProfileDisplay ? 'text-slate-900 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500 italic'}`}>
+                  {currentProfileDisplay || 'None (Unassigned)'}
                 </span>
               </div>
             )}
 
-            <div className={`flex justify-between items-center ${!isSingleProfile ? 'border-t border-slate-200 dark:border-slate-800/80 pt-2' : ''} text-slate-700 dark:text-slate-300`}>
-              <span className="text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1">
+            <div className={`flex justify-between items-start gap-4 ${!isSingleProfile ? 'border-t border-slate-200 dark:border-slate-800/80 pt-2' : ''} text-slate-700 dark:text-slate-300`}>
+              <span className="text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1 shrink-0">
                 <ArrowRight className="w-3.5 h-3.5" /> {isSingleProfile ? 'Action Pipeline:' : 'Target Profile:'}
               </span>
-              <span className="text-sky-600 dark:text-sky-300 font-bold">{targetProfileName}</span>
+              <span className="text-sky-600 dark:text-sky-300 font-bold text-right">{targetProfileDisplay}</span>
             </div>
           </div>
 

@@ -16,7 +16,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
           {/* Copyright & Brand */}
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-left">
             <span className="text-slate-800 dark:text-slate-300 font-medium">
-              © {currentYear} Leinensoft / Switchr Orchestrator. All rights reserved.
+              © {currentYear} Christian Leinen. All rights reserved.
             </span>
             <span className="hidden sm:inline text-slate-300 dark:text-slate-600">|</span>
             <span className="text-slate-600 dark:text-slate-400 text-[11px] flex items-center gap-1">
