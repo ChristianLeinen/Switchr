@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Header,
 } from './components/Header';
@@ -13,6 +13,24 @@ import { orchestratorService } from './services/mockOrchestrator';
 import { JobRecord, ManagedService, TargetHost } from './types';
 import { ShieldAlert, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 
+const REFRESH_INTERVAL_STORAGE_KEY = 'switchr_refresh_interval_ms';
+const ALLOWED_REFRESH_INTERVALS = [0, 5000, 15000, 30000, 60000] as const;
+
+function loadStoredRefreshInterval(): number {
+  try {
+    const raw = localStorage.getItem(REFRESH_INTERVAL_STORAGE_KEY);
+    if (raw !== null) {
+      const parsed = Number(raw);
+      if (ALLOWED_REFRESH_INTERVALS.includes(parsed as any)) {
+        return parsed;
+      }
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return 0; // Default: Off
+}
+
 export default function App() {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'fleet' | 'audit'>('fleet');
@@ -21,7 +39,13 @@ export default function App() {
   const [auditHistory, setAuditHistory] = useState<JobRecord[]>([]);
   const [activeLocksCount, setActiveLocksCount] = useState(0);
   const [dryRun, setDryRun] = useState(false);
+  const [refreshIntervalMs, setRefreshIntervalMs] = useState<number>(loadStoredRefreshInterval);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeLegalModal, setActiveLegalModal] = useState<LegalModalType>(null);
+
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+  const inFlightRefreshRef = useRef<{ promise: Promise<void>; includeHistory: boolean } | null>(null);
 
   // Active Job Drawer State
   const [activeJob, setActiveJob] = useState<JobRecord | null>(null);
@@ -41,45 +65,139 @@ export default function App() {
     description: string;
   } | null>(null);
 
-  // Sync state from API with fallback to orchestratorService
-  const refreshState = async () => {
-    try {
-      const res = await fetch('/api/inventory');
-      if (res.ok) {
-        const data = await res.json();
-        const allServices: ManagedService[] = [];
-        data.hosts.forEach((h: any) => {
-          if (h.services) allServices.push(...h.services);
-        });
-        setHosts(data.hosts);
-        setServices(allServices);
-        setActiveLocksCount(data.active_locks_count ?? 0);
-        setDryRun(Boolean(data.dry_run));
+  // Sync state from API with fallback to orchestratorService (prevents overlapping refreshes)
+  const refreshState = useCallback(async (options?: { includeHistory?: boolean; minSpinMs?: number }) => {
+    const includeHistory = options?.includeHistory ?? true;
+    const minSpinMs = options?.minSpinMs ?? 0;
 
-        // Fetch audit history
-        const hRes = await fetch('/api/jobs/history');
-        if (hRes.ok) {
-          const hData = await hRes.json();
-          if (hData.history) setAuditHistory(hData.history);
-        }
+    if (inFlightRefreshRef.current) {
+      const existing = inFlightRefreshRef.current;
+      await existing.promise;
+      if (!includeHistory || existing.includeHistory) {
         return;
       }
-    } catch {
-      // Fallback to local orchestratorService
     }
 
-    setHosts([...orchestratorService.getHosts()]);
-    setServices([...orchestratorService.getServices()]);
-    setAuditHistory([...orchestratorService.getAuditHistory()]);
-    setActiveLocksCount(orchestratorService.getActiveLocksCount());
-    setDryRun(true);
+    const startTime = performance.now();
+    setIsRefreshing(true);
+
+    const run = async () => {
+      try {
+        const res = await fetch('/api/inventory', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const allServices: ManagedService[] = [];
+          data.hosts.forEach((h: any) => {
+            if (h.services) allServices.push(...h.services);
+          });
+          setHosts(data.hosts);
+          setServices(allServices);
+          setActiveLocksCount(data.active_locks_count ?? 0);
+          setDryRun(Boolean(data.dry_run));
+
+          if (includeHistory) {
+            const hRes = await fetch('/api/jobs/history', { cache: 'no-store' });
+            if (hRes.ok) {
+              const hData = await hRes.json();
+              if (hData.history) setAuditHistory(hData.history);
+            }
+          }
+          return;
+        }
+      } catch {
+        // Fallback to local orchestratorService
+      }
+
+      setHosts([...orchestratorService.getHosts()]);
+      setServices([...orchestratorService.getServices()]);
+      if (includeHistory) {
+        setAuditHistory([...orchestratorService.getAuditHistory()]);
+      }
+      setActiveLocksCount(orchestratorService.getActiveLocksCount());
+      setDryRun(true);
+    };
+
+    const promise = run().finally(async () => {
+      const elapsed = performance.now() - startTime;
+      if (minSpinMs > elapsed) {
+        await new Promise((resolve) => setTimeout(resolve, minSpinMs - elapsed));
+      }
+      inFlightRefreshRef.current = null;
+      setIsRefreshing(false);
+    });
+
+    inFlightRefreshRef.current = { promise, includeHistory };
+    await promise;
+  }, []);
+
+  const handleChangeRefreshInterval = (intervalMs: number) => {
+    setRefreshIntervalMs(intervalMs);
+    try {
+      localStorage.setItem(REFRESH_INTERVAL_STORAGE_KEY, String(intervalMs));
+    } catch {
+      // ignore storage errors
+    }
   };
 
+  const handleManualRefresh = () => {
+    void refreshState({ includeHistory: true, minSpinMs: 350 });
+  };
+
+  // Initial load on mount
   useEffect(() => {
-    refreshState();
-    const interval = setInterval(refreshState, 2000);
-    return () => clearInterval(interval);
-  }, []);
+    void refreshState({ includeHistory: true });
+  }, [refreshState]);
+
+  // Refresh audit history when switching to the Audit History tab
+  useEffect(() => {
+    if (activeTab === 'audit') {
+      void refreshState({ includeHistory: true });
+    }
+  }, [activeTab, refreshState]);
+
+  // Sequential, visibility-aware auto-refresh when enabled (refreshIntervalMs > 0)
+  useEffect(() => {
+    if (refreshIntervalMs <= 0) return;
+
+    let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
+    const clearTimer = () => {
+      if (timerId !== null) {
+        clearTimeout(timerId);
+        timerId = null;
+      }
+    };
+
+    const scheduleNext = () => {
+      clearTimer();
+      if (cancelled || document.hidden) return;
+      timerId = setTimeout(async () => {
+        if (cancelled || document.hidden) return;
+        await refreshState({ includeHistory: activeTabRef.current === 'audit' });
+        scheduleNext();
+      }, refreshIntervalMs);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearTimer();
+      } else if (!cancelled) {
+        void refreshState({ includeHistory: activeTabRef.current === 'audit' }).then(() => {
+          scheduleNext();
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    scheduleNext();
+
+    return () => {
+      cancelled = true;
+      clearTimer();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshIntervalMs, refreshState]);
 
   const showToast = (type: 'success' | 'error' | 'warning', title: string, description: string) => {
     setToastMessage({ type, title, description });
@@ -449,7 +567,10 @@ export default function App() {
             services={services}
             onInitiateSwitch={handleInitiateSwitch}
             onOpenLiveStream={handleOpenLiveStream}
-            onRefresh={refreshState}
+            onRefresh={handleManualRefresh}
+            isRefreshing={isRefreshing}
+            refreshIntervalMs={refreshIntervalMs}
+            onChangeRefreshInterval={handleChangeRefreshInterval}
           />
         )}
 

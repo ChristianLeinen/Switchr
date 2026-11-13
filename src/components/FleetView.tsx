@@ -24,6 +24,9 @@ interface FleetViewProps {
   onInitiateSwitch: (host: TargetHost, service: ManagedService, targetProfile: string, simulateFailure: boolean) => void;
   onOpenLiveStream: (jobId: string, label: string) => void;
   onRefresh: () => void;
+  isRefreshing: boolean;
+  refreshIntervalMs: number;
+  onChangeRefreshInterval: (intervalMs: number) => void;
 }
 
 export const FleetView: React.FC<FleetViewProps> = ({
@@ -32,6 +35,9 @@ export const FleetView: React.FC<FleetViewProps> = ({
   onInitiateSwitch,
   onOpenLiveStream,
   onRefresh,
+  isRefreshing,
+  refreshIntervalMs,
+  onChangeRefreshInterval,
 }) => {
   const [osFilter, setOsFilter] = useState<'all' | 'windows' | 'unix'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,13 +91,33 @@ export const FleetView: React.FC<FleetViewProps> = ({
               {lockedServices}
             </div>
           </div>
-          <button
-            onClick={onRefresh}
-            className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/60 rounded-md transition-colors"
-            title="Refresh fleet states"
-          >
-            <RotateCw className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <label htmlFor="auto-refresh-interval" className="sr-only">
+              Auto-refresh interval
+            </label>
+            <select
+              id="auto-refresh-interval"
+              value={refreshIntervalMs}
+              onChange={(e) => onChangeRefreshInterval(Number(e.target.value))}
+              title="Configure automatic background refresh interval"
+              className="text-xs font-mono px-2.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700/60 rounded-md focus:outline-none focus:border-sky-500 transition-colors cursor-pointer"
+            >
+              <option value={0}>Auto: Off</option>
+              <option value={5000}>Auto: 5s</option>
+              <option value={15000}>Auto: 15s</option>
+              <option value={30000}>Auto: 30s</option>
+              <option value={60000}>Auto: 60s</option>
+            </select>
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/60 rounded-md transition-colors disabled:opacity-60"
+              title={isRefreshing ? 'Refreshing fleet states...' : 'Refresh fleet states'}
+              aria-label="Refresh fleet states"
+            >
+              <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-sky-600 dark:text-sky-400' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
