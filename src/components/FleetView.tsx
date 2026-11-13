@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Server,
   Terminal,
@@ -14,6 +14,7 @@ import {
   FileText,
   Info,
   Play,
+  X,
 } from 'lucide-react';
 import { ManagedService, OSType, TargetHost } from '../types';
 import { HostDetailsModal } from './HostDetailsModal';
@@ -43,25 +44,48 @@ export const FleetView: React.FC<FleetViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, string>>({});
   const [selectedHostForDetails, setSelectedHostForDetails] = useState<TargetHost | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleProfileSelect = (serviceId: string, profileName: string) => {
     setSelectedProfiles((prev) => ({ ...prev, [serviceId]: profileName }));
   };
 
-  // Filter hosts
-  const filteredHosts = hosts.filter((host) => {
-    if (osFilter !== 'all' && host.os_type !== osFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const hostMatch = host.name.toLowerCase().includes(q) || host.hostname.toLowerCase().includes(q);
+  // Filter hosts and services contextually
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const filteredHostEntries = hosts
+    .filter((host) => osFilter === 'all' || host.os_type === osFilter)
+    .map((host) => {
       const hostServices = services.filter((s) => s.host_id === host.id);
-      const serviceMatch = hostServices.some(
-        (s) => s.name.toLowerCase().includes(q) || s.verification_service_name.toLowerCase().includes(q)
-      );
-      return hostMatch || serviceMatch;
-    }
-    return true;
-  });
+      if (!trimmedQuery) {
+        return { host, visibleServices: hostServices };
+      }
+
+      const hostMatch =
+        (host.name ?? '').toLowerCase().includes(trimmedQuery) ||
+        (host.hostname ?? '').toLowerCase().includes(trimmedQuery) ||
+        (host.description ?? '').toLowerCase().includes(trimmedQuery);
+
+      const matchingServices = hostServices.filter((s) => {
+        const serviceMatch =
+          (s.name ?? '').toLowerCase().includes(trimmedQuery) ||
+          (s.verification_service_name ?? '').toLowerCase().includes(trimmedQuery) ||
+          (s.description ?? '').toLowerCase().includes(trimmedQuery);
+        const profileDescriptionMatch = s.profiles.some((p) =>
+          (p.description ?? '').toLowerCase().includes(trimmedQuery)
+        );
+        return serviceMatch || profileDescriptionMatch;
+      });
+
+      if (!hostMatch && matchingServices.length === 0) {
+        return null;
+      }
+
+      return {
+        host,
+        visibleServices: hostMatch ? hostServices : matchingServices,
+      };
+    })
+    .filter((entry): entry is { host: TargetHost; visibleServices: ManagedService[] } => entry !== null);
 
   const totalServices = services.length;
   const lockedServices = services.filter((s) => s.is_locked).length;
@@ -156,28 +180,42 @@ export const FleetView: React.FC<FleetViewProps> = ({
 
         {/* Search Input */}
         <div className="relative flex-1 sm:max-w-xs">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search host or service..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono shadow-sm transition-colors duration-150"
+            placeholder="Search hosts, services, or profiles..."
+            className="w-full pl-9 pr-8 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono shadow-sm transition-colors duration-150"
           />
+          {searchQuery.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                searchInputRef.current?.focus();
+              }}
+              aria-label="Clear search"
+              title="Clear search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Host Cards */}
       <div className="space-y-6">
-        {filteredHosts.length === 0 ? (
+        {filteredHostEntries.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
             <Server className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
             <div className="text-sm font-medium text-slate-600 dark:text-slate-400">No matching hosts found</div>
             <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try clearing your search query or switching filters</div>
           </div>
         ) : (
-          filteredHosts.map((host) => {
-            const hostServices = services.filter((s) => s.host_id === host.id);
+          filteredHostEntries.map(({ host, visibleServices }) => {
             const isWindows = host.os_type === 'windows';
 
             return (
@@ -220,7 +258,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
 
                 {/* Services List */}
                 <div className="divide-y divide-slate-200 dark:divide-slate-800/60">
-                  {hostServices.map((service) => {
+                  {visibleServices.map((service) => {
                     const isLocked = service.is_locked;
                     const isSingleProfile = service.profiles.length === 1;
                     const soleProfile = isSingleProfile ? service.profiles[0].name : '';
