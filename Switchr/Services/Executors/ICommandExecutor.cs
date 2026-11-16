@@ -5,6 +5,11 @@ namespace Switchr.Services.Executors;
 
 public interface ICommandExecutor
 {
+    Task<ICommandSession> OpenSessionAsync(
+        HostConfig host,
+        CancellationToken cancellationToken = default
+    );
+
     IAsyncEnumerable<string> ExecuteCommandStreamAsync(
         HostConfig host,
         string scriptPath,

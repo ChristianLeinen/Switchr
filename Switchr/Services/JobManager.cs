@@ -231,6 +231,8 @@ public class JobManager
                 throw new InvalidOperationException($"No scripts configured for profile '{profileConfig.Name}'.");
             }
 
+            await using var session = await executor.OpenSessionAsync(hostConfig, context.Cts.Token);
+
             for (int i = 0; i < scripts.Count; i++)
             {
                 var step = scripts[i];
@@ -240,8 +242,7 @@ public class JobManager
 
                 await EmitLogAsync(context, $"[STEP {stepNumber}/{totalSteps}] Starting: {stepName} ({step.ScriptPath})", "info");
 
-                await foreach (var line in executor.ExecuteCommandStreamAsync(
-                    hostConfig,
+                await foreach (var line in session.ExecuteCommandStreamAsync(
                     step.ScriptPath,
                     step.ArgumentsString,
                     context.Cts.Token
@@ -256,8 +257,7 @@ public class JobManager
 
             // Post-execution verification probe
             await EmitLogAsync(context, $"[PROBE] Verifying managed service status for '{serviceConfig.VerificationServiceName}'...", "info");
-            var isRunning = await executor.VerifyServiceRunningAsync(
-                hostConfig,
+            var isRunning = await session.VerifyServiceRunningAsync(
                 serviceConfig.VerificationServiceName,
                 context.Cts.Token
             );
@@ -273,8 +273,7 @@ public class JobManager
                 {
                     try
                     {
-                        var readProfile = await executor.ReadRemoteTextFileAsync(
-                            hostConfig,
+                        var readProfile = await session.ReadRemoteTextFileAsync(
                             serviceConfig.ActiveProfilePath,
                             context.Cts.Token
                         );

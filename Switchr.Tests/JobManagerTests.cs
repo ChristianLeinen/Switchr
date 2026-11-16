@@ -192,6 +192,10 @@ public class JobManagerTests
         Assert.True(step2DoneIdx > step2StartIdx, "Step 2 finished after start");
         Assert.True(step3StartIdx > step2DoneIdx, "Step 3 starts after Step 2 finished");
         Assert.True(step3DoneIdx > step3StartIdx, "Step 3 finished after start");
+
+        // Verify only 1 connection was initiated across all 3 steps
+        var connectLines = lines.FindAll(l => l.Contains("[INFO] [DRY RUN] Connecting to"));
+        Assert.Single(connectLines);
     }
 
     [Fact]

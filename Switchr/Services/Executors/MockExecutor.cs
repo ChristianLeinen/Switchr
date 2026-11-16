@@ -12,6 +12,12 @@ public class MockExecutor : ICommandExecutor
         _logger = logger;
     }
 
+    public Task<ICommandSession> OpenSessionAsync(HostConfig host, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("[MOCK] Opening mock session for {Host}", host.Hostname);
+        return Task.FromResult<ICommandSession>(new MockCommandSession(host, _logger));
+    }
+
     public async IAsyncEnumerable<string> ExecuteCommandStreamAsync(
         HostConfig host,
         string scriptPath,
@@ -19,24 +25,11 @@ public class MockExecutor : ICommandExecutor
         [EnumeratorCancellation] CancellationToken cancellationToken
     )
     {
-        _logger.LogInformation("[MOCK] Starting execution on {Host}: {Script} {Args}", host.Hostname, scriptPath, arguments);
-
-        yield return $"[INFO] [DRY RUN] Connecting to {host.Hostname}:{host.Port} ({host.OsType.ToUpper()})...";
-        await Task.Delay(400, cancellationToken);
-
-        yield return $"[INFO] [DRY RUN] Authenticated as '{host.EffectiveUsername}'.";
-        await Task.Delay(300, cancellationToken);
-
-        yield return $"[EXEC] Invoking script: {scriptPath} {(string.IsNullOrWhiteSpace(arguments) ? "" : arguments)}";
-        await Task.Delay(400, cancellationToken);
-
-        yield return $"[OUT] Running script payload for: {Path.GetFileName(scriptPath)}";
-        await Task.Delay(400, cancellationToken);
-
-        yield return "[OUT] Completed execution successfully with status OK.";
-        await Task.Delay(200, cancellationToken);
-
-        yield return "[INFO] Script execution finished with exit code: 0";
+        await using var session = await OpenSessionAsync(host, cancellationToken);
+        await foreach (var line in session.ExecuteCommandStreamAsync(scriptPath, arguments, cancellationToken))
+        {
+            yield return line;
+        }
     }
 
     public async Task<bool> VerifyServiceRunningAsync(
@@ -45,9 +38,8 @@ public class MockExecutor : ICommandExecutor
         CancellationToken cancellationToken
     )
     {
-        _logger.LogInformation("[MOCK] Verifying service '{VerificationName}' on {Host}", verificationName, host.Hostname);
-        await Task.Delay(500, cancellationToken);
-        return true; // Always healthy in mock mode
+        await using var session = await OpenSessionAsync(host, cancellationToken);
+        return await session.VerifyServiceRunningAsync(verificationName, cancellationToken);
     }
 
     public async Task<string?> ReadRemoteTextFileAsync(
@@ -56,22 +48,88 @@ public class MockExecutor : ICommandExecutor
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogInformation("[MOCK] Reading remote text file '{FilePath}' on {Host}", filePath, host.Hostname);
-        await Task.Delay(100, cancellationToken);
+        await using var session = await OpenSessionAsync(host, cancellationToken);
+        return await session.ReadRemoteTextFileAsync(filePath, cancellationToken);
+    }
 
-        if (File.Exists(filePath))
+    private sealed class MockCommandSession : ICommandSession
+    {
+        private readonly HostConfig _host;
+        private readonly ILogger<MockExecutor> _logger;
+        private bool _connected;
+
+        public MockCommandSession(HostConfig host, ILogger<MockExecutor> logger)
         {
-            try
-            {
-                var content = await File.ReadAllTextAsync(filePath, cancellationToken);
-                return content.Trim();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "[MOCK] Failed to read mock file {FilePath}", filePath);
-            }
+            _host = host;
+            _logger = logger;
         }
 
-        return null;
+        public async IAsyncEnumerable<string> ExecuteCommandStreamAsync(
+            string scriptPath,
+            string? arguments,
+            [EnumeratorCancellation] CancellationToken cancellationToken
+        )
+        {
+            _logger.LogInformation("[MOCK] Starting execution on {Host}: {Script} {Args}", _host.Hostname, scriptPath, arguments);
+
+            if (!_connected)
+            {
+                yield return $"[INFO] [DRY RUN] Connecting to {_host.Hostname}:{_host.Port} ({_host.OsType.ToUpper()})...";
+                await Task.Delay(400, cancellationToken);
+
+                yield return $"[INFO] [DRY RUN] Authenticated as '{_host.EffectiveUsername}'.";
+                await Task.Delay(300, cancellationToken);
+
+                _connected = true;
+            }
+
+            yield return $"[EXEC] Invoking script: {scriptPath} {(string.IsNullOrWhiteSpace(arguments) ? "" : arguments)}";
+            await Task.Delay(400, cancellationToken);
+
+            yield return $"[OUT] Running script payload for: {Path.GetFileName(scriptPath)}";
+            await Task.Delay(400, cancellationToken);
+
+            yield return "[OUT] Completed execution successfully with status OK.";
+            await Task.Delay(200, cancellationToken);
+
+            yield return "[INFO] Script execution finished with exit code: 0";
+        }
+
+        public async Task<bool> VerifyServiceRunningAsync(
+            string verificationName,
+            CancellationToken cancellationToken
+        )
+        {
+            _logger.LogInformation("[MOCK] Verifying service '{VerificationName}' on {Host}", verificationName, _host.Hostname);
+            await Task.Delay(500, cancellationToken);
+            return true; // Always healthy in mock mode
+        }
+
+        public async Task<string?> ReadRemoteTextFileAsync(
+            string filePath,
+            CancellationToken cancellationToken = default
+        )
+        {
+            _logger.LogInformation("[MOCK] Reading remote text file '{FilePath}' on {Host}", filePath, _host.Hostname);
+            await Task.Delay(100, cancellationToken);
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    var content = await File.ReadAllTextAsync(filePath, cancellationToken);
+                    return content.Trim();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[MOCK] Failed to read mock file {FilePath}", filePath);
+                }
+            }
+
+            return null;
+        }
+
+        public void Dispose() { }
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }
