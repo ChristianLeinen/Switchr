@@ -135,11 +135,15 @@ export const AuditHistoryView: React.FC<AuditHistoryViewProps> = ({
                   const isSuccess = rec.status === 'SUCCESS';
                   const isFailed = rec.status === 'FAILED';
                   const isAborted = rec.status === 'ABORTED';
-                  const dateStr = rec.started_at ? new Date(rec.started_at).toLocaleTimeString() : '-';
+                  const parsedDate = rec.started_at ? new Date(rec.started_at) : null;
+                  const dateStr =
+                    parsedDate && !Number.isNaN(parsedDate.getTime())
+                      ? parsedDate.toLocaleString()
+                      : '-';
 
                   return (
                     <tr key={rec.job_id} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
-                      <td className="px-4 py-3 tabular-nums text-slate-500 dark:text-slate-400">{dateStr}</td>
+                      <td className="px-4 py-3 tabular-nums whitespace-nowrap text-slate-500 dark:text-slate-400">{dateStr}</td>
                       <td className="px-4 py-3 text-sky-600 dark:text-sky-400 font-bold">{rec.job_id}</td>
                       <td className="px-4 py-3 text-slate-900 dark:text-slate-200">
                         <div className="flex items-center gap-1.5">
