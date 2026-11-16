@@ -51,7 +51,7 @@ export const AuditHistoryView: React.FC<AuditHistoryViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Strip */}
-      <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
+      <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 md:min-h-[72px] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
         <div>
           <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Audit History</h1>
         </div>

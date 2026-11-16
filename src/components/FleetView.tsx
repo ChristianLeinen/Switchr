@@ -93,25 +93,25 @@ export const FleetView: React.FC<FleetViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner / Summary Strip */}
-      <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
+      <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 md:min-h-[72px] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
         <div>
           <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Fleet & Services</h1>
         </div>
 
         <div className="flex items-center gap-6 text-xs text-slate-600 dark:text-slate-400 shrink-0">
           <div>
-            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px]">Hosts Fleet</div>
-            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums">{hosts.length}</div>
+            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">Hosts Fleet</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">{hosts.length}</div>
           </div>
-          <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+          <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
           <div>
-            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px]">Services</div>
-            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums">{totalServices}</div>
+            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">Services</div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">{totalServices}</div>
           </div>
-          <div className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+          <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
           <div>
-            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px]">Active Locks</div>
-            <div className={`text-lg font-mono font-bold tabular-nums ${lockedServices > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">Active Locks</div>
+            <div className={`text-lg font-mono font-bold tabular-nums leading-none mt-0.5 ${lockedServices > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {lockedServices}
             </div>
           </div>
@@ -124,7 +124,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
               value={refreshIntervalMs}
               onChange={(e) => onChangeRefreshInterval(Number(e.target.value))}
               title="Configure automatic background refresh interval"
-              className="text-xs font-mono px-2.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700/60 rounded-md focus:outline-none focus:border-sky-500 transition-colors cursor-pointer"
+              className="text-xs leading-4 font-mono px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700/60 rounded-md focus:outline-none focus:border-sky-500 transition-colors cursor-pointer"
             >
               <option value={0}>Auto: Off</option>
               <option value={5000}>Auto: 5s</option>
@@ -135,7 +135,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
             <button
               onClick={onRefresh}
               disabled={isRefreshing}
-              className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/60 rounded-md transition-colors disabled:opacity-60"
+              className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/60 rounded-md transition-colors disabled:opacity-60"
               title={isRefreshing ? 'Refreshing fleet states...' : 'Refresh fleet states'}
               aria-label="Refresh fleet states"
             >
