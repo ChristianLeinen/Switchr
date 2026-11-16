@@ -20,7 +20,7 @@ const TABS: TabDefinition[] = [
   { id: 'impressum', label: 'Legal Notice', shortLabel: 'Impressum', icon: Building2 },
   { id: 'privacy', label: 'Privacy Policy', shortLabel: 'Privacy', icon: Lock },
   { id: 'disclaimer', label: 'Disclaimer', shortLabel: 'Disclaimer', icon: Scale },
-  { id: 'trademarks', label: 'Trademarks & Copyright', shortLabel: 'Trademarks', icon: FileText },
+  { id: 'trademarks', label: 'License & Trademarks', shortLabel: 'License', icon: FileText },
 ];
 
 export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectTab }) => {
@@ -77,7 +77,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
                 Compliance & Legal Center
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                EU regulations, GDPR privacy policies, operator liability & trademark notices
+                MIT open-source license, self-hosted operator notices, liability & third-party trademarks
               </p>
             </div>
           </div>
@@ -145,32 +145,23 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
           {activeTab === 'impressum' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-xs text-sky-800 dark:text-sky-200">
-                Information pursuant to § 5 of the German Telemedia Act (TMG) and § 18 Section 2 of the German Interstate Media Treaty (MStV):
+                Open-Source Software Attribution & Self-Hosted Deployment Notice:
               </div>
 
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Service Provider / Operator:</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Author & Official Project Repository:</h3>
                 <p className="font-mono text-xs text-slate-700 dark:text-slate-300">
-                  Leinensoft<br />
-                  Proprietor / Responsible Person: Christian Leinen<br />
+                  Author / Maintainer: Christian Leinen<br />
                   Email: <a href="mailto:christian@leinensoft.de" className="text-sky-600 dark:text-sky-400 underline hover:text-sky-500 dark:hover:text-sky-300">christian@leinensoft.de</a><br />
-                  Website: <a href="https://leinensoft.de" target="_blank" rel="noopener noreferrer" className="text-sky-600 dark:text-sky-400 underline hover:text-sky-500 dark:hover:text-sky-300">https://leinensoft.de</a><br />
+                  Website / Repository: <a href="https://github.com/ChristianLeinen/Switchr" target="_blank" rel="noopener noreferrer" className="text-sky-600 dark:text-sky-400 underline hover:text-sky-500 dark:hover:text-sky-300">https://github.com/ChristianLeinen/Switchr</a><br />
                   Germany / European Union
                 </p>
               </div>
 
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Responsible for Content pursuant to § 18 Sec. 2 MStV:</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Self-Hosted Instance Operator Responsibility:</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  Christian Leinen (Address as indicated above)
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">EU Online Dispute Resolution / Consumer Arbitration:</h3>
-                <p className="text-xs text-slate-700 dark:text-slate-300">
-                  The European Commission provides a platform for online dispute resolution (ODR): <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer" className="text-sky-600 dark:text-sky-400 underline">https://ec.europa.eu/consumers/odr/</a>.<br />
-                  Our email address can be found above under service provider info. We are neither willing nor obliged to participate in dispute resolution proceedings before a consumer arbitration board.
+                  Switchr is distributed as free, open-source software and is not hosted or operated as a central service by the author. Whoever deploys and hosts this instance is solely responsible as its operator, including compliance with any applicable local legal or statutory notice requirements (such as § 5 DDG / § 18 MStV in Germany, where applicable).
                 </p>
               </div>
             </div>
@@ -179,34 +170,34 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
           {activeTab === 'privacy' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-800 dark:text-emerald-200">
-                Data Protection & Privacy Notice pursuant to the General Data Protection Regulation (EU GDPR / DSGVO - Articles 13 & 14):
+                Data Protection & Privacy Information for Self-Hosted Deployments (EU GDPR / DSGVO):
               </div>
 
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">1. Data Controller</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  The data controller within the meaning of the GDPR is Christian Leinen (Leinensoft), Contact: <a href="mailto:christian@leinensoft.de" className="text-emerald-600 dark:text-emerald-400 underline">christian@leinensoft.de</a>.
+                  Because Switchr runs entirely on self-hosted infrastructure, the organization or individual operating this deployed instance is the data controller within the meaning of the GDPR. The software author (Christian Leinen) does not host this application and receives no telemetry, usage data, or operational logs from it.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">2. Collection and Processing of Connection Data</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  When accessing this orchestrator dashboard, standard server connection logs (such as IP address, access timestamp, transferred data volume, and user agent) are processed transiently to guarantee stable system operations and ensure network security (Legal basis: Art. 6(1)(f) GDPR).
+                  When accessing a self-hosted Switchr dashboard, standard HTTP server connection logs (such as IP address, access timestamp, and user agent) may be processed locally by the host infrastructure to ensure stable system operations and network security (Legal basis: Art. 6(1)(f) GDPR, where applicable).
                 </p>
               </div>
 
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">3. Orchestration & Execution Audit Logs</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  Audit logs and transaction histories displayed within the console log exclusively technical host state, remote script execution exit codes, and profile transition records for infrastructure maintenance purposes. No advertising trackers, third-party analytics cookies, or behavioral profiling are employed.
+                  Audit logs and transaction histories stored locally by Switchr record technical host state, remote script execution exit codes, and profile transition records for infrastructure maintenance purposes. No advertising trackers, third-party analytics cookies, external telemetry, or behavioral profiling are included in the software.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">4. Your Rights under GDPR</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  You are entitled under the GDPR to request access to your personal data (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20), and to object to processing (Art. 21). You also have the right to lodge a complaint with a competent data protection supervisory authority (Art. 77 GDPR).
+                  Where the GDPR applies, you may exercise your rights regarding personal data—including access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20), objection (Art. 21), and lodging a complaint with a supervisory authority (Art. 77)—directly with the operator of this Switchr instance.
                 </p>
               </div>
             </div>
@@ -215,27 +206,27 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
           {activeTab === 'disclaimer' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-800 dark:text-amber-200">
-                Limitation of Liability pursuant to §§ 7–10 of the German Telemedia Act (TMG):
+                Warranty Disclaimer & Limitation of Liability (MIT License):
               </div>
 
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Liability for Content</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Software Provided &ldquo;As Is&rdquo;</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  As a service provider, we are responsible for our own content on these pages under general law pursuant to § 7 Sec. 1 TMG. However, under §§ 8 to 10 TMG, we are not obligated to monitor transmitted or stored third-party information or to investigate circumstances that indicate unlawful activity. Obligations to remove or block the use of information in accordance with general legislation remain unaffected.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Liability for External Links</h3>
-                <p className="text-xs text-slate-700 dark:text-slate-300">
-                  Our application may contain links to external third-party websites over whose contents we have no influence. Therefore, we cannot assume any liability for these external contents. The respective provider or operator of the pages is always responsible for the contents of linked websites.
+                  In accordance with the MIT License, Switchr is provided &ldquo;as is&rdquo;, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
                 </p>
               </div>
 
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Automation & Fail-Safe Invariants</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  The Switchr application executes remote automation scripts and configuration profiles on target machines. All profile definitions and scripts must be thoroughly verified before deployment in production environments. Developers and operators assume no liability for service downtime, data loss, or misconfigurations resulting from executed custom scripts.
+                  The Switchr application executes remote automation scripts and configuration profiles on target machines. All profile definitions and scripts must be thoroughly verified before deployment in production environments. Authors and contributors assume no liability for service downtime, data loss, or misconfigurations resulting from executed scripts or configurations.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">External Links</h3>
+                <p className="text-xs text-slate-700 dark:text-slate-300">
+                  Links to external resources (such as the project repository on GitHub) point to third-party platforms whose content and privacy practices are governed by their respective operators.
                 </p>
               </div>
             </div>
@@ -244,13 +235,13 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
           {activeTab === 'trademarks' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
               <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 text-xs text-purple-800 dark:text-purple-200">
-                Copyright and Third-Party Trademarks Notice:
+                MIT Open-Source License, Copyright & Third-Party Trademarks Notice:
               </div>
 
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Copyright Protection</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Copyright & MIT License</h3>
                 <p className="text-xs text-slate-700 dark:text-slate-300">
-                  The content, software code, and works created by the site operators on these pages are subject to German and European copyright laws. Reproduction, adaptation, distribution, or any form of commercialization outside the limits of copyright law requires prior written consent from the author or creator.
+                  Copyright © {new Date().getFullYear()} Christian Leinen. Switchr is free and open-source software released under the <span className="font-semibold text-slate-900 dark:text-white">MIT License</span>. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the conditions set forth in the <a href="https://github.com/ChristianLeinen/Switchr/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="text-purple-600 dark:text-purple-400 underline hover:text-purple-500 dark:hover:text-purple-300">LICENSE</a> file in the official repository.
                 </p>
               </div>
 
@@ -260,7 +251,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
                   All brand names and trademarks mentioned within this application (including Windows, WinRM, Microsoft Corporation, Linux, SSH, OpenSSH, Docker, systemd, PowerShell) are subject without restriction to the provisions of the respective trademark law and the ownership rights of their registered holders.
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                  The mere mentioning of trademarks does not imply that they are not protected by third-party rights.
+                  The mere mentioning of trademarks does not imply that they are not protected by third-party rights, nor does it grant any license over third-party trademarks.
                 </p>
               </div>
             </div>
@@ -271,7 +262,17 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose, onSelectT
         <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>EU & German Compliance Standards Verified</span>
+            <span>
+              MIT License ·{' '}
+              <a
+                href="https://github.com/ChristianLeinen/Switchr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+              >
+                github.com/ChristianLeinen/Switchr
+              </a>
+            </span>
           </div>
           <button
             onClick={onClose}

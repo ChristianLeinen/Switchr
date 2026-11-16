@@ -618,6 +618,7 @@ async function bootstrap() {
       server: {
         middlewareMode: true,
         hmr: disableHmr ? false : { server: httpServer },
+        ws: disableHmr ? false : undefined,
         watch: disableHmr ? null : {},
       },
       appType: 'spa',
