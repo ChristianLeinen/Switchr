@@ -17,4 +17,4 @@ publish/
 .vs/
 _ReSharper*/
 *.DotSettings.user
-Switchr-dist.zip
+*.zip
