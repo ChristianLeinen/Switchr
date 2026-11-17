@@ -28,19 +28,14 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-3 shrink-0">
           <div className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-700/80 dark:border-slate-700 flex items-center justify-center shadow-sm overflow-hidden relative group">
             <img
-              src="/icon.svg"
+              src="/icon.png"
               alt="Switchr Icon"
               className="w-full h-full object-contain p-1"
               onError={(e) => {
                 const target = e.currentTarget;
-                if (!target.dataset.triedPng) {
-                  target.dataset.triedPng = 'true';
-                  target.src = '/icon.png';
-                } else {
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }
+                target.style.display = 'none';
+                const fallback = target.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
               }}
             />
             <div style={{ display: 'none' }} className="w-full h-full items-center justify-center">
