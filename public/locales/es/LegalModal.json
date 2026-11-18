@@ -1,0 +1,60 @@
+{
+  "header": {
+    "title": "Centro de Cumplimiento y Aviso Legal",
+    "subtitle": "Licencia de código abierto MIT, avisos para instancias autoalojadas, responsabilidad y marcas de terceros",
+    "closeAriaLabel": "Cerrar diálogo"
+  },
+  "tabs": {
+    "ariaLabel": "Secciones legales",
+    "impressumLabel": "Aviso legal",
+    "impressumShort": "Aviso legal",
+    "privacyLabel": "Política de privacidad",
+    "privacyShort": "Privacidad",
+    "disclaimerLabel": "Descargo de responsabilidad",
+    "disclaimerShort": "Exención",
+    "trademarksLabel": "Licencia y marcas",
+    "trademarksShort": "Licencia"
+  },
+  "impressum": {
+    "banner": "Atribución de software de código abierto y aviso para despliegues autoalojados:",
+    "authorHeading": "Autor y repositorio oficial del proyecto:",
+    "authorLine": "Autor / Responsable: Christian Leinen",
+    "emailLabel": "Correo electrónico:",
+    "websiteLabel": "Sitio web / Repositorio:",
+    "regionLine": "Alemania / Unión Europea",
+    "operatorHeading": "Responsabilidad del operador de instancias autoalojadas:",
+    "operatorBody": "Switchr se distribuye como software libre y de código abierto y no es alojado ni operado como un servicio centralizado por su autor. Quien despliega y aloja esta instancia es el único responsable como operador, incluido el cumplimiento de las obligaciones legales o avisos oficiales aplicables localmente (como los §§ 5 DDG / 18 MStV en Alemania, cuando corresponda)."
+  },
+  "privacy": {
+    "banner": "Información de protección de datos y privacidad para despliegues autoalojados (RGPD / GDPR):",
+    "controllerHeading": "1. Responsable del tratamiento",
+    "controllerBody": "Dado que Switchr se ejecuta íntegramente en infraestructura autoalojada, la organización o persona que opera esta instancia desplegada es el responsable del tratamiento conforme al RGPD. El autor del software (Christian Leinen) no aloja esta aplicación ni recibe telemetría, datos de uso ni registros operativos de la misma.",
+    "connectionHeading": "2. Recopilación y tratamiento de datos de conexión",
+    "connectionBody": "Al acceder a un panel Switchr autoalojado, los registros estándar de conexión HTTP del servidor (como dirección IP, marca de tiempo de acceso y User-Agent) pueden procesarse localmente por la infraestructura anfitriona para garantizar el funcionamiento estable del sistema y la seguridad de la red (base jurídica: art. 6.1.f RGPD, cuando corresponda).",
+    "auditHeading": "3. Registros de auditoría de orquestación y ejecución",
+    "auditBody": "Los registros de auditoría e historiales almacenados localmente por Switchr registran únicamente el estado técnico de los hosts, códigos de salida de scripts remotos y transiciones de perfil para fines de mantenimiento de infraestructura. El software no incluye rastreadores publicitarios, cookies analíticas de terceros, telemetría externa ni perfilado de comportamiento.",
+    "rightsHeading": "4. Sus derechos conforme al RGPD",
+    "rightsBody": "Cuando sea aplicable el RGPD, puede ejercer sus derechos sobre los datos personales —incluidos los de acceso (art. 15), rectificación (art. 16), supresión (art. 17), limitación del tratamiento (art. 18), portabilidad (art. 20), oposición (art. 21) y reclamación ante una autoridad de control (art. 77)— directamente ante el operador de esta instancia de Switchr."
+  },
+  "disclaimer": {
+    "banner": "Exención de garantías y limitación de responsabilidad (Licencia MIT):",
+    "asIsHeading": "Software proporcionado «tal cual» (As Is)",
+    "asIsBody": "De acuerdo con la Licencia MIT, Switchr se proporciona «tal cual», sin garantía de ningún tipo, expresa o implícita, incluidas, entre otras, las garantías de comerciabilidad, idoneidad para un fin particular y no infracción. En ningún caso los autores o titulares de los derechos de autor serán responsables de ninguna reclamación, daño u otra responsabilidad, ya sea por contrato, agravio o cualquier otro motivo, derivada del software o de su uso.",
+    "automationHeading": "Automatización e invariantes Fail-Safe",
+    "automationBody": "La aplicación Switchr ejecuta scripts de automatización remotos y perfiles de configuración en las máquinas de destino. Todas las definiciones de perfil y scripts deben verificarse minuciosamente antes de su despliegue en entornos de producción. Los autores y colaboradores no asumen ninguna responsabilidad por interrupciones de servicio, pérdida de datos o configuraciones erróneas derivadas de los scripts o configuraciones ejecutados.",
+    "linksHeading": "Enlaces externos",
+    "linksBody": "Los enlaces a recursos externos (como el repositorio del proyecto en GitHub) dirigen a plataformas de terceros cuyo contenido y prácticas de privacidad se rigen por sus respectivos operadores."
+  },
+  "trademarks": {
+    "banner": "Licencia MIT de código abierto, derechos de autor y marcas comerciales de terceros:",
+    "licenseHeading": "Derechos de autor y Licencia MIT",
+    "licenseBody": "Copyright © {{year}} Christian Leinen. Switchr es software libre y de código abierto publicado bajo la <license>Licencia MIT</license>. Se concede permiso, de forma gratuita, a cualquier persona que obtenga una copia de este software y de los archivos de documentación asociados, para utilizar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del software, sujeto a las condiciones establecidas en el archivo <link>LICENSE</link> del repositorio oficial.",
+    "thirdPartyHeading": "Marcas comerciales de terceros",
+    "thirdPartyBody": "Todos los nombres comerciales y marcas mencionadas en esta aplicación (incluidos Windows, WinRM, Microsoft Corporation, Linux, SSH, OpenSSH, Docker, systemd, PowerShell) están sujetos sin restricciones a la legislación de marcas aplicable y a los derechos de propiedad de sus respectivos titulares registrados.",
+    "thirdPartyNote": "La mera mención de estas marcas no implica que no estén protegidas por derechos de terceros, ni otorga licencia alguna sobre marcas comerciales de terceros."
+  },
+  "footer": {
+    "mitLabel": "Licencia MIT",
+    "closeButton": "Cerrar"
+  }
+}

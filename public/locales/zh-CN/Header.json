@@ -1,0 +1,26 @@
+{
+  "brand": {
+    "iconAlt": "Switchr 图标"
+  },
+  "nav": {
+    "ariaLabel": "主导航",
+    "fleet": "集群与服务",
+    "audit": "审计历史"
+  },
+  "telemetry": {
+    "locks_one": "{{count}} 个锁定",
+    "locks_other": "{{count}} 个锁定"
+  },
+  "actions": {
+    "testConflictButton": "测试 409 锁定",
+    "testConflictTitle": "通过对同一服务触发并发切换来测试 HTTP 409 冲突拒绝"
+  },
+  "language": {
+    "ariaLabel": "选择界面语言",
+    "title": "更改显示语言"
+  },
+  "theme": {
+    "switchToLight": "切换到浅色模式",
+    "switchToDark": "切换到深色模式"
+  }
+}

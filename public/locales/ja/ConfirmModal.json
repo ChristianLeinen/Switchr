@@ -1,0 +1,35 @@
+{
+  "header": {
+    "confirmExecution": "実行の確認",
+    "confirmSwitch": "構成切り替えの確認",
+    "closeAriaLabel": "ダイアログを閉じる"
+  },
+  "summary": {
+    "targetHost": "ターゲットホスト:",
+    "managedService": "管理対象サービス:",
+    "currentProfile": "現在のプロファイル:",
+    "noneUnassigned": "なし (未割り当て)",
+    "actionPipeline": "アクションパイプライン:",
+    "targetProfile": "ターゲットプロファイル:"
+  },
+  "details": {
+    "title": "実行詳細",
+    "stepSummary_one": "{{count}} ステップ · {{seconds}}秒",
+    "stepSummary_other": "{{count}} ステップ · {{seconds}}秒",
+    "show": "表示",
+    "hide": "非表示",
+    "verificationProbe": "検証プローブ:",
+    "totalTimeout": "合計タイムアウト:",
+    "totalTimeoutValue_one": "{{seconds}}秒 ({{count}} 順次ステップ)",
+    "totalTimeoutValue_other": "{{seconds}}秒 ({{count}} 順次ステップ)",
+    "sequentialPipelineLabel": "順次スクリプトパイプライン",
+    "defaultScriptName": "スクリプト",
+    "stepTimeout": "{{seconds}}秒",
+    "failFastTitle": "Fail-Fast テストモード有効:",
+    "failFastDescription": "この実行は終了コード 1 をシミュレートするよう構成されており、後続ステップやロールバックを実行せずに即座に停止する動作を確認できます。"
+  },
+  "actions": {
+    "cancel": "キャンセル",
+    "confirm": "確認してパイプラインを実行"
+  }
+}

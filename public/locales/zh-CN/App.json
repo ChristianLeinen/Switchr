@@ -1,0 +1,26 @@
+{
+  "loading": "正在加载...",
+  "toasts": {
+    "conflictTitle": "并发锁定冲突 (HTTP 409)",
+    "conflictDefaultDetail": "该服务已被活动作业锁定。",
+    "executionErrorTitle": "执行错误",
+    "executionErrorDefault": "启动切换作业失败。",
+    "switchSucceededTitle": "配置切换成功",
+    "switchSucceededRunning": "{{serviceName}} 已验证为 RUNNING。",
+    "switchSucceededOnHost": "{{hostName}} 上的 {{serviceName}} 已验证为 RUNNING。",
+    "jobFailedTitle": "作业失败 (Fail-Fast)",
+    "jobFailedDefault": "服务探针检查或状态切换失败。",
+    "jobFailedProbeOrScript": "验证探针或脚本执行失败。",
+    "abortDispatchedTitle": "已发送中止请求",
+    "abortDispatchedDetail": "已向作业 {{jobId}} 发送取消信号。",
+    "job1DispatchedTitle": "作业 1 已下发",
+    "job1DispatchedDetail": "已获取 ({{hostId}}, {{serviceId}}) 的锁定",
+    "conflictVerifiedTitle": "HTTP 409 冲突不变量已验证！",
+    "conflictVerifiedDetail": "已拒绝针对 ({{hostId}}, {{serviceId}}) 的并发切换。",
+    "conflictVerifiedLockHeld": "已拒绝针对 ({{hostId}}, {{serviceId}}) 的并发切换：内存锁定当前由 {{jobId}} 持有。",
+    "lockActiveTitle": "锁定已激活",
+    "auditResetTitle": "审计记录已重置",
+    "auditResetDetail": "执行审计历史记录已清空。",
+    "dismissAriaLabel": "关闭通知"
+  }
+}

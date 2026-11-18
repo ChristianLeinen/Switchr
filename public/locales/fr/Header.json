@@ -1,0 +1,26 @@
+{
+  "brand": {
+    "iconAlt": "Icône Switchr"
+  },
+  "nav": {
+    "ariaLabel": "Navigation principale",
+    "fleet": "Flotte & Services",
+    "audit": "Historique d'audit"
+  },
+  "telemetry": {
+    "locks_one": "{{count}} verrou",
+    "locks_other": "{{count}} verrous"
+  },
+  "actions": {
+    "testConflictButton": "Tester verrou 409",
+    "testConflictTitle": "Tester le rejet de conflit HTTP 409 en déclenchant des changements simultanés sur le même service"
+  },
+  "language": {
+    "ariaLabel": "Sélectionner la langue de l'interface",
+    "title": "Changer la langue d'affichage"
+  },
+  "theme": {
+    "switchToLight": "Passer en mode clair",
+    "switchToDark": "Passer en mode sombre"
+  }
+}

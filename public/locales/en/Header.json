@@ -1,0 +1,26 @@
+{
+  "brand": {
+    "iconAlt": "Switchr Icon"
+  },
+  "nav": {
+    "ariaLabel": "Primary navigation",
+    "fleet": "Fleet & Services",
+    "audit": "Audit History"
+  },
+  "telemetry": {
+    "locks_one": "{{count}} lock",
+    "locks_other": "{{count}} locks"
+  },
+  "actions": {
+    "testConflictButton": "Test 409 Lock",
+    "testConflictTitle": "Test 409 Conflict rejection by triggering concurrent switches on the same service"
+  },
+  "language": {
+    "ariaLabel": "Select interface language",
+    "title": "Change display language"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "title": "フリート & サービス",
+    "hostsFleetLabel": "ホストフリート",
+    "servicesLabel": "サービス",
+    "activeLocksLabel": "アクティブなロック"
+  },
+  "refresh": {
+    "intervalAriaLabel": "自動更新間隔",
+    "intervalTitle": "バックグラウンド自動更新の間隔を設定します",
+    "autoOff": "自動: オフ",
+    "autoSeconds": "自動: {{seconds}}秒",
+    "buttonAriaLabel": "フリート状態を更新",
+    "buttonTitle": "フリート状態を更新",
+    "buttonRefreshingTitle": "フリート状態を更新中..."
+  },
+  "filterToolbar": {
+    "allHosts": "すべてのホスト ({{count}})",
+    "windowsWinRm": "Windows / WinRM",
+    "linuxSsh": "Linux / SSH",
+    "searchPlaceholder": "ホスト、サービス、プロファイルを検索...",
+    "clearSearchAriaLabel": "検索をクリア",
+    "clearSearchTitle": "検索をクリア"
+  },
+  "emptyState": {
+    "title": "一致するホストが見つかりません",
+    "subtitle": "検索クエリをクリアするか、フィルターを切り替えてください"
+  },
+  "hostCard": {
+    "viewDetailsAriaLabel": "{{hostName}} の接続詳細を表示",
+    "viewDetailsTitle": "{{hostName}} の接続詳細を表示"
+  },
+  "serviceRow": {
+    "statusLocked": "切り替え中 (ロック中)",
+    "statusProbeFailed": "プローブ失敗",
+    "statusRunning": "RUNNING",
+    "selectProfilePlaceholder": "-- 適用するプロファイルを選択 --",
+    "actionLocked": "ロック中",
+    "actionExecute": "実行",
+    "actionSwitchProfile": "プロファイル切り替え",
+    "liveStreamButton": "ライブストリーム",
+    "liveStreamLabel": "{{serviceName}} (アクティブストリーム)"
+  }
+}

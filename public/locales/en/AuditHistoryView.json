@@ -1,0 +1,33 @@
+{
+  "header": {
+    "title": "Audit History",
+    "exportJson": "Export JSON",
+    "reset": "Reset"
+  },
+  "filterToolbar": {
+    "all": "All ({{count}})",
+    "statusSuccess": "SUCCESS",
+    "statusFailed": "FAILED",
+    "statusAborted": "ABORTED",
+    "searchPlaceholder": "Search job, host, profile..."
+  },
+  "table": {
+    "headers": {
+      "startedAt": "Started At",
+      "jobId": "Job ID",
+      "hostOs": "Host / OS",
+      "service": "Service",
+      "transitionProfile": "Transition Profile",
+      "status": "Status",
+      "duration": "Duration",
+      "probe": "Probe",
+      "terminal": "Terminal"
+    },
+    "emptyState": "No execution audit logs found.",
+    "previousProfileNone": "None",
+    "durationSeconds": "{{value}}s",
+    "probePassed": "PASSED",
+    "probeFailed": "FAILED / NONE",
+    "logsButton": "Logs"
+  }
+}

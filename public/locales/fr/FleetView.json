@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "title": "Flotte & Services",
+    "hostsFleetLabel": "Flotte d'hôtes",
+    "servicesLabel": "Services",
+    "activeLocksLabel": "Verrous actifs"
+  },
+  "refresh": {
+    "intervalAriaLabel": "Intervalle d'actualisation automatique",
+    "intervalTitle": "Configurer l'intervalle d'actualisation automatique en arrière-plan",
+    "autoOff": "Auto : Désactivé",
+    "autoSeconds": "Auto : {{seconds}}s",
+    "buttonAriaLabel": "Actualiser l'état de la flotte",
+    "buttonTitle": "Actualiser l'état de la flotte",
+    "buttonRefreshingTitle": "Actualisation de l'état de la flotte..."
+  },
+  "filterToolbar": {
+    "allHosts": "Tous les hôtes ({{count}})",
+    "windowsWinRm": "Windows / WinRM",
+    "linuxSsh": "Linux / SSH",
+    "searchPlaceholder": "Rechercher hôtes, services ou profils...",
+    "clearSearchAriaLabel": "Effacer la recherche",
+    "clearSearchTitle": "Effacer la recherche"
+  },
+  "emptyState": {
+    "title": "Aucun hôte correspondant trouvé",
+    "subtitle": "Essayez d'effacer votre recherche ou de modifier les filtres"
+  },
+  "hostCard": {
+    "viewDetailsAriaLabel": "Afficher les détails de connexion pour {{hostName}}",
+    "viewDetailsTitle": "Afficher les détails de connexion pour {{hostName}}"
+  },
+  "serviceRow": {
+    "statusLocked": "TRANSITION EN COURS (VERROUILLÉ)",
+    "statusProbeFailed": "ÉCHEC DE LA SONDE",
+    "statusRunning": "RUNNING",
+    "selectProfilePlaceholder": "-- Sélectionner un profil à appliquer --",
+    "actionLocked": "Verrouillé",
+    "actionExecute": "Exécuter",
+    "actionSwitchProfile": "Changer de profil",
+    "liveStreamButton": "Flux en direct",
+    "liveStreamLabel": "{{serviceName}} (Flux actif)"
+  }
+}

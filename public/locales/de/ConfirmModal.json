@@ -1,0 +1,35 @@
+{
+  "header": {
+    "confirmExecution": "Ausführung bestätigen",
+    "confirmSwitch": "Konfigurationswechsel bestätigen",
+    "closeAriaLabel": "Dialog schließen"
+  },
+  "summary": {
+    "targetHost": "Ziel-Host:",
+    "managedService": "Verwalteter Dienst:",
+    "currentProfile": "Aktuelles Profil:",
+    "noneUnassigned": "Keines (Nicht zugewiesen)",
+    "actionPipeline": "Aktions-Pipeline:",
+    "targetProfile": "Zielprofil:"
+  },
+  "details": {
+    "title": "Ausführungsdetails",
+    "stepSummary_one": "{{count}} Schritt · {{seconds}}s",
+    "stepSummary_other": "{{count}} Schritte · {{seconds}}s",
+    "show": "Anzeigen",
+    "hide": "Ausblenden",
+    "verificationProbe": "Verifizierungs-Probe:",
+    "totalTimeout": "Gesamt-Timeout:",
+    "totalTimeoutValue_one": "{{seconds}}s ({{count}} sequenzieller Schritt)",
+    "totalTimeoutValue_other": "{{seconds}}s ({{count}} sequenzielle Schritte)",
+    "sequentialPipelineLabel": "Sequenzielle Skript-Pipeline",
+    "defaultScriptName": "Skript",
+    "stepTimeout": "{{seconds}}s",
+    "failFastTitle": "Fail-Fast-Testmodus aktiv:",
+    "failFastDescription": "Diese Ausführung ist so konfiguriert, dass ein Skript-Exit-Code 1 simuliert wird, um zu demonstrieren, dass die Ausführung sofort abbricht, ohne nachfolgende Schritte oder ein Rollback auszuführen."
+  },
+  "actions": {
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen & Pipeline ausführen"
+  }
+}

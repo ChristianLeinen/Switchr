@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "title": "Flotte & Dienste",
+    "hostsFleetLabel": "Host-Flotte",
+    "servicesLabel": "Dienste",
+    "activeLocksLabel": "Aktive Sperren"
+  },
+  "refresh": {
+    "intervalAriaLabel": "Intervall für automatische Aktualisierung",
+    "intervalTitle": "Intervall für automatische Hintergrundaktualisierung konfigurieren",
+    "autoOff": "Auto: Aus",
+    "autoSeconds": "Auto: {{seconds}}s",
+    "buttonAriaLabel": "Flottenstatus aktualisieren",
+    "buttonTitle": "Flottenstatus aktualisieren",
+    "buttonRefreshingTitle": "Flottenstatus wird aktualisiert..."
+  },
+  "filterToolbar": {
+    "allHosts": "Alle Hosts ({{count}})",
+    "windowsWinRm": "Windows / WinRM",
+    "linuxSsh": "Linux / SSH",
+    "searchPlaceholder": "Hosts, Dienste oder Profile suchen...",
+    "clearSearchAriaLabel": "Suche leeren",
+    "clearSearchTitle": "Suche leeren"
+  },
+  "emptyState": {
+    "title": "Keine passenden Hosts gefunden",
+    "subtitle": "Leeren Sie den Suchbegriff oder passen Sie die Filter an"
+  },
+  "hostCard": {
+    "viewDetailsAriaLabel": "Verbindungsdetails für {{hostName}} anzeigen",
+    "viewDetailsTitle": "Verbindungsdetails für {{hostName}} anzeigen"
+  },
+  "serviceRow": {
+    "statusLocked": "ÜBERGANG (GESPERRT)",
+    "statusProbeFailed": "PROBE FEHLGESCHLAGEN",
+    "statusRunning": "RUNNING",
+    "selectProfilePlaceholder": "-- Profil zur Anwendung auswählen --",
+    "actionLocked": "Gesperrt",
+    "actionExecute": "Ausführen",
+    "actionSwitchProfile": "Profil wechseln",
+    "liveStreamButton": "Live-Stream",
+    "liveStreamLabel": "{{serviceName}} (Aktiver Stream)"
+  }
+}

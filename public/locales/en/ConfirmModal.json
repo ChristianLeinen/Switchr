@@ -1,0 +1,35 @@
+{
+  "header": {
+    "confirmExecution": "Confirm Execution",
+    "confirmSwitch": "Confirm Configuration Switch",
+    "closeAriaLabel": "Close dialog"
+  },
+  "summary": {
+    "targetHost": "Target Host:",
+    "managedService": "Managed Service:",
+    "currentProfile": "Current Profile:",
+    "noneUnassigned": "None (Unassigned)",
+    "actionPipeline": "Action Pipeline:",
+    "targetProfile": "Target Profile:"
+  },
+  "details": {
+    "title": "Execution Details",
+    "stepSummary_one": "{{count}} step · {{seconds}}s",
+    "stepSummary_other": "{{count}} steps · {{seconds}}s",
+    "show": "Show",
+    "hide": "Hide",
+    "verificationProbe": "Verification Probe:",
+    "totalTimeout": "Total Timeout:",
+    "totalTimeoutValue_one": "{{seconds}}s ({{count}} sequential step)",
+    "totalTimeoutValue_other": "{{seconds}}s ({{count}} sequential steps)",
+    "sequentialPipelineLabel": "Sequential Script Pipeline",
+    "defaultScriptName": "Script",
+    "stepTimeout": "{{seconds}}s",
+    "failFastTitle": "Fail-Fast Test Mode Active:",
+    "failFastDescription": "This execution is configured to simulate a script exit code 1 to demonstrate that execution halts immediately without attempting subsequent steps or rollback."
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "confirm": "Confirm & Execute Pipeline"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "loading": "Chargement...",
+  "toasts": {
+    "conflictTitle": "Conflit de verrouillage concurrent (HTTP 409)",
+    "conflictDefaultDetail": "Le service est déjà verrouillé par une tâche active.",
+    "executionErrorTitle": "Erreur d'exécution",
+    "executionErrorDefault": "Impossible de démarrer la tâche de changement de configuration.",
+    "switchSucceededTitle": "Changement de configuration réussi",
+    "switchSucceededRunning": "{{serviceName}} vérifié à l'état RUNNING.",
+    "switchSucceededOnHost": "{{serviceName}} sur {{hostName}} vérifié à l'état RUNNING.",
+    "jobFailedTitle": "Échec de la tâche (Fail-Fast)",
+    "jobFailedDefault": "La sonde de vérification du service ou la transition a échoué.",
+    "jobFailedProbeOrScript": "La sonde de vérification ou le script a échoué.",
+    "abortDispatchedTitle": "Annulation envoyée",
+    "abortDispatchedDetail": "Le signal d'annulation de la tâche {{jobId}} a été envoyé.",
+    "job1DispatchedTitle": "Tâche 1 lancée",
+    "job1DispatchedDetail": "Verrou acquis pour ({{hostId}}, {{serviceId}})",
+    "conflictVerifiedTitle": "Invariant de conflit HTTP 409 vérifié !",
+    "conflictVerifiedDetail": "Changement concurrent rejeté sur ({{hostId}}, {{serviceId}}).",
+    "conflictVerifiedLockHeld": "Changement concurrent rejeté sur ({{hostId}}, {{serviceId}}) : le verrou en mémoire est détenu par {{jobId}}.",
+    "lockActiveTitle": "Verrou actif",
+    "auditResetTitle": "Audit réinitialisé",
+    "auditResetDetail": "L'historique d'audit d'exécution a été effacé.",
+    "dismissAriaLabel": "Fermer la notification"
+  }
+}

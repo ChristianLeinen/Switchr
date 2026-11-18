@@ -1,0 +1,35 @@
+{
+  "header": {
+    "confirmExecution": "Confirmar ejecución",
+    "confirmSwitch": "Confirmar cambio de configuración",
+    "closeAriaLabel": "Cerrar diálogo"
+  },
+  "summary": {
+    "targetHost": "Host de destino:",
+    "managedService": "Servicio gestionado:",
+    "currentProfile": "Perfil actual:",
+    "noneUnassigned": "Ninguno (Sin asignar)",
+    "actionPipeline": "Pipeline de acción:",
+    "targetProfile": "Perfil de destino:"
+  },
+  "details": {
+    "title": "Detalles de ejecución",
+    "stepSummary_one": "{{count}} paso · {{seconds}}s",
+    "stepSummary_other": "{{count}} pasos · {{seconds}}s",
+    "show": "Mostrar",
+    "hide": "Ocultar",
+    "verificationProbe": "Sonda de verificación:",
+    "totalTimeout": "Tiempo máximo total:",
+    "totalTimeoutValue_one": "{{seconds}}s ({{count}} paso secuencial)",
+    "totalTimeoutValue_other": "{{seconds}}s ({{count}} pasos secuenciales)",
+    "sequentialPipelineLabel": "Pipeline secuencial de scripts",
+    "defaultScriptName": "Script",
+    "stepTimeout": "{{seconds}}s",
+    "failFastTitle": "Modo de prueba Fail-Fast activo:",
+    "failFastDescription": "Esta ejecución está configurada para simular un código de salida 1 con el fin de demostrar que la ejecución se detiene de inmediato sin intentar pasos posteriores ni reversión."
+  },
+  "actions": {
+    "cancel": "Cancelar",
+    "confirm": "Confirmar y ejecutar pipeline"
+  }
+}

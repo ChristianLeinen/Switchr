@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ShieldAlert,
   AlertTriangle,
   ArrowRight,
   X,
@@ -8,10 +7,10 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Clock,
-  Layers,
 } from 'lucide-react';
-import { ConfigProfile, getEffectiveScripts, ManagedService, TargetHost } from '../types';
+import { useTranslation } from 'react-i18next';
+import { getEffectiveScripts, ManagedService, TargetHost } from '../types';
+import { formatLocaleNumber } from '../utils/intlFormat';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -32,6 +31,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const { t, i18n } = useTranslation('ConfirmModal');
   const [showExecutionDetails, setShowExecutionDetails] = useState(false);
 
   // Reset accordion state when opening or closing modal
@@ -43,6 +43,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   if (!isOpen || !host || !service) return null;
 
+  const locale = i18n.resolvedLanguage || i18n.language;
   const profile = service.profiles.find((p) => p.name === targetProfileName) || service.profiles[0];
   const currentProfileObj = service.current_profile
     ? service.profiles.find((p) => p.name === service.current_profile)
@@ -55,6 +56,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   const isSingleProfile = service.profiles.length === 1;
   const effectiveScripts = getEffectiveScripts(profile);
   const totalTimeoutSeconds = effectiveScripts.reduce((sum, s) => sum + (s.timeout_seconds || 60), 0);
+  const formattedTotalTimeout = formatLocaleNumber(totalTimeoutSeconds, locale);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
@@ -67,13 +69,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-display font-bold text-slate-900 dark:text-white">
-                {isSingleProfile ? 'Confirm Execution' : 'Confirm Configuration Switch'}
+                {isSingleProfile ? t('header.confirmExecution') : t('header.confirmSwitch')}
               </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            aria-label="Close dialog"
+            aria-label={t('header.closeAriaLabel')}
             className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded transition-colors"
           >
             <X className="w-5 h-5" />
@@ -85,7 +87,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           {/* Transition Summary Grid (Clean & Compact) */}
           <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-3 font-mono text-xs">
             <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-              <span>Target Host:</span>
+              <span>{t('summary.targetHost')}</span>
               <span className="text-slate-900 dark:text-slate-200 font-semibold flex items-center gap-1.5">
                 <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${isWindows ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-amber-100 text-amber-700 dark:bg-orange-950 dark:text-orange-300'}`}>
                   {isWindows ? 'WIN' : 'UNIX'}
@@ -95,22 +97,22 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             </div>
 
             <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
-              <span>Managed Service:</span>
+              <span>{t('summary.managedService')}</span>
               <span className="text-slate-900 dark:text-slate-200 font-semibold">{service.name}</span>
             </div>
 
             {!isSingleProfile && (
               <div className="flex justify-between items-start gap-4 text-slate-500 dark:text-slate-400">
-                <span className="shrink-0">Current Profile:</span>
+                <span className="shrink-0">{t('summary.currentProfile')}</span>
                 <span className={`text-right ${currentProfileDisplay ? 'text-slate-900 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500 italic'}`}>
-                  {currentProfileDisplay || 'None (Unassigned)'}
+                  {currentProfileDisplay || t('summary.noneUnassigned')}
                 </span>
               </div>
             )}
 
             <div className={`flex justify-between items-start gap-4 ${!isSingleProfile ? 'border-t border-slate-200 dark:border-slate-800/80 pt-2' : ''} text-slate-700 dark:text-slate-300`}>
               <span className="text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1 shrink-0">
-                <ArrowRight className="w-3.5 h-3.5" /> {isSingleProfile ? 'Action Pipeline:' : 'Target Profile:'}
+                <ArrowRight className="w-3.5 h-3.5" /> {isSingleProfile ? t('summary.actionPipeline') : t('summary.targetProfile')}
               </span>
               <span className="text-sky-600 dark:text-sky-300 font-bold text-right">{targetProfileDisplay}</span>
             </div>
@@ -130,13 +132,16 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 ) : (
                   <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
                 )}
-                <span>Execution Details</span>
+                <span>{t('details.title')}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                  {effectiveScripts.length} {effectiveScripts.length === 1 ? 'step' : 'steps'} · {totalTimeoutSeconds}s
+                  {t('details.stepSummary', {
+                    count: effectiveScripts.length,
+                    seconds: formattedTotalTimeout,
+                  })}
                 </span>
               </div>
               <span className="text-[11px] text-sky-600 dark:text-sky-400 underline-offset-2 hover:underline">
-                {showExecutionDetails ? 'Hide' : 'Show'}
+                {showExecutionDetails ? t('details.hide') : t('details.show')}
               </span>
             </button>
 
@@ -145,7 +150,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 {/* Verification Probe & Timeout Summary */}
                 <div className="bg-white dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-2 text-xs font-mono">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-slate-500 dark:text-slate-400">
-                    <span className="shrink-0">Verification Probe:</span>
+                    <span className="shrink-0">{t('details.verificationProbe')}</span>
                     <span className="text-slate-800 dark:text-slate-300 font-mono text-[11px] break-all sm:text-right">
                       {isWindows
                         ? `sc query "${service.verification_service_name}"`
@@ -154,9 +159,12 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                   </div>
 
                   <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/60 pt-2">
-                    <span>Total Timeout:</span>
+                    <span>{t('details.totalTimeout')}</span>
                     <span className="text-slate-800 dark:text-slate-300 font-semibold">
-                      {totalTimeoutSeconds}s ({effectiveScripts.length} sequential {effectiveScripts.length === 1 ? 'step' : 'steps'})
+                      {t('details.totalTimeoutValue', {
+                        count: effectiveScripts.length,
+                        seconds: formattedTotalTimeout,
+                      })}
                     </span>
                   </div>
                 </div>
@@ -164,7 +172,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 {/* Numbered Sequential Script Pipeline Preview */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">
-                    Sequential Script Pipeline
+                    {t('details.sequentialPipelineLabel')}
                   </label>
                   <div className="bg-slate-100/90 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-2 font-mono text-xs max-h-48 overflow-y-auto">
                     {effectiveScripts.map((step, idx) => (
@@ -175,8 +183,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                         <span className="text-sky-600 dark:text-sky-400 font-bold select-none">{idx + 1}.</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-slate-900 dark:text-slate-200 font-medium truncate">{step.name || 'Script'}</span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 shrink-0">{step.timeout_seconds || 60}s</span>
+                            <span className="text-slate-900 dark:text-slate-200 font-medium truncate">
+                              {step.name || t('details.defaultScriptName')}
+                            </span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 shrink-0">
+                              {t('details.stepTimeout', {
+                                seconds: formatLocaleNumber(step.timeout_seconds || 60, locale),
+                              })}
+                            </span>
                           </div>
                           <div className="text-[11px] text-slate-600 dark:text-slate-400 font-mono break-all mt-0.5">
                             {step.script_path} {(step.parameters || []).join(' ')}
@@ -192,7 +206,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                   <div className="flex items-start gap-2.5 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/80 rounded-lg text-xs text-rose-700 dark:text-rose-300">
                     <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold">Fail-Fast Test Mode Active:</span> This execution is configured to simulate a script exit code 1 to demonstrate that execution halts immediately without attempting subsequent steps or rollback.
+                      <span className="font-bold">{t('details.failFastTitle')}</span> {t('details.failFastDescription')}
                     </div>
                   </div>
                 )}
@@ -207,14 +221,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
-            Cancel
+            {t('actions.cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="px-4 py-2 text-xs font-medium bg-sky-600 hover:bg-sky-500 text-white rounded-md transition-colors flex items-center gap-1.5 shadow"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Confirm & Execute Pipeline
+            {t('actions.confirm')}
           </button>
         </div>
       </div>

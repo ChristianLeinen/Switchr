@@ -1,0 +1,26 @@
+{
+  "loading": "Wird geladen...",
+  "toasts": {
+    "conflictTitle": "Parallelitäts-Sperrkonflikt (HTTP 409)",
+    "conflictDefaultDetail": "Der Dienst ist bereits durch einen aktiven Auftrag gesperrt.",
+    "executionErrorTitle": "Ausführungsfehler",
+    "executionErrorDefault": "Wechselauftrag konnte nicht gestartet werden.",
+    "switchSucceededTitle": "Konfigurationswechsel erfolgreich",
+    "switchSucceededRunning": "{{serviceName}} wurde als RUNNING verifiziert.",
+    "switchSucceededOnHost": "{{serviceName}} auf {{hostName}} wurde als RUNNING verifiziert.",
+    "jobFailedTitle": "Auftrag fehlgeschlagen (Fail-Fast)",
+    "jobFailedDefault": "Dienst-Probe oder Übergang fehlgeschlagen.",
+    "jobFailedProbeOrScript": "Verifizierungs-Probe oder Skript fehlgeschlagen.",
+    "abortDispatchedTitle": "Abbruch gesendet",
+    "abortDispatchedDetail": "Abbruchsignal für Auftrag {{jobId}} gesendet.",
+    "job1DispatchedTitle": "Auftrag 1 gestartet",
+    "job1DispatchedDetail": "Sperre erworben für ({{hostId}}, {{serviceId}})",
+    "conflictVerifiedTitle": "HTTP 409-Konflikt-Invariante verifiziert!",
+    "conflictVerifiedDetail": "Gleichzeitiger Wechsel auf ({{hostId}}, {{serviceId}}) abgelehnt.",
+    "conflictVerifiedLockHeld": "Gleichzeitiger Wechsel auf ({{hostId}}, {{serviceId}}) abgelehnt: In-Memory-Sperre wird von {{jobId}} gehalten.",
+    "lockActiveTitle": "Sperre aktiv",
+    "auditResetTitle": "Audit zurückgesetzt",
+    "auditResetDetail": "Die Ausführungs-Audit-Historie wurde gelöscht.",
+    "dismissAriaLabel": "Benachrichtigung schließen"
+  }
+}

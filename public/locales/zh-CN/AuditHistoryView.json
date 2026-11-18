@@ -1,0 +1,33 @@
+{
+  "header": {
+    "title": "审计历史",
+    "exportJson": "导出 JSON",
+    "reset": "重置"
+  },
+  "filterToolbar": {
+    "all": "全部 ({{count}})",
+    "statusSuccess": "SUCCESS",
+    "statusFailed": "FAILED",
+    "statusAborted": "ABORTED",
+    "searchPlaceholder": "搜索作业、主机、配置..."
+  },
+  "table": {
+    "headers": {
+      "startedAt": "开始时间",
+      "jobId": "作业 ID",
+      "hostOs": "主机 / OS",
+      "service": "服务",
+      "transitionProfile": "配置切换目标",
+      "status": "状态",
+      "duration": "耗时",
+      "probe": "探针",
+      "terminal": "终端"
+    },
+    "emptyState": "未找到执行审计日志。",
+    "previousProfileNone": "无",
+    "durationSeconds": "{{value}}秒",
+    "probePassed": "PASSED",
+    "probeFailed": "FAILED / NONE",
+    "logsButton": "日志"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "header": {
+    "elapsedSeconds": "{{value}}s"
+  },
+  "actions": {
+    "abortJob": "Interrompre la tâche",
+    "copyLogsTitle": "Copier les logs du terminal",
+    "downloadLogsTitle": "Télécharger le journal d'audit complet",
+    "closeAriaLabel": "Fermer le tiroir terminal"
+  },
+  "subheader": {
+    "statusPrefix": "STATUS :",
+    "exitCodeLabel": "Code de sortie :",
+    "exitCodeRunning": "en cours...",
+    "probeLabel": "Sonde :",
+    "probeVerified": "VERIFIED",
+    "probePending": "en attente...",
+    "probeFailed": "FAILED",
+    "filterPlaceholder": "Filtrer les logs..."
+  },
+  "body": {
+    "emptyFilter": "Aucune ligne de log ne correspond au filtre."
+  },
+  "footer": {
+    "sseChannel": "Canal de flux SSE :",
+    "linesTotal_one": "{{count}} ligne au total",
+    "linesTotal_other": "{{count}} lignes au total"
+  }
+}

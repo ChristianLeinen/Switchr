@@ -1,23 +1,21 @@
-import React, { useRef, useState } from 'react';
+import React, { Suspense, useRef, useState } from 'react';
 import {
   Server,
   Terminal,
-  ShieldCheck,
   Lock,
   ArrowRight,
   Search,
   CheckCircle2,
   AlertTriangle,
   RotateCw,
-  Sliders,
-  Flame,
-  FileText,
   Info,
   Play,
   X,
 } from 'lucide-react';
-import { ManagedService, OSType, TargetHost } from '../types';
+import { useTranslation } from 'react-i18next';
+import { ManagedService, TargetHost } from '../types';
 import { HostDetailsModal } from './HostDetailsModal';
+import { formatLocaleNumber } from '../utils/intlFormat';
 
 interface FleetViewProps {
   hosts: TargetHost[];
@@ -40,6 +38,8 @@ export const FleetView: React.FC<FleetViewProps> = ({
   refreshIntervalMs,
   onChangeRefreshInterval,
 }) => {
+  const { t, i18n } = useTranslation('FleetView');
+  const locale = i18n.resolvedLanguage || i18n.language;
   const [osFilter, setOsFilter] = useState<'all' | 'windows' | 'unix'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, string>>({});
@@ -95,49 +95,61 @@ export const FleetView: React.FC<FleetViewProps> = ({
       {/* Top Banner / Summary Strip */}
       <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 rounded-lg p-5 md:min-h-[72px] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm transition-colors duration-150">
         <div>
-          <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">Fleet & Services</h1>
+          <h1 className="text-xl font-display font-bold text-slate-900 dark:text-white tracking-tight">
+            {t('summary.title')}
+          </h1>
         </div>
 
         <div className="flex items-center gap-6 text-xs text-slate-600 dark:text-slate-400 shrink-0">
           <div>
-            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">Hosts Fleet</div>
-            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">{hosts.length}</div>
+            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">
+              {t('summary.hostsFleetLabel')}
+            </div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">
+              {formatLocaleNumber(hosts.length, locale)}
+            </div>
           </div>
           <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
           <div>
-            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">Services</div>
-            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">{totalServices}</div>
+            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">
+              {t('summary.servicesLabel')}
+            </div>
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white tabular-nums leading-none mt-0.5">
+              {formatLocaleNumber(totalServices, locale)}
+            </div>
           </div>
           <div className="w-px h-7 bg-slate-200 dark:bg-slate-800" />
           <div>
-            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">Active Locks</div>
+            <div className="text-slate-500 font-mono uppercase tracking-wider text-[10px] leading-none">
+              {t('summary.activeLocksLabel')}
+            </div>
             <div className={`text-lg font-mono font-bold tabular-nums leading-none mt-0.5 ${lockedServices > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-              {lockedServices}
+              {formatLocaleNumber(lockedServices, locale)}
             </div>
           </div>
           <div className="flex items-center gap-2">
             <label htmlFor="auto-refresh-interval" className="sr-only">
-              Auto-refresh interval
+              {t('refresh.intervalAriaLabel')}
             </label>
             <select
               id="auto-refresh-interval"
               value={refreshIntervalMs}
               onChange={(e) => onChangeRefreshInterval(Number(e.target.value))}
-              title="Configure automatic background refresh interval"
+              title={t('refresh.intervalTitle')}
               className="text-xs leading-4 font-mono px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700/60 rounded-md focus:outline-none focus:border-sky-500 transition-colors cursor-pointer"
             >
-              <option value={0}>Auto: Off</option>
-              <option value={5000}>Auto: 5s</option>
-              <option value={15000}>Auto: 15s</option>
-              <option value={30000}>Auto: 30s</option>
-              <option value={60000}>Auto: 60s</option>
+              <option value={0}>{t('refresh.autoOff')}</option>
+              <option value={5000}>{t('refresh.autoSeconds', { seconds: 5 })}</option>
+              <option value={15000}>{t('refresh.autoSeconds', { seconds: 15 })}</option>
+              <option value={30000}>{t('refresh.autoSeconds', { seconds: 30 })}</option>
+              <option value={60000}>{t('refresh.autoSeconds', { seconds: 60 })}</option>
             </select>
             <button
               onClick={onRefresh}
               disabled={isRefreshing}
               className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700/60 rounded-md transition-colors disabled:opacity-60"
-              title={isRefreshing ? 'Refreshing fleet states...' : 'Refresh fleet states'}
-              aria-label="Refresh fleet states"
+              title={isRefreshing ? t('refresh.buttonRefreshingTitle') : t('refresh.buttonTitle')}
+              aria-label={t('refresh.buttonAriaLabel')}
             >
               <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-sky-600 dark:text-sky-400' : ''}`} />
             </button>
@@ -156,7 +168,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
           >
-            All Hosts ({hosts.length})
+            {t('filterToolbar.allHosts', { count: hosts.length })}
           </button>
           <button
             onClick={() => setOsFilter('windows')}
@@ -165,7 +177,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
           >
-            Windows / WinRM
+            {t('filterToolbar.windowsWinRm')}
           </button>
           <button
             onClick={() => setOsFilter('unix')}
@@ -174,7 +186,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
           >
-            Linux / SSH
+            {t('filterToolbar.linuxSsh')}
           </button>
         </div>
 
@@ -186,7 +198,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search hosts, services, or profiles..."
+            placeholder={t('filterToolbar.searchPlaceholder')}
             className="w-full pl-9 pr-8 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono shadow-sm transition-colors duration-150"
           />
           {searchQuery.length > 0 && (
@@ -196,8 +208,8 @@ export const FleetView: React.FC<FleetViewProps> = ({
                 setSearchQuery('');
                 searchInputRef.current?.focus();
               }}
-              aria-label="Clear search"
-              title="Clear search"
+              aria-label={t('filterToolbar.clearSearchAriaLabel')}
+              title={t('filterToolbar.clearSearchTitle')}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
             >
               <X className="w-3.5 h-3.5" />
@@ -211,8 +223,8 @@ export const FleetView: React.FC<FleetViewProps> = ({
         {filteredHostEntries.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
             <Server className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
-            <div className="text-sm font-medium text-slate-600 dark:text-slate-400">No matching hosts found</div>
-            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try clearing your search query or switching filters</div>
+            <div className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('emptyState.title')}</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t('emptyState.subtitle')}</div>
           </div>
         ) : (
           filteredHostEntries.map(({ host, visibleServices }) => {
@@ -248,8 +260,8 @@ export const FleetView: React.FC<FleetViewProps> = ({
                   {/* Info Icon Button Opening Details Modal */}
                   <button
                     onClick={() => setSelectedHostForDetails(host)}
-                    aria-label={`View connection details for ${host.name}`}
-                    title={`View connection details for ${host.name}`}
+                    aria-label={t('hostCard.viewDetailsAriaLabel', { hostName: host.name })}
+                    title={t('hostCard.viewDetailsTitle', { hostName: host.name })}
                     className="p-1.5 rounded-md text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
                   >
                     <Info className="w-4 h-4" />
@@ -285,17 +297,17 @@ export const FleetView: React.FC<FleetViewProps> = ({
                               {isLocked ? (
                                 <span className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-600 dark:text-amber-400 font-medium">
                                   <Lock className="w-3 h-3 text-amber-500 dark:text-amber-400 animate-pulse" />
-                                  TRANSITIONING (LOCKED)
+                                  {t('serviceRow.statusLocked')}
                                 </span>
                               ) : service.status === 'ERROR' ? (
                                 <span className="inline-flex items-center gap-1 text-xs font-mono text-rose-600 dark:text-rose-400 font-medium">
                                   <AlertTriangle className="w-3 h-3 text-rose-500 dark:text-rose-400" />
-                                  PROBE FAILED
+                                  {t('serviceRow.statusProbeFailed')}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 text-xs font-mono text-emerald-600 dark:text-emerald-400 font-medium">
                                   <CheckCircle2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
-                                  RUNNING
+                                  {t('serviceRow.statusRunning')}
                                 </span>
                               )}
                             </div>
@@ -323,7 +335,7 @@ export const FleetView: React.FC<FleetViewProps> = ({
                                 >
                                   {!service.current_profile && (
                                     <option value="" disabled>
-                                      -- Select profile to apply --
+                                      {t('serviceRow.selectProfilePlaceholder')}
                                     </option>
                                   )}
                                   {service.profiles.map((p) => (
@@ -353,17 +365,17 @@ export const FleetView: React.FC<FleetViewProps> = ({
                               {isLocked ? (
                                 <>
                                   <Lock className="w-3.5 h-3.5" />
-                                  Locked
+                                  {t('serviceRow.actionLocked')}
                                 </>
                               ) : isSingleProfile ? (
                                 <>
                                   <Play className="w-3.5 h-3.5 fill-current" />
-                                  Execute
+                                  {t('serviceRow.actionExecute')}
                                 </>
                               ) : (
                                 <>
                                   <ArrowRight className="w-3.5 h-3.5" />
-                                  Switch Profile
+                                  {t('serviceRow.actionSwitchProfile')}
                                 </>
                               )}
                             </button>
@@ -371,11 +383,16 @@ export const FleetView: React.FC<FleetViewProps> = ({
                             {/* View Live Stream Button if currently transitioning */}
                             {isLocked && service.active_job_id && (
                               <button
-                                onClick={() => onOpenLiveStream(service.active_job_id!, `${service.name} (Active Stream)`)}
+                                onClick={() =>
+                                  onOpenLiveStream(
+                                    service.active_job_id!,
+                                    t('serviceRow.liveStreamLabel', { serviceName: service.name })
+                                  )
+                                }
                                 className="px-3 py-2 text-xs font-mono text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-950/80 border border-sky-300 dark:border-sky-800/80 rounded-md transition-colors flex items-center gap-1.5 shadow-sm"
                               >
                                 <Terminal className="w-3.5 h-3.5" />
-                                Live Stream
+                                {t('serviceRow.liveStreamButton')}
                               </button>
                             )}
                           </div>
@@ -391,12 +408,14 @@ export const FleetView: React.FC<FleetViewProps> = ({
       </div>
 
       {/* Host Details Popup Modal */}
-      <HostDetailsModal
-        host={selectedHostForDetails}
-        services={services}
-        isOpen={Boolean(selectedHostForDetails)}
-        onClose={() => setSelectedHostForDetails(null)}
-      />
+      <Suspense fallback={null}>
+        <HostDetailsModal
+          host={selectedHostForDetails}
+          services={services}
+          isOpen={Boolean(selectedHostForDetails)}
+          onClose={() => setSelectedHostForDetails(null)}
+        />
+      </Suspense>
     </div>
   );
 };

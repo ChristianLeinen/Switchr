@@ -1,0 +1,26 @@
+{
+  "brand": {
+    "iconAlt": "Switchr アイコン"
+  },
+  "nav": {
+    "ariaLabel": "メインナビゲーション",
+    "fleet": "フリート & サービス",
+    "audit": "監査履歴"
+  },
+  "telemetry": {
+    "locks_one": "{{count}} 件のロック",
+    "locks_other": "{{count}} 件のロック"
+  },
+  "actions": {
+    "testConflictButton": "409 ロックをテスト",
+    "testConflictTitle": "同一サービスに対して同時切り替えを実行し、HTTP 409 競合拒否をテストします"
+  },
+  "language": {
+    "ariaLabel": "表示言語を選択",
+    "title": "表示言語を変更"
+  },
+  "theme": {
+    "switchToLight": "ライトモードに切り替え",
+    "switchToDark": "ダークモードに切り替え"
+  }
+}

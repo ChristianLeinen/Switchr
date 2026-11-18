@@ -1,0 +1,33 @@
+{
+  "header": {
+    "title": "Historique d'audit",
+    "exportJson": "Exporter JSON",
+    "reset": "Réinitialiser"
+  },
+  "filterToolbar": {
+    "all": "Tous ({{count}})",
+    "statusSuccess": "SUCCESS",
+    "statusFailed": "FAILED",
+    "statusAborted": "ABORTED",
+    "searchPlaceholder": "Rechercher tâche, hôte, profil..."
+  },
+  "table": {
+    "headers": {
+      "startedAt": "Démarré le",
+      "jobId": "ID de tâche",
+      "hostOs": "Hôte / OS",
+      "service": "Service",
+      "transitionProfile": "Profil de transition",
+      "status": "Statut",
+      "duration": "Durée",
+      "probe": "Sonde",
+      "terminal": "Terminal"
+    },
+    "emptyState": "Aucun journal d'audit d'exécution trouvé.",
+    "previousProfileNone": "Aucun",
+    "durationSeconds": "{{value}}s",
+    "probePassed": "PASSED",
+    "probeFailed": "FAILED / NONE",
+    "logsButton": "Logs"
+  }
+}

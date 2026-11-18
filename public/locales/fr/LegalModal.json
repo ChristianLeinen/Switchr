@@ -1,0 +1,60 @@
+{
+  "header": {
+    "title": "Centre de conformité et d'informations légales",
+    "subtitle": "Licence open source MIT, avis pour instances auto-hébergées, responsabilité & marques tierces",
+    "closeAriaLabel": "Fermer la boîte de dialogue"
+  },
+  "tabs": {
+    "ariaLabel": "Sections légales",
+    "impressumLabel": "Mentions légales",
+    "impressumShort": "Mentions",
+    "privacyLabel": "Confidentialité",
+    "privacyShort": "Vie privée",
+    "disclaimerLabel": "Clause de non-responsabilité",
+    "disclaimerShort": "Responsabilité",
+    "trademarksLabel": "Licence & Marques",
+    "trademarksShort": "Licence"
+  },
+  "impressum": {
+    "banner": "Attribution du logiciel open source & avis pour déploiements auto-hébergés :",
+    "authorHeading": "Auteur & Dépôt officiel du projet :",
+    "authorLine": "Auteur / Mainteneur : Christian Leinen",
+    "emailLabel": "E-mail :",
+    "websiteLabel": "Site web / Dépôt :",
+    "regionLine": "Allemagne / Union européenne",
+    "operatorHeading": "Responsabilité de l'exploitant d'une instance auto-hébergée :",
+    "operatorBody": "Switchr est distribué en tant que logiciel libre et open source et n'est ni hébergé ni exploité en tant que service centralisé par l'auteur. Toute personne ou organisation déployant et hébergeant cette instance en est seule responsable en tant qu'exploitant, y compris pour le respect des obligations légales ou mentions réglementaires locales applicables (telles que § 5 DDG / § 18 MStV en Allemagne, le cas échéant)."
+  },
+  "privacy": {
+    "banner": "Protection des données et confidentialité pour les déploiements auto-hébergés (RGPD / GDPR) :",
+    "controllerHeading": "1. Responsable du traitement",
+    "controllerBody": "Switchr fonctionnant exclusivement sur une infrastructure auto-hébergée, l'organisation ou la personne exploitant cette instance déployée agit en qualité de responsable du traitement au sens du RGPD. L'auteur du logiciel (Christian Leinen) n'héberge pas cette application et ne reçoit aucune télémétrie, donnée d'utilisation ni journal opérationnel.",
+    "connectionHeading": "2. Collecte et traitement des données de connexion",
+    "connectionBody": "Lors de l'accès à un tableau de bord Switchr auto-hébergé, les journaux de connexion HTTP standard du serveur (tels que l'adresse IP, l'horodatage d'accès et l'agent utilisateur) peuvent être traités localement par l'infrastructure hôte afin de garantir la stabilité du système et la sécurité réseau (base légale : art. 6(1)(f) du RGPD, le cas échéant).",
+    "auditHeading": "3. Journaux d'audit d'orchestration et d'exécution",
+    "auditBody": "Les journaux d'audit et historiques conservés localement par Switchr enregistrent uniquement l'état technique des hôtes, les codes de sortie des scripts distants et les transitions de profil à des fins de maintenance d'infrastructure. Aucun traceur publicitaire, cookie analytique tiers, télémétrie externe ou profilage comportemental n'est intégré au logiciel.",
+    "rightsHeading": "4. Vos droits au titre du RGPD",
+    "rightsBody": "Lorsque le RGPD s'applique, vous pouvez exercer vos droits concernant vos données personnelles — notamment les droits d'accès (art. 15), de rectification (art. 16), d'effacement (art. 17), de limitation du traitement (art. 18), de portabilité (art. 20), d'opposition (art. 21) et d'introduction d'une réclamation auprès d'une autorité de contrôle (art. 77) — directement auprès de l'exploitant de cette instance Switchr."
+  },
+  "disclaimer": {
+    "banner": "Exclusion de garantie et limitation de responsabilité (Licence MIT) :",
+    "asIsHeading": "Logiciel fourni « en l'état » (As Is)",
+    "asIsBody": "Conformément à la licence MIT, Switchr est fourni « en l'état », sans garantie d'aucune sorte, expresse ou implicite, y compris mais sans s'y limiter les garanties de qualité marchande, d'adéquation à un usage particulier et d'absence de contrefaçon. En aucun cas les auteurs ou titulaires des droits d'auteur ne pourront être tenus responsables de toute réclamation, dommage ou autre responsabilité, que ce soit dans le cadre d'une action contractuelle, délictuelle ou autre, découlant du logiciel ou de son utilisation.",
+    "automationHeading": "Automatisation & invariants Fail-Safe",
+    "automationBody": "L'application Switchr exécute des scripts d'automatisation distants et des profils de configuration sur les machines cibles. Toutes les définitions de profil et tous les scripts doivent être rigoureusement vérifiés avant tout déploiement en production. Les auteurs et contributeurs déclinent toute responsabilité en cas d'interruption de service, de perte de données ou d'erreur de configuration résultant des scripts ou configurations exécutés.",
+    "linksHeading": "Liens externes",
+    "linksBody": "Les liens vers des ressources externes (telles que le dépôt du projet sur GitHub) renvoient vers des plateformes tierces dont le contenu et les pratiques de confidentialité relèvent de la responsabilité de leurs exploitants respectifs."
+  },
+  "trademarks": {
+    "banner": "Licence open source MIT, droits d'auteur & marques déposées tierces :",
+    "licenseHeading": "Droits d'auteur & Licence MIT",
+    "licenseBody": "Copyright © {{year}} Christian Leinen. Switchr est un logiciel libre et open source publié sous <license>licence MIT</license>. L'autorisation est accordée gratuitement à toute personne obtenant une copie de ce logiciel et des fichiers de documentation associés d'utiliser, copier, modifier, fusionner, publier, distribuer, sous-licencier et/ou vendre des copies du logiciel, sous réserve des conditions énoncées dans le fichier <link>LICENSE</link> du dépôt officiel.",
+    "thirdPartyHeading": "Marques déposées de tiers",
+    "thirdPartyBody": "Tous les noms de marque et marques déposées mentionnés dans cette application (y compris Windows, WinRM, Microsoft Corporation, Linux, SSH, OpenSSH, Docker, systemd, PowerShell) demeurent soumis sans restriction aux dispositions du droit des marques applicable et aux droits de propriété de leurs titulaires enregistrés.",
+    "thirdPartyNote": "La simple mention de marques déposées n'implique pas qu'elles ne soient pas protégées par des droits de tiers et ne confère aucune licence sur les marques tierces."
+  },
+  "footer": {
+    "mitLabel": "Licence MIT",
+    "closeButton": "Fermer"
+  }
+}

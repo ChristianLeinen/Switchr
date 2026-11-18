@@ -1,0 +1,35 @@
+{
+  "header": {
+    "closeAriaLabel": "Dialog schließen"
+  },
+  "network": {
+    "sectionTitle": "Netzwerk & Remote-Protokoll",
+    "hostIdentifier": "Host-Kennung:",
+    "ipOrHostname": "IP-Adresse / Hostname:",
+    "port": "Port:",
+    "transportLayer": "Transportschicht:",
+    "transportWinRm": "WinRM (WS-Management 5985)",
+    "transportSsh": "Paramiko SSH (Port 22)",
+    "operatingSystem": "Betriebssystem:",
+    "osWindows": "Windows Server",
+    "osUnix": "Linux / Unix"
+  },
+  "services": {
+    "sectionTitle": "Verwaltete Dienste & Laufzeit-Metadaten",
+    "count_one": "{{count}} Dienst",
+    "count_other": "{{count}} Dienste",
+    "statusLocked": "Gesperrt",
+    "statusFailed": "Fehlgeschlagen",
+    "statusRunning": "Läuft",
+    "activeProfile": "Aktives Profil:",
+    "none": "Keines",
+    "serviceType": "Diensttyp:",
+    "probeService": "Probe-Dienst:",
+    "profilePath": "Profilpfad:",
+    "notConfigured": "Nicht konfiguriert"
+  },
+  "footer": {
+    "telemetryLabel": "Switchr Agentenlose Host-Telemetrie",
+    "closeButton": "Schließen"
+  }
+}

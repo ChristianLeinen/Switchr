@@ -1,0 +1,35 @@
+{
+  "header": {
+    "closeAriaLabel": "Cerrar diálogo"
+  },
+  "network": {
+    "sectionTitle": "Red y Protocolo Remoto",
+    "hostIdentifier": "Identificador de Host:",
+    "ipOrHostname": "Dirección IP / Nombre de Host:",
+    "port": "Puerto:",
+    "transportLayer": "Capa de transporte:",
+    "transportWinRm": "WinRM (WS-Management 5985)",
+    "transportSsh": "Paramiko SSH (Port 22)",
+    "operatingSystem": "Sistema operativo:",
+    "osWindows": "Windows Server",
+    "osUnix": "Linux / Unix"
+  },
+  "services": {
+    "sectionTitle": "Servicios Gestionados y Metadatos en Tiempo de Ejecución",
+    "count_one": "{{count}} servicio",
+    "count_other": "{{count}} servicios",
+    "statusLocked": "Bloqueado",
+    "statusFailed": "Fallido",
+    "statusRunning": "En ejecución",
+    "activeProfile": "Perfil activo:",
+    "none": "Ninguno",
+    "serviceType": "Tipo de servicio:",
+    "probeService": "Servicio de sonda:",
+    "profilePath": "Ruta del perfil:",
+    "notConfigured": "No configurado"
+  },
+  "footer": {
+    "telemetryLabel": "Telemetría sin agente de Switchr",
+    "closeButton": "Cerrar"
+  }
+}

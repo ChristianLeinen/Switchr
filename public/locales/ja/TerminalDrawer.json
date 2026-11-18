@@ -1,0 +1,29 @@
+{
+  "header": {
+    "elapsedSeconds": "{{value}}秒"
+  },
+  "actions": {
+    "abortJob": "ジョブを中止",
+    "copyLogsTitle": "ターミナルログをコピー",
+    "downloadLogsTitle": "完全な監査ログをダウンロード",
+    "closeAriaLabel": "ターミナルドロワーを閉じる"
+  },
+  "subheader": {
+    "statusPrefix": "STATUS:",
+    "exitCodeLabel": "終了コード:",
+    "exitCodeRunning": "実行中...",
+    "probeLabel": "プローブ:",
+    "probeVerified": "VERIFIED",
+    "probePending": "待機中...",
+    "probeFailed": "FAILED",
+    "filterPlaceholder": "ログをフィルター..."
+  },
+  "body": {
+    "emptyFilter": "フィルターに一致するログ行がありません。"
+  },
+  "footer": {
+    "sseChannel": "SSE ストリームチャネル:",
+    "linesTotal_one": "合計 {{count}} 行",
+    "linesTotal_other": "合計 {{count}} 行"
+  }
+}

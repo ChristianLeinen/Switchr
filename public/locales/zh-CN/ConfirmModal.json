@@ -1,0 +1,35 @@
+{
+  "header": {
+    "confirmExecution": "确认执行",
+    "confirmSwitch": "确认配置切换",
+    "closeAriaLabel": "关闭对话框"
+  },
+  "summary": {
+    "targetHost": "目标主机:",
+    "managedService": "托管服务:",
+    "currentProfile": "当前配置:",
+    "noneUnassigned": "无 (未分配)",
+    "actionPipeline": "执行流水线:",
+    "targetProfile": "目标配置:"
+  },
+  "details": {
+    "title": "执行详情",
+    "stepSummary_one": "{{count}} 个步骤 · {{seconds}}秒",
+    "stepSummary_other": "{{count}} 个步骤 · {{seconds}}秒",
+    "show": "展开",
+    "hide": "收起",
+    "verificationProbe": "验证探针:",
+    "totalTimeout": "总超时时间:",
+    "totalTimeoutValue_one": "{{seconds}}秒 ({{count}} 个顺序步骤)",
+    "totalTimeoutValue_other": "{{seconds}}秒 ({{count}} 个顺序步骤)",
+    "sequentialPipelineLabel": "顺序脚本流水线",
+    "defaultScriptName": "脚本",
+    "stepTimeout": "{{seconds}}秒",
+    "failFastTitle": "Fail-Fast 测试模式已启用:",
+    "failFastDescription": "此执行已配置为模拟脚本退出代码 1，以演示在发生错误时立即中止执行，而不会继续后续步骤或回滚。"
+  },
+  "actions": {
+    "cancel": "取消",
+    "confirm": "确认并执行流水线"
+  }
+}

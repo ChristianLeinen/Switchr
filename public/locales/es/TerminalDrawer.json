@@ -1,0 +1,29 @@
+{
+  "header": {
+    "elapsedSeconds": "{{value}}s"
+  },
+  "actions": {
+    "abortJob": "Cancelar tarea",
+    "copyLogsTitle": "Copiar registros de terminal",
+    "downloadLogsTitle": "Descargar registro de auditoría completo",
+    "closeAriaLabel": "Cerrar panel de terminal"
+  },
+  "subheader": {
+    "statusPrefix": "STATUS:",
+    "exitCodeLabel": "Código de salida:",
+    "exitCodeRunning": "en ejecución...",
+    "probeLabel": "Sonda:",
+    "probeVerified": "VERIFIED",
+    "probePending": "pendiente...",
+    "probeFailed": "FAILED",
+    "filterPlaceholder": "Filtrar registros..."
+  },
+  "body": {
+    "emptyFilter": "No hay líneas de registro que coincidan con el filtro."
+  },
+  "footer": {
+    "sseChannel": "Canal de flujo SSE:",
+    "linesTotal_one": "{{count}} línea en total",
+    "linesTotal_other": "{{count}} líneas en total"
+  }
+}

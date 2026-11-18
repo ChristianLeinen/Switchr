@@ -1,0 +1,26 @@
+{
+  "brand": {
+    "iconAlt": "Switchr-Symbol"
+  },
+  "nav": {
+    "ariaLabel": "Hauptnavigation",
+    "fleet": "Flotte & Dienste",
+    "audit": "Audit-Historie"
+  },
+  "telemetry": {
+    "locks_one": "{{count}} Sperre",
+    "locks_other": "{{count}} Sperren"
+  },
+  "actions": {
+    "testConflictButton": "409-Sperre testen",
+    "testConflictTitle": "HTTP-409-Konfliktablehnung durch gleichzeitige Profilwechsel auf demselben Dienst testen"
+  },
+  "language": {
+    "ariaLabel": "Sprache der Benutzeroberfläche auswählen",
+    "title": "Anzeigesprache ändern"
+  },
+  "theme": {
+    "switchToLight": "Zum hellen Modus wechseln",
+    "switchToDark": "Zum dunklen Modus wechseln"
+  }
+}

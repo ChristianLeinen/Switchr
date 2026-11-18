@@ -1,0 +1,29 @@
+{
+  "header": {
+    "elapsedSeconds": "{{value}}s"
+  },
+  "actions": {
+    "abortJob": "Abort Job",
+    "copyLogsTitle": "Copy terminal logs",
+    "downloadLogsTitle": "Download full audit log",
+    "closeAriaLabel": "Close terminal drawer"
+  },
+  "subheader": {
+    "statusPrefix": "STATUS:",
+    "exitCodeLabel": "Exit Code:",
+    "exitCodeRunning": "running...",
+    "probeLabel": "Probe:",
+    "probeVerified": "VERIFIED",
+    "probePending": "pending...",
+    "probeFailed": "FAILED",
+    "filterPlaceholder": "Filter logs..."
+  },
+  "body": {
+    "emptyFilter": "No log lines matching filter."
+  },
+  "footer": {
+    "sseChannel": "SSE Stream Channel:",
+    "linesTotal_one": "{{count}} line total",
+    "linesTotal_other": "{{count}} lines total"
+  }
+}

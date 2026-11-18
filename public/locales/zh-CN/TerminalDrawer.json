@@ -1,0 +1,29 @@
+{
+  "header": {
+    "elapsedSeconds": "{{value}}秒"
+  },
+  "actions": {
+    "abortJob": "中止作业",
+    "copyLogsTitle": "复制终端日志",
+    "downloadLogsTitle": "下载完整审计日志",
+    "closeAriaLabel": "关闭终端抽屉"
+  },
+  "subheader": {
+    "statusPrefix": "STATUS:",
+    "exitCodeLabel": "退出代码:",
+    "exitCodeRunning": "运行中...",
+    "probeLabel": "探针:",
+    "probeVerified": "VERIFIED",
+    "probePending": "等待中...",
+    "probeFailed": "FAILED",
+    "filterPlaceholder": "筛选日志..."
+  },
+  "body": {
+    "emptyFilter": "没有匹配筛选条件的日志行。"
+  },
+  "footer": {
+    "sseChannel": "SSE 流通道:",
+    "linesTotal_one": "共 {{count}} 行",
+    "linesTotal_other": "共 {{count}} 行"
+  }
+}

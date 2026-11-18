@@ -1,0 +1,60 @@
+{
+  "header": {
+    "title": "Compliance & Legal Center",
+    "subtitle": "MIT open-source license, self-hosted operator notices, liability & third-party trademarks",
+    "closeAriaLabel": "Close dialog"
+  },
+  "tabs": {
+    "ariaLabel": "Legal Sections",
+    "impressumLabel": "Legal Notice",
+    "impressumShort": "Impressum",
+    "privacyLabel": "Privacy Policy",
+    "privacyShort": "Privacy",
+    "disclaimerLabel": "Disclaimer",
+    "disclaimerShort": "Disclaimer",
+    "trademarksLabel": "License & Trademarks",
+    "trademarksShort": "License"
+  },
+  "impressum": {
+    "banner": "Open-Source Software Attribution & Self-Hosted Deployment Notice:",
+    "authorHeading": "Author & Official Project Repository:",
+    "authorLine": "Author / Maintainer: Christian Leinen",
+    "emailLabel": "Email:",
+    "websiteLabel": "Website / Repository:",
+    "regionLine": "Germany / European Union",
+    "operatorHeading": "Self-Hosted Instance Operator Responsibility:",
+    "operatorBody": "Switchr is distributed as free, open-source software and is not hosted or operated as a central service by the author. Whoever deploys and hosts this instance is solely responsible as its operator, including compliance with any applicable local legal or statutory notice requirements (such as § 5 DDG / § 18 MStV in Germany, where applicable)."
+  },
+  "privacy": {
+    "banner": "Data Protection & Privacy Information for Self-Hosted Deployments (EU GDPR / DSGVO):",
+    "controllerHeading": "1. Data Controller",
+    "controllerBody": "Because Switchr runs entirely on self-hosted infrastructure, the organization or individual operating this deployed instance is the data controller within the meaning of the GDPR. The software author (Christian Leinen) does not host this application and receives no telemetry, usage data, or operational logs from it.",
+    "connectionHeading": "2. Collection and Processing of Connection Data",
+    "connectionBody": "When accessing a self-hosted Switchr dashboard, standard HTTP server connection logs (such as IP address, access timestamp, and user agent) may be processed locally by the host infrastructure to ensure stable system operations and network security (Legal basis: Art. 6(1)(f) GDPR, where applicable).",
+    "auditHeading": "3. Orchestration & Execution Audit Logs",
+    "auditBody": "Audit logs and transaction histories stored locally by Switchr record technical host state, remote script execution exit codes, and profile transition records for infrastructure maintenance purposes. No advertising trackers, third-party analytics cookies, external telemetry, or behavioral profiling are included in the software.",
+    "rightsHeading": "4. Your Rights under GDPR",
+    "rightsBody": "Where the GDPR applies, you may exercise your rights regarding personal data—including access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20), objection (Art. 21), and lodging a complaint with a supervisory authority (Art. 77)—directly with the operator of this Switchr instance."
+  },
+  "disclaimer": {
+    "banner": "Warranty Disclaimer & Limitation of Liability (MIT License):",
+    "asIsHeading": "Software Provided “As Is”",
+    "asIsBody": "In accordance with the MIT License, Switchr is provided “as is”, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.",
+    "automationHeading": "Automation & Fail-Safe Invariants",
+    "automationBody": "The Switchr application executes remote automation scripts and configuration profiles on target machines. All profile definitions and scripts must be thoroughly verified before deployment in production environments. Authors and contributors assume no liability for service downtime, data loss, or misconfigurations resulting from executed scripts or configurations.",
+    "linksHeading": "External Links",
+    "linksBody": "Links to external resources (such as the project repository on GitHub) point to third-party platforms whose content and privacy practices are governed by their respective operators."
+  },
+  "trademarks": {
+    "banner": "MIT Open-Source License, Copyright & Third-Party Trademarks Notice:",
+    "licenseHeading": "Copyright & MIT License",
+    "licenseBody": "Copyright © {{year}} Christian Leinen. Switchr is free and open-source software released under the <license>MIT License</license>. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the conditions set forth in the <link>LICENSE</link> file in the official repository.",
+    "thirdPartyHeading": "Third-Party Trademarks",
+    "thirdPartyBody": "All brand names and trademarks mentioned within this application (including Windows, WinRM, Microsoft Corporation, Linux, SSH, OpenSSH, Docker, systemd, PowerShell) are subject without restriction to the provisions of the respective trademark law and the ownership rights of their registered holders.",
+    "thirdPartyNote": "The mere mentioning of trademarks does not imply that they are not protected by third-party rights, nor does it grant any license over third-party trademarks."
+  },
+  "footer": {
+    "mitLabel": "MIT License",
+    "closeButton": "Close"
+  }
+}

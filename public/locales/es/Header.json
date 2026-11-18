@@ -1,0 +1,26 @@
+{
+  "brand": {
+    "iconAlt": "Icono de Switchr"
+  },
+  "nav": {
+    "ariaLabel": "Navegación principal",
+    "fleet": "Flota y Servicios",
+    "audit": "Historial de Auditoría"
+  },
+  "telemetry": {
+    "locks_one": "{{count}} bloqueo",
+    "locks_other": "{{count}} bloqueos"
+  },
+  "actions": {
+    "testConflictButton": "Probar bloqueo 409",
+    "testConflictTitle": "Probar el rechazo por conflicto HTTP 409 lanzando cambios concurrentes en el mismo servicio"
+  },
+  "language": {
+    "ariaLabel": "Seleccionar idioma de la interfaz",
+    "title": "Cambiar idioma de visualización"
+  },
+  "theme": {
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro"
+  }
+}

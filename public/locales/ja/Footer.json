@@ -1,0 +1,13 @@
+{
+  "brand": {
+    "copyright": "© {{year}} Christian Leinen",
+    "engineeredInEu": "欧州連合 (EU) で開発"
+  },
+  "nav": {
+    "ariaLabel": "法的情報",
+    "legalNotice": "法的表記",
+    "privacyPolicy": "プライバシーポリシー",
+    "disclaimer": "免責事項",
+    "licenseTrademarks": "ライセンス & 商標"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "brand": {
+    "copyright": "© {{year}} Christian Leinen",
+    "engineeredInEu": "Entwickelt in der Europäischen Union"
+  },
+  "nav": {
+    "ariaLabel": "Rechtliche Hinweise",
+    "legalNotice": "Impressum",
+    "privacyPolicy": "Datenschutz",
+    "disclaimer": "Haftungsausschluss",
+    "licenseTrademarks": "Lizenz & Markenrechte"
+  }
+}

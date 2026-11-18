@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "title": "Flota y Servicios",
+    "hostsFleetLabel": "Flota de Hosts",
+    "servicesLabel": "Servicios",
+    "activeLocksLabel": "Bloqueos Activos"
+  },
+  "refresh": {
+    "intervalAriaLabel": "Intervalo de actualización automática",
+    "intervalTitle": "Configurar el intervalo de actualización automática en segundo plano",
+    "autoOff": "Auto: Desactivado",
+    "autoSeconds": "Auto: {{seconds}}s",
+    "buttonAriaLabel": "Actualizar estados de la flota",
+    "buttonTitle": "Actualizar estados de la flota",
+    "buttonRefreshingTitle": "Actualizando estados de la flota..."
+  },
+  "filterToolbar": {
+    "allHosts": "Todos los hosts ({{count}})",
+    "windowsWinRm": "Windows / WinRM",
+    "linuxSsh": "Linux / SSH",
+    "searchPlaceholder": "Buscar hosts, servicios o perfiles...",
+    "clearSearchAriaLabel": "Limpiar búsqueda",
+    "clearSearchTitle": "Limpiar búsqueda"
+  },
+  "emptyState": {
+    "title": "No se encontraron hosts coincidentes",
+    "subtitle": "Pruebe a borrar la búsqueda o cambiar los filtros"
+  },
+  "hostCard": {
+    "viewDetailsAriaLabel": "Ver detalles de conexión de {{hostName}}",
+    "viewDetailsTitle": "Ver detalles de conexión de {{hostName}}"
+  },
+  "serviceRow": {
+    "statusLocked": "EN TRANSICIÓN (BLOQUEADO)",
+    "statusProbeFailed": "SONDA FALLIDA",
+    "statusRunning": "RUNNING",
+    "selectProfilePlaceholder": "-- Seleccione el perfil a aplicar --",
+    "actionLocked": "Bloqueado",
+    "actionExecute": "Ejecutar",
+    "actionSwitchProfile": "Cambiar perfil",
+    "liveStreamButton": "Flujo en vivo",
+    "liveStreamLabel": "{{serviceName}} (Flujo activo)"
+  }
+}

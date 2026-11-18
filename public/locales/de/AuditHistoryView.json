@@ -1,0 +1,33 @@
+{
+  "header": {
+    "title": "Audit-Historie",
+    "exportJson": "JSON exportieren",
+    "reset": "Zurücksetzen"
+  },
+  "filterToolbar": {
+    "all": "Alle ({{count}})",
+    "statusSuccess": "SUCCESS",
+    "statusFailed": "FAILED",
+    "statusAborted": "ABORTED",
+    "searchPlaceholder": "Auftrag, Host, Profil suchen..."
+  },
+  "table": {
+    "headers": {
+      "startedAt": "Gestartet am",
+      "jobId": "Auftrags-ID",
+      "hostOs": "Host / OS",
+      "service": "Dienst",
+      "transitionProfile": "Zielprofil-Übergang",
+      "status": "Status",
+      "duration": "Dauer",
+      "probe": "Probe",
+      "terminal": "Terminal"
+    },
+    "emptyState": "Keine Ausführungs-Audit-Logs gefunden.",
+    "previousProfileNone": "Keines",
+    "durationSeconds": "{{value}}s",
+    "probePassed": "PASSED",
+    "probeFailed": "FAILED / NONE",
+    "logsButton": "Logs"
+  }
+}

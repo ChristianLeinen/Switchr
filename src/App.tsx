@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Header,
 } from './components/Header';
@@ -32,6 +33,7 @@ function loadStoredRefreshInterval(): number {
 }
 
 export default function App() {
+  const { t } = useTranslation('App');
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'fleet' | 'audit'>('fleet');
   const [hosts, setHosts] = useState<TargetHost[]>([]);
@@ -240,8 +242,8 @@ export default function App() {
         const err = await res.json();
         showToast(
           'warning',
-          'Concurrency Lock Conflict (HTTP 409)',
-          err.detail || 'Service is already locked by an active job.'
+          t('toasts.conflictTitle'),
+          err.detail || t('toasts.conflictDefaultDetail')
         );
         refreshState();
         return;
@@ -286,11 +288,11 @@ export default function App() {
       if (err.status === 409 || err.message?.includes('409')) {
         showToast(
           'warning',
-          'Concurrency Lock Conflict (HTTP 409)',
-          err.message || 'Service is already locked by an active job.'
+          t('toasts.conflictTitle'),
+          err.message || t('toasts.conflictDefaultDetail')
         );
       } else {
-        showToast('error', 'Execution Error', err.message || 'Failed to start switch job.');
+        showToast('error', t('toasts.executionErrorTitle'), err.message || t('toasts.executionErrorDefault'));
       }
     }
   };
@@ -341,9 +343,9 @@ export default function App() {
       eventSource.close();
       refreshState();
       if (isSuccess) {
-        showToast('success', 'Configuration Switch Succeeded', `${job.service_name} verified RUNNING.`);
+        showToast('success', t('toasts.switchSucceededTitle'), t('toasts.switchSucceededRunning', { serviceName: job.service_name }));
       } else {
-        showToast('error', 'Job Failed (Fail-Fast)', 'Service probe or transition failed.');
+        showToast('error', t('toasts.jobFailedTitle'), t('toasts.jobFailedDefault'));
       }
     });
 
@@ -373,14 +375,14 @@ export default function App() {
         if (finalJob.status === 'SUCCESS') {
           showToast(
             'success',
-            'Configuration Switch Succeeded',
-            `${finalJob.service_name} on ${finalJob.host_name} verified RUNNING.`
+            t('toasts.switchSucceededTitle'),
+            t('toasts.switchSucceededOnHost', { serviceName: finalJob.service_name, hostName: finalJob.host_name })
           );
         } else if (finalJob.status === 'FAILED') {
           showToast(
             'error',
-            'Job Failed (Fail-Fast)',
-            finalJob.error_summary || 'Verification probe or script failed.'
+            t('toasts.jobFailedTitle'),
+            finalJob.error_summary || t('toasts.jobFailedProbeOrScript')
           );
         }
       }
@@ -420,7 +422,7 @@ export default function App() {
     }
     orchestratorService.abortJob(jobId);
     refreshState();
-    showToast('warning', 'Abort Dispatched', `Job ${jobId} cancellation signal sent.`);
+    showToast('warning', t('toasts.abortDispatchedTitle'), t('toasts.abortDispatchedDetail', { jobId }));
   };
 
   // Demo tool: trigger 409 Conflict test
@@ -442,8 +444,8 @@ export default function App() {
       });
 
       if (res1.ok) {
-        const d1 = await res1.json();
-        showToast('warning', 'Job 1 Dispatched', `Acquired lock for (${finHost.id}, ${finService.id})`);
+        await res1.json();
+        showToast('warning', t('toasts.job1DispatchedTitle'), t('toasts.job1DispatchedDetail', { hostId: finHost.id, serviceId: finService.id }));
         refreshState();
 
         // 2. Immediately attempt concurrent switch on same service to trigger 409 Conflict
@@ -462,8 +464,8 @@ export default function App() {
             const err = await res2.json();
             showToast(
               'warning',
-              'HTTP 409 Conflict Invariant Verified!',
-              err.detail || `Rejected concurrent switch on (${finHost.id}, ${finService.id}).`
+              t('toasts.conflictVerifiedTitle'),
+              err.detail || t('toasts.conflictVerifiedDetail', { hostId: finHost.id, serviceId: finService.id })
             );
           }
         }, 300);
@@ -492,13 +494,13 @@ export default function App() {
         } catch (err: any) {
           showToast(
             'warning',
-            'HTTP 409 Conflict Invariant Verified!',
-            `Rejected concurrent switch on (${finHost.id}, ${finService.id}): In-memory lock is held by ${job1.job_id}.`
+            t('toasts.conflictVerifiedTitle'),
+            t('toasts.conflictVerifiedLockHeld', { hostId: finHost.id, serviceId: finService.id, jobId: job1.job_id })
           );
         }
       }, 300);
     } catch (e: any) {
-      showToast('warning', 'Lock Active', e.message);
+      showToast('warning', t('toasts.lockActiveTitle'), e.message);
     }
   };
 
@@ -512,7 +514,7 @@ export default function App() {
     orchestratorService.clearAuditHistory();
     setAuditHistory([]);
     await refreshState();
-    showToast('success', 'Audit Reset', 'Execution audit history has been cleared.');
+    showToast('success', t('toasts.auditResetTitle'), t('toasts.auditResetDetail'));
   };
 
   return (
@@ -551,6 +553,7 @@ export default function App() {
 
             <button
               onClick={() => setToastMessage(null)}
+              aria-label={t('toasts.dismissAriaLabel')}
               className="text-slate-400 hover:text-white p-1 rounded transition-colors"
             >
               <X className="w-4 h-4" />
@@ -575,14 +578,16 @@ export default function App() {
         )}
 
         {activeTab === 'audit' && (
-          <AuditHistoryView
-            history={auditHistory}
-            onOpenLog={(job) => {
-              setActiveJob(job);
-              setIsDrawerOpen(true);
-            }}
-            onClearHistory={handleClearHistory}
-          />
+          <Suspense fallback={<div className="py-12 text-center text-xs font-mono text-slate-500 dark:text-slate-400">{t('loading')}</div>}>
+            <AuditHistoryView
+              history={auditHistory}
+              onOpenLog={(job) => {
+                setActiveJob(job);
+                setIsDrawerOpen(true);
+              }}
+              onClearHistory={handleClearHistory}
+            />
+          </Suspense>
         )}
       </main>
 
@@ -590,29 +595,35 @@ export default function App() {
       <Footer onOpenLegal={(type) => setActiveLegalModal(type)} />
 
       {/* Legal Popups / Modal */}
-      <LegalModal
-        type={activeLegalModal}
-        onClose={() => setActiveLegalModal(null)}
-      />
+      <Suspense fallback={null}>
+        <LegalModal
+          type={activeLegalModal}
+          onClose={() => setActiveLegalModal(null)}
+        />
+      </Suspense>
 
       {/* Profile Switch Confirmation Modal */}
-      <ConfirmModal
-        isOpen={isModalOpen}
-        host={modalHost}
-        service={modalService}
-        targetProfileName={modalTargetProfile}
-        simulateFailure={modalSimulateFailure}
-        onConfirm={handleConfirmSwitch}
-        onClose={() => setIsModalOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <ConfirmModal
+          isOpen={isModalOpen}
+          host={modalHost}
+          service={modalService}
+          targetProfileName={modalTargetProfile}
+          simulateFailure={modalSimulateFailure}
+          onConfirm={handleConfirmSwitch}
+          onClose={() => setIsModalOpen(false)}
+        />
+      </Suspense>
 
       {/* Live Terminal Drawer */}
-      <TerminalDrawer
-        job={activeJob}
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        onAbort={handleAbortJob}
-      />
+      <Suspense fallback={null}>
+        <TerminalDrawer
+          job={activeJob}
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          onAbort={handleAbortJob}
+        />
+      </Suspense>
     </div>
   );
 }

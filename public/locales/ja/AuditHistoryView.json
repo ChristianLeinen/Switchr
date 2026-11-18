@@ -1,0 +1,33 @@
+{
+  "header": {
+    "title": "監査履歴",
+    "exportJson": "JSON をエクスポート",
+    "reset": "リセット"
+  },
+  "filterToolbar": {
+    "all": "すべて ({{count}})",
+    "statusSuccess": "SUCCESS",
+    "statusFailed": "FAILED",
+    "statusAborted": "ABORTED",
+    "searchPlaceholder": "ジョブ、ホスト、プロファイルを検索..."
+  },
+  "table": {
+    "headers": {
+      "startedAt": "開始日時",
+      "jobId": "ジョブ ID",
+      "hostOs": "ホスト / OS",
+      "service": "サービス",
+      "transitionProfile": "プロファイル遷移",
+      "status": "ステータス",
+      "duration": "所要時間",
+      "probe": "プローブ",
+      "terminal": "ターミナル"
+    },
+    "emptyState": "実行監査ログが見つかりません。",
+    "previousProfileNone": "なし",
+    "durationSeconds": "{{value}}秒",
+    "probePassed": "PASSED",
+    "probeFailed": "FAILED / NONE",
+    "logsButton": "ログ"
+  }
+}

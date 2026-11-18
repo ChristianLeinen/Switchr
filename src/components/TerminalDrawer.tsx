@@ -5,13 +5,12 @@ import {
   Download,
   Terminal,
   Search,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
   Copy,
   Check,
 } from 'lucide-react';
-import { JobRecord, LogLine } from '../types';
+import { useTranslation } from 'react-i18next';
+import { JobRecord } from '../types';
+import { formatLocaleNumber } from '../utils/intlFormat';
 
 interface TerminalDrawerProps {
   job: JobRecord | null;
@@ -26,6 +25,7 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
   onClose,
   onAbort,
 }) => {
+  const { t, i18n } = useTranslation('TerminalDrawer');
   const [filterText, setFilterText] = useState('');
   const [copied, setCopied] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -57,10 +57,10 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
 
   if (!isOpen || !job) return null;
 
+  const locale = i18n.resolvedLanguage || i18n.language;
   const isRunning = job.status === 'RUNNING';
   const isSuccess = job.status === 'SUCCESS';
   const isFailed = job.status === 'FAILED';
-  const isAborted = job.status === 'ABORTED';
 
   const filteredLogs = job.logs.filter((line) => {
     if (!filterText.trim()) return true;
@@ -128,7 +128,9 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
                 <span aria-hidden="true">·</span>
                 <span className="text-sky-300">{job.target_profile}</span>
                 <span aria-hidden="true">·</span>
-                <span className="tabular-nums text-slate-300">{elapsedSeconds}s</span>
+                <span className="tabular-nums text-slate-300">
+                  {t('header.elapsedSeconds', { value: formatLocaleNumber(elapsedSeconds, locale) })}
+                </span>
               </div>
             </div>
           </div>
@@ -140,13 +142,14 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
                 className="px-3 py-1.5 text-xs font-mono bg-rose-950/80 hover:bg-rose-900 border border-rose-800/80 text-rose-300 rounded transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <Square className="w-3 h-3 fill-rose-300" />
-                Abort Job
+                {t('actions.abortJob')}
               </button>
             )}
 
             <button
               onClick={handleCopyLogs}
-              title="Copy terminal logs"
+              title={t('actions.copyLogsTitle')}
+              aria-label={t('actions.copyLogsTitle')}
               className="p-1.5 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded transition-colors"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -154,7 +157,8 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
 
             <button
               onClick={handleDownloadLogs}
-              title="Download full audit log"
+              title={t('actions.downloadLogsTitle')}
+              aria-label={t('actions.downloadLogsTitle')}
               className="p-1.5 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded transition-colors"
             >
               <Download className="w-4 h-4" />
@@ -162,6 +166,7 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
 
             <button
               onClick={onClose}
+              aria-label={t('actions.closeAriaLabel')}
               className="p-1.5 text-slate-400 hover:text-white transition-colors ml-1"
             >
               <X className="w-5 h-5" />
@@ -183,18 +188,20 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
                   : 'text-slate-400'
               }`}
             >
-              STATUS: {job.status}
+              {t('subheader.statusPrefix')} {job.status}
             </span>
             <span className="text-slate-600">|</span>
-            <span className="text-slate-400">Exit Code: {job.exit_code ?? 'running...'}</span>
+            <span className="text-slate-400">
+              {t('subheader.exitCodeLabel')} {job.exit_code ?? t('subheader.exitCodeRunning')}
+            </span>
             <span className="text-slate-600">|</span>
             <span className="text-slate-400">
-              Probe:{' '}
+              {t('subheader.probeLabel')}{' '}
               {job.verification_passed || isSuccess || job.logs?.some((l) => l.text.includes('[✓] PROBE VERIFIED'))
-                ? 'VERIFIED'
+                ? t('subheader.probeVerified')
                 : isRunning
-                ? 'pending...'
-                : 'FAILED'}
+                ? t('subheader.probePending')
+                : t('subheader.probeFailed')}
             </span>
           </div>
 
@@ -204,7 +211,7 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
               type="text"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              placeholder="Filter logs..."
+              placeholder={t('subheader.filterPlaceholder')}
               className="w-full pl-7 pr-2 py-1 text-[11px] bg-slate-900 border border-slate-800 rounded text-slate-300 focus:outline-none focus:border-sky-500"
             />
           </div>
@@ -217,7 +224,7 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
         >
           {filteredLogs.length === 0 ? (
             <div className="text-slate-600 italic py-6 text-center">
-              No log lines matching filter.
+              {t('body.emptyFilter')}
             </div>
           ) : (
             filteredLogs.map((line) => {
@@ -246,9 +253,9 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({
         <div className="px-5 py-2.5 bg-[#0c1220] border-t border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
           <div className="flex items-center gap-2">
             <Terminal className="w-3.5 h-3.5 text-sky-400" />
-            <span>SSE Stream Channel: <code className="text-sky-300">/api/jobs/{job.job_id}/stream</code></span>
+            <span>{t('footer.sseChannel')} <code className="text-sky-300">/api/jobs/{job.job_id}/stream</code></span>
           </div>
-          <div className="tabular-nums">{job.logs.length} lines total</div>
+          <div className="tabular-nums">{t('footer.linesTotal', { count: job.logs.length })}</div>
         </div>
       </div>
     </div>

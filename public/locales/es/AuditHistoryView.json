@@ -1,0 +1,33 @@
+{
+  "header": {
+    "title": "Historial de Auditoría",
+    "exportJson": "Exportar JSON",
+    "reset": "Restablecer"
+  },
+  "filterToolbar": {
+    "all": "Todos ({{count}})",
+    "statusSuccess": "SUCCESS",
+    "statusFailed": "FAILED",
+    "statusAborted": "ABORTED",
+    "searchPlaceholder": "Buscar tarea, host, perfil..."
+  },
+  "table": {
+    "headers": {
+      "startedAt": "Iniciado el",
+      "jobId": "ID de Tarea",
+      "hostOs": "Host / OS",
+      "service": "Servicio",
+      "transitionProfile": "Transición de Perfil",
+      "status": "Estado",
+      "duration": "Duración",
+      "probe": "Sonda",
+      "terminal": "Terminal"
+    },
+    "emptyState": "No se encontraron registros de auditoría de ejecución.",
+    "previousProfileNone": "Ninguno",
+    "durationSeconds": "{{value}}s",
+    "probePassed": "PASSED",
+    "probeFailed": "FAILED / NONE",
+    "logsButton": "Logs"
+  }
+}

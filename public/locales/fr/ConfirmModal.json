@@ -1,0 +1,35 @@
+{
+  "header": {
+    "confirmExecution": "Confirmer l'exécution",
+    "confirmSwitch": "Confirmer le changement de configuration",
+    "closeAriaLabel": "Fermer la boîte de dialogue"
+  },
+  "summary": {
+    "targetHost": "Hôte cible :",
+    "managedService": "Service géré :",
+    "currentProfile": "Profil actuel :",
+    "noneUnassigned": "Aucun (Non attribué)",
+    "actionPipeline": "Pipeline d'action :",
+    "targetProfile": "Profil cible :"
+  },
+  "details": {
+    "title": "Détails d'exécution",
+    "stepSummary_one": "{{count}} étape · {{seconds}}s",
+    "stepSummary_other": "{{count}} étapes · {{seconds}}s",
+    "show": "Afficher",
+    "hide": "Masquer",
+    "verificationProbe": "Sonde de vérification :",
+    "totalTimeout": "Délai d'expiration total :",
+    "totalTimeoutValue_one": "{{seconds}}s ({{count}} étape séquentielle)",
+    "totalTimeoutValue_other": "{{seconds}}s ({{count}} étapes séquentielles)",
+    "sequentialPipelineLabel": "Pipeline séquentiel de scripts",
+    "defaultScriptName": "Script",
+    "stepTimeout": "{{seconds}}s",
+    "failFastTitle": "Mode test Fail-Fast actif :",
+    "failFastDescription": "Cette exécution est configurée pour simuler un code de sortie 1 afin de démontrer que l'exécution s'interrompt immédiatement sans poursuivre les étapes suivantes ni effectuer de retour arrière."
+  },
+  "actions": {
+    "cancel": "Annuler",
+    "confirm": "Confirmer et exécuter le pipeline"
+  }
+}

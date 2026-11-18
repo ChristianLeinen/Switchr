@@ -1,0 +1,60 @@
+{
+  "header": {
+    "title": "合规与法律中心",
+    "subtitle": "MIT 开源许可证、自托管运营方声明、责任限制与第三方商标",
+    "closeAriaLabel": "关闭对话框"
+  },
+  "tabs": {
+    "ariaLabel": "法律条款栏目",
+    "impressumLabel": "法律声明",
+    "impressumShort": "声明",
+    "privacyLabel": "隐私政策",
+    "privacyShort": "隐私",
+    "disclaimerLabel": "免责声明",
+    "disclaimerShort": "免责",
+    "trademarksLabel": "许可与商标",
+    "trademarksShort": "许可"
+  },
+  "impressum": {
+    "banner": "开源软件署名与自托管部署声明:",
+    "authorHeading": "作者与官方项目仓库:",
+    "authorLine": "作者 / 维护者: Christian Leinen",
+    "emailLabel": "电子邮箱:",
+    "websiteLabel": "官方网站 / 代码仓库:",
+    "regionLine": "德国 / 欧盟",
+    "operatorHeading": "自托管实例运营方责任:",
+    "operatorBody": "Switchr 作为免费开源软件分发，作者不将其作为中心化服务进行托管或运营。部署并托管此实例的组织或个人作为唯一运营方承担全部责任，包括遵守适用的地方法律或法定公告要求（如适用时的德国 DDG 第5条 / MStV 第18条）。"
+  },
+  "privacy": {
+    "banner": "自托管部署数据保护与隐私说明 (EU GDPR / DSGVO):",
+    "controllerHeading": "1. 数据控制者",
+    "controllerBody": "由于 Switchr 完全运行于自托管基础设施之上，运营此部署实例的组织或个人即为 GDPR 意义上的数据控制者。软件作者（Christian Leinen）不托管此应用程序，也不接收任何遥测数据、使用数据或运行日志。",
+    "connectionHeading": "2. 连接数据的收集与处理",
+    "connectionBody": "访问自托管 Switchr 控制台时，主机基础设施可能会在本地处理标准 HTTP 服务器连接日志（如 IP 地址、访问时间戳和 User-Agent），以确保系统稳定运行与网络安全（法律依据：如适用，GDPR 第6条第1款(f)项）。",
+    "auditHeading": "3. 编排与执行审计日志",
+    "auditBody": "Switchr 在本地存储的审计日志和事务历史仅记录用于基础设施维护的技术主机状态、远程脚本执行退出代码以及配置切换记录。本软件不包含任何广告追踪器、第三方分析 Cookie、外部遥测或行为分析功能。",
+    "rightsHeading": "4. 您在 GDPR 下的权利",
+    "rightsBody": "在 GDPR 适用范围内，您可以直接向本 Switchr 实例的运营方行使有关个人数据的权利，包括访问权（第15条）、更正权（第16条）、删除权（第17条）、限制处理权（第18条）、数据可携权（第20条）、反对权（第21条）以及向监管机构投诉的权利（第77条）。"
+  },
+  "disclaimer": {
+    "banner": "免责声明与责任限制 (MIT 许可证):",
+    "asIsHeading": "软件按“原样”提供 (As Is)",
+    "asIsBody": "根据 MIT 许可证，Switchr 按“原样”提供，不附带任何明示或暗示的担保，包括但不限于适销性、特定用途适用性及不侵权的担保。在任何情况下，作者或版权持有人均不对因本软件或使用本软件而产生的任何索赔、损害或其他责任承担赔偿责任，无论是合同诉讼、侵权诉讼还是其他诉讼。",
+    "automationHeading": "自动化与 Fail-Safe 不变量",
+    "automationBody": "Switchr 应用程序会在目标机器上执行远程自动化脚本和配置文件。所有配置定义和脚本在部署到生产环境前都必须经过充分验证。作者与贡献者不对因执行脚本或配置而导致的服务中断、数据丢失或配置错误承担任何责任。",
+    "linksHeading": "外部链接",
+    "linksBody": "指向外部资源（如 GitHub 上的项目仓库）的链接均指向第三方平台，其内容与隐私实践由各自运营方负责。"
+  },
+  "trademarks": {
+    "banner": "MIT 开源许可证、版权与第三方商标声明:",
+    "licenseHeading": "版权与 MIT 许可证",
+    "licenseBody": "Copyright © {{year}} Christian Leinen. Switchr 是基于 <license>MIT 许可证</license> 发布的自由开源软件。特此免费授予任何获得本软件及相关文档文件副本的人员使用、复制、修改、合并、发布、分发、再许可和/或销售本软件副本的权利，但须遵守官方仓库中 <link>LICENSE</link> 文件规定的条款。",
+    "thirdPartyHeading": "第三方商标",
+    "thirdPartyBody": "本应用程序中提及的所有品牌名称和商标（包括 Windows、WinRM、Microsoft Corporation、Linux、SSH、OpenSSH、Docker、systemd、PowerShell）均不受限制地受各自适用商标法规定及其注册持有人所有权的约束。",
+    "thirdPartyNote": "仅提及商标并不意味着它们不受第三方权利保护，也不代表授予任何第三方商标许可。"
+  },
+  "footer": {
+    "mitLabel": "MIT 许可证",
+    "closeButton": "关闭"
+  }
+}

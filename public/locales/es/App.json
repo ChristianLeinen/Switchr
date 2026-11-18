@@ -1,0 +1,26 @@
+{
+  "loading": "Cargando...",
+  "toasts": {
+    "conflictTitle": "Conflicto de bloqueo concurrente (HTTP 409)",
+    "conflictDefaultDetail": "El servicio ya se encuentra bloqueado por una tarea activa.",
+    "executionErrorTitle": "Error de ejecución",
+    "executionErrorDefault": "No se pudo iniciar la tarea de cambio de configuración.",
+    "switchSucceededTitle": "Cambio de configuración completado",
+    "switchSucceededRunning": "{{serviceName}} verificado en estado RUNNING.",
+    "switchSucceededOnHost": "{{serviceName}} en {{hostName}} verificado en estado RUNNING.",
+    "jobFailedTitle": "Error en la tarea (Fail-Fast)",
+    "jobFailedDefault": "La sonda de verificación del servicio o la transición ha fallado.",
+    "jobFailedProbeOrScript": "La sonda de verificación o el script han fallado.",
+    "abortDispatchedTitle": "Cancelación enviada",
+    "abortDispatchedDetail": "Se envió la señal de cancelación para la tarea {{jobId}}.",
+    "job1DispatchedTitle": "Tarea 1 iniciada",
+    "job1DispatchedDetail": "Bloqueo adquirido para ({{hostId}}, {{serviceId}})",
+    "conflictVerifiedTitle": "¡Invariante de conflicto HTTP 409 verificada!",
+    "conflictVerifiedDetail": "Se rechazó el cambio concurrente en ({{hostId}}, {{serviceId}}).",
+    "conflictVerifiedLockHeld": "Se rechazó el cambio concurrente en ({{hostId}}, {{serviceId}}): el bloqueo en memoria pertenece a {{jobId}}.",
+    "lockActiveTitle": "Bloqueo activo",
+    "auditResetTitle": "Auditoría restablecida",
+    "auditResetDetail": "Se ha borrado el historial de auditoría de ejecuciones.",
+    "dismissAriaLabel": "Descartar notificación"
+  }
+}

@@ -1,14 +1,13 @@
 import React, { useEffect } from 'react';
 import {
   X,
-  Server,
   Globe,
   Lock,
   Layers,
-  Cpu,
   CheckCircle2,
   AlertTriangle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ManagedService, TargetHost } from '../types';
 
 interface HostDetailsModalProps {
@@ -24,6 +23,8 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t } = useTranslation('HostDetailsModal');
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -76,7 +77,7 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            aria-label="Close dialog"
+            aria-label={t('header.closeAriaLabel')}
             className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -89,31 +90,31 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
           <div className="space-y-2">
             <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-bold">
               <Globe className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-              <span>Network & Remote Protocol</span>
+              <span>{t('network.sectionTitle')}</span>
             </div>
             <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Host Identifier:</span>
+                <span className="text-slate-500 dark:text-slate-400">{t('network.hostIdentifier')}</span>
                 <span className="text-slate-900 dark:text-slate-200 font-semibold">{host.id}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">IP Address / Hostname:</span>
+                <span className="text-slate-500 dark:text-slate-400">{t('network.ipOrHostname')}</span>
                 <span className="text-sky-600 dark:text-sky-400 font-bold">{host.hostname}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Port:</span>
+                <span className="text-slate-500 dark:text-slate-400">{t('network.port')}</span>
                 <span className="text-slate-900 dark:text-slate-200 font-semibold">{host.port}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Transport Layer:</span>
+                <span className="text-slate-500 dark:text-slate-400">{t('network.transportLayer')}</span>
                 <span className="text-slate-900 dark:text-slate-200">
-                  {isWindows ? 'WinRM (WS-Management 5985)' : 'Paramiko SSH (Port 22)'}
+                  {isWindows ? t('network.transportWinRm') : t('network.transportSsh')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Operating System:</span>
+                <span className="text-slate-500 dark:text-slate-400">{t('network.operatingSystem')}</span>
                 <span className="text-slate-900 dark:text-slate-200 capitalize">
-                  {host.os_type} ({isWindows ? 'Windows Server' : 'Linux / Unix'})
+                  {host.os_type} ({isWindows ? t('network.osWindows') : t('network.osUnix')})
                 </span>
               </div>
             </div>
@@ -124,10 +125,10 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
             <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between font-bold">
               <span className="flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>Managed Services & Runtime Metadata</span>
+                <span>{t('services.sectionTitle')}</span>
               </span>
               <span className="text-[10px] text-slate-500">
-                {hostServices.length} service{hostServices.length !== 1 ? 's' : ''}
+                {t('services.count', { count: hostServices.length })}
               </span>
             </div>
             <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-200 dark:divide-slate-800/80 overflow-hidden">
@@ -144,15 +145,15 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
                     <div className="shrink-0 flex items-center gap-1 text-[11px]">
                       {svc.is_locked ? (
                         <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-                          <Lock className="w-3 h-3 animate-pulse" /> Locked
+                          <Lock className="w-3 h-3 animate-pulse" /> {t('services.statusLocked')}
                         </span>
                       ) : svc.status === 'ERROR' ? (
                         <span className="text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Failed
+                          <AlertTriangle className="w-3 h-3" /> {t('services.statusFailed')}
                         </span>
                       ) : (
                         <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> Running
+                          <CheckCircle2 className="w-3 h-3" /> {t('services.statusRunning')}
                         </span>
                       )}
                     </div>
@@ -161,26 +162,26 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
                   {/* Enriched Metadata Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 pt-1.5 border-t border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400">
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
-                      <span className="text-slate-400 dark:text-slate-500">Active Profile:</span>
+                      <span className="text-slate-400 dark:text-slate-500">{t('services.activeProfile')}</span>
                       <span className="font-semibold text-sky-600 dark:text-sky-300">
-                        {svc.current_profile || 'None'}
+                        {svc.current_profile || t('services.none')}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
-                      <span className="text-slate-400 dark:text-slate-500">Service Type:</span>
+                      <span className="text-slate-400 dark:text-slate-500">{t('services.serviceType')}</span>
                       <span className="text-slate-800 dark:text-slate-200">{svc.service_type}</span>
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
-                      <span className="text-slate-400 dark:text-slate-500">Probe Service:</span>
+                      <span className="text-slate-400 dark:text-slate-500">{t('services.probeService')}</span>
                       <span className="text-slate-800 dark:text-slate-200 font-mono">{svc.verification_service_name}</span>
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2 truncate">
-                      <span className="text-slate-400 dark:text-slate-500 shrink-0">Profile Path:</span>
-                      <span className="text-slate-800 dark:text-slate-200 font-mono truncate" title={svc.active_profile_path || 'Not configured'}>
-                        {svc.active_profile_path ? svc.active_profile_path.split('\\').pop()?.split('/').pop() : 'None'}
+                      <span className="text-slate-400 dark:text-slate-500 shrink-0">{t('services.profilePath')}</span>
+                      <span className="text-slate-800 dark:text-slate-200 font-mono truncate" title={svc.active_profile_path || t('services.notConfigured')}>
+                        {svc.active_profile_path ? svc.active_profile_path.split('\\').pop()?.split('/').pop() : t('services.none')}
                       </span>
                     </div>
                   </div>
@@ -192,12 +193,12 @@ export const HostDetailsModal: React.FC<HostDetailsModalProps> = ({
 
         {/* Footer actions */}
         <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex items-center justify-between">
-          <span className="text-[11px] font-mono text-slate-500">Switchr Agentless Host Telemetry</span>
+          <span className="text-[11px] font-mono text-slate-500">{t('footer.telemetryLabel')}</span>
           <button
             onClick={onClose}
             className="px-4 py-1.5 text-xs font-medium rounded-md bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white transition-colors"
           >
-            Close
+            {t('footer.closeButton')}
           </button>
         </div>
       </div>

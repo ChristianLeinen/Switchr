@@ -1,0 +1,26 @@
+{
+  "loading": "Loading...",
+  "toasts": {
+    "conflictTitle": "Concurrency Lock Conflict (HTTP 409)",
+    "conflictDefaultDetail": "Service is already locked by an active job.",
+    "executionErrorTitle": "Execution Error",
+    "executionErrorDefault": "Failed to start switch job.",
+    "switchSucceededTitle": "Configuration Switch Succeeded",
+    "switchSucceededRunning": "{{serviceName}} verified RUNNING.",
+    "switchSucceededOnHost": "{{serviceName}} on {{hostName}} verified RUNNING.",
+    "jobFailedTitle": "Job Failed (Fail-Fast)",
+    "jobFailedDefault": "Service probe or transition failed.",
+    "jobFailedProbeOrScript": "Verification probe or script failed.",
+    "abortDispatchedTitle": "Abort Dispatched",
+    "abortDispatchedDetail": "Job {{jobId}} cancellation signal sent.",
+    "job1DispatchedTitle": "Job 1 Dispatched",
+    "job1DispatchedDetail": "Acquired lock for ({{hostId}}, {{serviceId}})",
+    "conflictVerifiedTitle": "HTTP 409 Conflict Invariant Verified!",
+    "conflictVerifiedDetail": "Rejected concurrent switch on ({{hostId}}, {{serviceId}}).",
+    "conflictVerifiedLockHeld": "Rejected concurrent switch on ({{hostId}}, {{serviceId}}): In-memory lock is held by {{jobId}}.",
+    "lockActiveTitle": "Lock Active",
+    "auditResetTitle": "Audit Reset",
+    "auditResetDetail": "Execution audit history has been cleared.",
+    "dismissAriaLabel": "Dismiss notification"
+  }
+}

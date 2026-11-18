@@ -1,0 +1,35 @@
+{
+  "header": {
+    "closeAriaLabel": "ダイアログを閉じる"
+  },
+  "network": {
+    "sectionTitle": "ネットワーク & リモートプロトコル",
+    "hostIdentifier": "ホスト識別子:",
+    "ipOrHostname": "IP アドレス / ホスト名:",
+    "port": "ポート:",
+    "transportLayer": "トランスポート層:",
+    "transportWinRm": "WinRM (WS-Management 5985)",
+    "transportSsh": "Paramiko SSH (Port 22)",
+    "operatingSystem": "オペレーティングシステム:",
+    "osWindows": "Windows Server",
+    "osUnix": "Linux / Unix"
+  },
+  "services": {
+    "sectionTitle": "管理対象サービス & ランタイムメタデータ",
+    "count_one": "{{count}} サービス",
+    "count_other": "{{count}} サービス",
+    "statusLocked": "ロック中",
+    "statusFailed": "失敗",
+    "statusRunning": "稼働中",
+    "activeProfile": "アクティブプロファイル:",
+    "none": "なし",
+    "serviceType": "サービス種別:",
+    "probeService": "プローブサービス:",
+    "profilePath": "プロファイルパス:",
+    "notConfigured": "未設定"
+  },
+  "footer": {
+    "telemetryLabel": "Switchr エージェントレスホストテレメトリ",
+    "closeButton": "閉じる"
+  }
+}

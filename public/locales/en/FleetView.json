@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "title": "Fleet & Services",
+    "hostsFleetLabel": "Hosts Fleet",
+    "servicesLabel": "Services",
+    "activeLocksLabel": "Active Locks"
+  },
+  "refresh": {
+    "intervalAriaLabel": "Auto-refresh interval",
+    "intervalTitle": "Configure automatic background refresh interval",
+    "autoOff": "Auto: Off",
+    "autoSeconds": "Auto: {{seconds}}s",
+    "buttonAriaLabel": "Refresh fleet states",
+    "buttonTitle": "Refresh fleet states",
+    "buttonRefreshingTitle": "Refreshing fleet states..."
+  },
+  "filterToolbar": {
+    "allHosts": "All Hosts ({{count}})",
+    "windowsWinRm": "Windows / WinRM",
+    "linuxSsh": "Linux / SSH",
+    "searchPlaceholder": "Search hosts, services, or profiles...",
+    "clearSearchAriaLabel": "Clear search",
+    "clearSearchTitle": "Clear search"
+  },
+  "emptyState": {
+    "title": "No matching hosts found",
+    "subtitle": "Try clearing your search query or switching filters"
+  },
+  "hostCard": {
+    "viewDetailsAriaLabel": "View connection details for {{hostName}}",
+    "viewDetailsTitle": "View connection details for {{hostName}}"
+  },
+  "serviceRow": {
+    "statusLocked": "TRANSITIONING (LOCKED)",
+    "statusProbeFailed": "PROBE FAILED",
+    "statusRunning": "RUNNING",
+    "selectProfilePlaceholder": "-- Select profile to apply --",
+    "actionLocked": "Locked",
+    "actionExecute": "Execute",
+    "actionSwitchProfile": "Switch Profile",
+    "liveStreamButton": "Live Stream",
+    "liveStreamLabel": "{{serviceName}} (Active Stream)"
+  }
+}

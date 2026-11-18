@@ -1,0 +1,60 @@
+{
+  "header": {
+    "title": "Compliance & Rechtliches",
+    "subtitle": "MIT-Open-Source-Lizenz, Hinweise für selbst gehostete Instanzen, Haftung & Markenrechte Dritter",
+    "closeAriaLabel": "Dialog schließen"
+  },
+  "tabs": {
+    "ariaLabel": "Rechtliche Bereiche",
+    "impressumLabel": "Impressum",
+    "impressumShort": "Impressum",
+    "privacyLabel": "Datenschutz",
+    "privacyShort": "Datenschutz",
+    "disclaimerLabel": "Haftungsausschluss",
+    "disclaimerShort": "Haftung",
+    "trademarksLabel": "Lizenz & Markenrechte",
+    "trademarksShort": "Lizenz"
+  },
+  "impressum": {
+    "banner": "Open-Source-Software-Attribution & Hinweis für selbst gehostete Bereitstellungen:",
+    "authorHeading": "Autor & Offizielles Projekt-Repository:",
+    "authorLine": "Autor / Betreuer: Christian Leinen",
+    "emailLabel": "E-Mail:",
+    "websiteLabel": "Website / Repository:",
+    "regionLine": "Deutschland / Europäische Union",
+    "operatorHeading": "Verantwortlichkeit der Betreiber selbst gehosteter Instanzen:",
+    "operatorBody": "Switchr wird als freie Open-Source-Software bereitgestellt und vom Autor nicht als zentraler Dienst gehostet oder betrieben. Wer diese Instanz bereitstellt und betreibt, ist als Betreiber allein verantwortlich – einschließlich der Einhaltung geltender lokaler oder gesetzlicher Informationspflichten (z. B. § 5 DDG / § 18 MStV in Deutschland, sofern anwendbar)."
+  },
+  "privacy": {
+    "banner": "Datenschutzhinweise für selbst gehostete Bereitstellungen (EU-DSGVO):",
+    "controllerHeading": "1. Verantwortlicher",
+    "controllerBody": "Da Switchr vollständig auf selbst gehosteter Infrastruktur betrieben wird, ist die Organisation bzw. Person, die diese Instanz betreibt, Verantwortlicher im Sinne der DSGVO. Der Autor der Software (Christian Leinen) hostet diese Anwendung nicht und erhält keinerlei Telemetrie-, Nutzungs- oder Betriebsdaten.",
+    "connectionHeading": "2. Erhebung und Verarbeitung von Verbindungsdaten",
+    "connectionBody": "Beim Zugriff auf ein selbst gehostetes Switchr-Dashboard können standardmäßige HTTP-Server-Verbindungsprotokolle (wie IP-Adresse, Zugriffszeitpunkt und User-Agent) lokal durch die Host-Infrastruktur verarbeitet werden, um einen stabilen Systembetrieb und die Netzwerksicherheit zu gewährleisten (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO, sofern anwendbar).",
+    "auditHeading": "3. Orchestrierungs- & Ausführungs-Audit-Logs",
+    "auditBody": "Lokal von Switchr gespeicherte Audit-Logs und Transaktionshistorien erfassen ausschließlich technische Host-Zustände, Exit-Codes ausgeführter Remote-Skripte und Profilwechsel-Protokolle zur Infrastrukturwartung. Die Software enthält keine Werbe-Tracker, Analyse-Cookies von Drittanbietern, externe Telemetrie oder Verhaltensprofile.",
+    "rightsHeading": "4. Ihre Rechte nach der DSGVO",
+    "rightsBody": "Sofern die DSGVO Anwendung findet, können Sie Ihre Betroffenenrechte – einschließlich Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20), Widerspruch (Art. 21) sowie Beschwerde bei einer Aufsichtsbehörde (Art. 77) – direkt gegenüber dem Betreiber dieser Switchr-Instanz geltend machen."
+  },
+  "disclaimer": {
+    "banner": "Gewährleistungsausschluss & Haftungsbeschränkung (MIT-Lizenz):",
+    "asIsHeading": "Bereitstellung der Software „wie besehen“ (As Is)",
+    "asIsBody": "Gemäß der MIT-Lizenz wird Switchr ohne jegliche ausdrückliche oder stillschweigende Gewährleistung zur Verfügung gestellt, einschließlich, aber nicht beschränkt auf die Gewährleistung der Marktgängigkeit, der Eignung für einen bestimmten Zweck und der Nichtverletzung von Rechten Dritter. In keinem Fall haften die Autoren oder Urheberrechtsinhaber für Ansprüche, Schäden oder sonstige Verbindlichkeiten, sei es aus Vertrag, unerlaubter Handlung oder anderweitig, die aus der Software oder deren Nutzung entstehen.",
+    "automationHeading": "Automatisierung & Fail-Safe-Invarianten",
+    "automationBody": "Die Anwendung Switchr führt Remote-Automatisierungsskripte und Konfigurationsprofile auf Zielsystemen aus. Sämtliche Profildefinitionen und Skripte müssen vor dem Produktiveinsatz sorgfältig geprüft werden. Autoren und Mitwirkende übernehmen keine Haftung für Dienstausfälle, Datenverlust oder Fehlkonfigurationen durch ausgeführte Skripte oder Konfigurationen.",
+    "linksHeading": "Externe Links",
+    "linksBody": "Links zu externen Ressourcen (wie dem Projekt-Repository auf GitHub) verweisen auf Plattformen Dritter, für deren Inhalte und Datenschutzpraktiken ausschließlich deren jeweilige Betreiber verantwortlich sind."
+  },
+  "trademarks": {
+    "banner": "MIT-Open-Source-Lizenz, Urheberrecht & Markenrechte Dritter:",
+    "licenseHeading": "Urheberrecht & MIT-Lizenz",
+    "licenseBody": "Copyright © {{year}} Christian Leinen. Switchr ist freie Open-Source-Software und unter der <license>MIT-Lizenz</license> veröffentlicht. Jeder Person, die eine Kopie dieser Software und der zugehörigen Dokumentationsdateien erhält, wird hiermit unentgeltlich gestattet, die Software zu nutzen, zu kopieren, zu verändern, zusammenzuführen, zu veröffentlichen, zu verbreiten, unterzulizenzieren und/oder zu verkaufen, vorbehaltlich der Bedingungen der Datei <link>LICENSE</link> im offiziellen Repository.",
+    "thirdPartyHeading": "Markenrechte Dritter",
+    "thirdPartyBody": "Alle innerhalb dieser Anwendung genannten Marken- und Produktnamen (einschließlich Windows, WinRM, Microsoft Corporation, Linux, SSH, OpenSSH, Docker, systemd, PowerShell) unterliegen uneingeschränkt den Bestimmungen des jeweils gültigen Kennzeichenrechts und den Eigentumsrechten ihrer eingetragenen Inhaber.",
+    "thirdPartyNote": "Allein aufgrund der bloßen Nennung ist nicht der Schluss zu ziehen, dass Markenzeichen nicht durch Rechte Dritter geschützt sind; ebenso wenig wird eine Lizenz an Markenrechten Dritter eingeräumt."
+  },
+  "footer": {
+    "mitLabel": "MIT-Lizenz",
+    "closeButton": "Schließen"
+  }
+}

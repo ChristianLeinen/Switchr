@@ -1,0 +1,35 @@
+{
+  "header": {
+    "closeAriaLabel": "关闭对话框"
+  },
+  "network": {
+    "sectionTitle": "网络与远程协议",
+    "hostIdentifier": "主机标识符:",
+    "ipOrHostname": "IP 地址 / 主机名:",
+    "port": "端口:",
+    "transportLayer": "传输层:",
+    "transportWinRm": "WinRM (WS-Management 5985)",
+    "transportSsh": "Paramiko SSH (Port 22)",
+    "operatingSystem": "操作系统:",
+    "osWindows": "Windows Server",
+    "osUnix": "Linux / Unix"
+  },
+  "services": {
+    "sectionTitle": "托管服务与运行时元数据",
+    "count_one": "{{count}} 个服务",
+    "count_other": "{{count}} 个服务",
+    "statusLocked": "已锁定",
+    "statusFailed": "失败",
+    "statusRunning": "运行中",
+    "activeProfile": "活动配置:",
+    "none": "无",
+    "serviceType": "服务类型:",
+    "probeService": "探针服务:",
+    "profilePath": "配置路径:",
+    "notConfigured": "未配置"
+  },
+  "footer": {
+    "telemetryLabel": "Switchr 无代理主机遥测",
+    "closeButton": "关闭"
+  }
+}
